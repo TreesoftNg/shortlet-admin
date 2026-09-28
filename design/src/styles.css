@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Brand — placeholder, swap freely */
+  --brand: #0E7C6B;
+  --brand-600: #0B6A5B;
+  --brand-50: #E8F5F2;
+  --brand-100: #CDEBE4;
+  --accent: #F2A93B;
+
+  --ink: #1B1D1F;
+  --ink-2: #4A4F55;
+  --ink-3: #80868C;
+  --line: #EAEAE6;
+  --line-2: #F2F2EF;
+  --bg: #FFFFFF;
+  --bg-soft: #F8F7F4;
+
+  --danger: #D9463B;
+  --warn: #E69A1A;
+  --ok: #1F9D55;
+  --info: #3A6FF0;
+
+  --r-sm: 10px;
+  --r: 14px;
+  --r-lg: 22px;
+  --shadow: 0 6px 24px rgba(20, 24, 28, .08);
+  --shadow-lg: 0 18px 50px rgba(20, 24, 28, .14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.5;
+}
+img { display: block; object-fit: cover; }
+a { color: inherit; text-decoration: none; }
+svg.lucide { width: 18px; height: 18px; stroke-width: 1.9; }
+
+.frame { width: 1440px; margin: 0 auto; }
+.wrap { padding: 0 80px; }
+
+/* Header */
+.nav {
+  height: 80px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line); background: #fff;
+}
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 22px; color: var(--brand); letter-spacing: -.02em; }
+.logo-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--brand); display: grid; place-items: center; color: #fff; }
+.logo-mark svg { width: 20px; height: 20px; }
+.nav-links { display: flex; gap: 30px; font-weight: 600; font-size: 14px; color: var(--ink-2); }
+.nav-links .active { color: var(--ink); position: relative; }
+.nav-links .active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -29px; height: 2px; background: var(--ink); }
+.nav-right { display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 600; }
+.user-pill { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; overflow: hidden; }
+.avatar img { width: 100%; height: 100%; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 12px; font-weight: 700; font-size: 15px; border: 0; font-family: inherit; }
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-dark { background: var(--ink); color: #fff; }
+.btn-ghost { background: #fff; border: 1px solid var(--ink); color: var(--ink); }
+.btn-soft { background: var(--bg-soft); color: var(--ink); }
+.btn-sm { height: 38px; padding: 0 14px; font-size: 13px; border-radius: 10px; }
+.btn-block { width: 100%; }
+
+/* Chips */
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; font-weight: 600; background: #fff; color: var(--ink-2); }
+.chip.on { border-color: var(--ink); color: var(--ink); background: var(--bg-soft); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.b-ok { background: #E6F6EC; color: var(--ok); }
+.b-warn { background: #FDF3E1; color: #B7750B; }
+.b-danger { background: #FCE9E7; color: var(--danger); }
+.b-info { background: #E9EFFE; color: var(--info); }
+.b-mute { background: var(--line-2); color: var(--ink-2); }
+.b-brand { background: var(--brand-50); color: var(--brand-600); }
+
+/* Listing card */
+.card-img { position: relative; border-radius: var(--r); overflow: hidden; aspect-ratio: 1 / 0.95; }
+.card-img img { width: 100%; height: 100%; }
+.heart { position: absolute; top: 14px; right: 14px; color: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,.4)); }
+.heart svg { width: 24px; height: 24px; }
+.heart.on svg { fill: var(--brand); color: #fff; }
+.tag { position: absolute; top: 14px; left: 14px; background: #fff; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700; box-shadow: var(--shadow); }
+.dots { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+.dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.6); }
+.dots i:first-child { background: #fff; }
+.card-body { padding-top: 12px; }
+.card-row { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; font-size: 15px; }
+.rating { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; font-size: 14px; }
+.rating svg { width: 14px; height: 14px; fill: var(--ink); stroke: none; }
+.muted { color: var(--ink-3); }
+.sub { color: var(--ink-2); font-size: 14px; }
+.price { margin-top: 6px; font-size: 15px; }
+.price b { font-weight: 800; }
+
+.h1 { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.h2 { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+.h3 { font-size: 18px; font-weight: 700; }
+.divider { height: 1px; background: var(--line); }
+
+/* Inputs */
+.field { border: 1px solid #D5D5D0; border-radius: 12px; padding: 10px 14px; }
+.field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink); }
+.field div { font-size: 15px; color: var(--ink-2); }
+
+/* Footer */
+.footer { background: var(--bg-soft); border-top: 1px solid var(--line); padding: 48px 80px 32px; font-size: 14px; color: var(--ink-2); }
+.footer-cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; }
+.footer h4 { color: var(--ink); font-size: 14px; margin-bottom: 14px; }
+.footer li { list-style: none; margin-bottom: 10px; }
+.footer-bottom { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; }
+
+/* Admin */
+.admin { display: grid; grid-template-columns: 260px 1fr; min-height: 960px; background: var(--bg-soft); }
+.side { background: #fff; border-right: 1px solid var(--line); padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; }
+.side .logo { padding: 0 10px 22px; font-size: 20px; }
+.side-sec { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; padding: 16px 12px 6px; }
+.side a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.side a.on { background: var(--brand-50); color: var(--brand-600); }
+.side a .cnt { margin-left: auto; background: var(--brand); color: #fff; font-size: 11px; border-radius: 999px; padding: 1px 8px; }
+.main { padding: 28px 36px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+.search { display: flex; align-items: center; gap: 10px; height: 44px; width: 380px; padding: 0 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; color: var(--ink-3); font-size: 14px; }
+.panel { background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px; }
+.icon-btn { width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; position: relative; }
+.icon-btn .pip { position: absolute; top: 10px; right: 11px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); border: 2px solid #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 700; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+td { padding: 14px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+.cell-prop { display: flex; align-items: center; gap: 12px; }
+.cell-prop img { width: 48px; height: 40px; border-radius: 8px; }

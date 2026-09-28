@@ -1,0 +1,115 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .kpi { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; }
+  .kpi .top { display: flex; justify-content: space-between; align-items: center; color: var(--ink-2); font-size: 14px; font-weight: 600; }
+  .kpi .ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: var(--brand-50); color: var(--brand); }
+  .kpi .val { font-size: 30px; font-weight: 800; letter-spacing: -.02em; margin: 10px 0 4px; }
+  .delta { font-size: 13px; font-weight: 700; color: var(--ok); display: inline-flex; align-items: center; gap: 3px; }
+  .delta.down { color: var(--danger); }
+  .row2 { display: grid; grid-template-columns: 1.8fr 1fr; gap: 18px; margin-top: 18px; }
+  .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .seg { display: flex; background: var(--bg-soft); border-radius: 10px; padding: 3px; font-size: 13px; font-weight: 700; }
+  .seg span { padding: 6px 12px; border-radius: 8px; color: var(--ink-3); }
+  .seg .on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .occ { display: flex; align-items: center; gap: 24px; }
+  .legend div { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 10px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .today li { list-style: none; display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-2); font-size: 14px; }
+  .today li:last-child { border: 0; }
+  .today .avatar { width: 36px; height: 36px; }
+</style></head>
+<body><div class="frame"><div class="admin">
+  <aside class="side">
+    <div class="logo"><div class="logo-mark"><i data-lucide="home"></i></div>Haven <span class="badge b-mute" style="font-size:10px">Admin</span></div>
+    <a class="on"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+    <a class=""><i data-lucide="calendar-check"></i>Bookings<span class="cnt">4</span></a>
+    <a class=""><i data-lucide="calendar-days"></i>Availability</a>
+    <a><i data-lucide="building-2"></i>Properties</a>
+    <a><i data-lucide="door-open"></i>Units</a>
+    <div class="side-sec">Guests</div>
+    <a><i data-lucide="users"></i>Customers</a>
+    <a><i data-lucide="message-square"></i>Messages<span class="cnt">7</span></a>
+    <a><i data-lucide="star"></i>Reviews</a>
+    <div class="side-sec">Finance</div>
+    <a><i data-lucide="wallet"></i>Payments</a>
+    <a><i data-lucide="undo-2"></i>Refunds</a>
+    <a><i data-lucide="bar-chart-3"></i>Reports</a>
+    <div class="side-sec">Business</div>
+    <a><i data-lucide="file-text"></i>Content &amp; SEO</a>
+    <a><i data-lucide="user-cog"></i>Staff</a>
+    <a><i data-lucide="settings"></i>Settings</a>
+    <div style="margin-top:auto;display:flex;gap:12px;align-items:center;padding:14px 10px;border-top:1px solid var(--line)"><div class="avatar"><img src="https://i.pravatar.cc/100?img=68"></div><div style="font-size:13px"><b>Kemi Adeyemi</b><div class="muted">Tenant Admin</div></div></div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div><div class="h1" style="font-size:26px">Good morning, Kemi 👋</div><div class="sub">Here's what's happening across your properties today.</div></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="search" style="width:300px"><i data-lucide="search"></i>Search bookings, guests…</div>
+        <div class="chip" style="height:44px;border-radius:12px"><i data-lucide="calendar"></i>Last 30 days <i data-lucide="chevron-down"></i></div>
+        <div class="icon-btn"><i data-lucide="bell"></i><span class="pip"></span></div>
+        <a class="btn btn-primary" style="height:44px"><i data-lucide="plus"></i>New booking</a>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="top">Revenue<span class="ic"><i data-lucide="wallet"></i></span></div><div class="val">₦18.4M</div><span class="delta"><i data-lucide="trending-up" style="width:14px"></i>12.5%</span> <span class="muted" style="font-size:13px">vs last period</span></div>
+      <div class="kpi"><div class="top">Bookings<span class="ic"><i data-lucide="calendar-check"></i></span></div><div class="val">142</div><span class="delta"><i data-lucide="trending-up" style="width:14px"></i>8.2%</span> <span class="muted" style="font-size:13px">vs last period</span></div>
+      <div class="kpi"><div class="top">Occupancy<span class="ic"><i data-lucide="percent"></i></span></div><div class="val">78%</div><span class="delta"><i data-lucide="trending-up" style="width:14px"></i>4.1%</span> <span class="muted" style="font-size:13px">vs last period</span></div>
+      <div class="kpi"><div class="top">Avg. nightly rate<span class="ic"><i data-lucide="tag"></i></span></div><div class="val">₦92k</div><span class="delta down"><i data-lucide="trending-down" style="width:14px"></i>1.8%</span> <span class="muted" style="font-size:13px">vs last period</span></div>
+    </div>
+
+    <div class="row2">
+      <div class="panel">
+        <div class="panel-head"><div><div class="h3">Revenue overview</div><div class="sub">Confirmed payments, net of refunds</div></div><div class="seg"><span>7D</span><span class="on">30D</span><span>90D</span><span>12M</span></div></div>
+        <svg viewBox="0 0 720 260" width="100%" height="260">
+          <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style="stop-color:var(--brand)" stop-opacity=".22"/><stop offset="1" style="stop-color:var(--brand)" stop-opacity="0"/></linearGradient></defs>
+          <g stroke="#F0F0EC" stroke-width="1"><line x1="40" x2="720" y1="20" y2="20"/><line x1="40" x2="720" y1="80" y2="80"/><line x1="40" x2="720" y1="140" y2="140"/><line x1="40" x2="720" y1="200" y2="200"/></g>
+          <g font-size="11" fill="#80868C" font-family="Plus Jakarta Sans"><text x="0" y="24">₦1M</text><text x="0" y="84">₦750k</text><text x="0" y="144">₦500k</text><text x="0" y="204">₦250k</text>
+            <text x="44" y="250">Aug 28</text><text x="200" y="250">Sep 4</text><text x="360" y="250">Sep 11</text><text x="520" y="250">Sep 18</text><text x="670" y="250">Sep 25</text></g>
+          <path d="M40 170 C 80 150, 110 160, 140 140 S 200 100, 240 120 S 300 150, 340 110 S 400 70, 440 90 S 500 120, 540 80 S 610 40, 650 60 S 700 50, 720 44 L720 230 L40 230Z" fill="url(#g)"/>
+          <path d="M40 170 C 80 150, 110 160, 140 140 S 200 100, 240 120 S 300 150, 340 110 S 400 70, 440 90 S 500 120, 540 80 S 610 40, 650 60 S 700 50, 720 44" fill="none" style="stroke:var(--brand)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M40 200 C 100 190, 160 180, 220 185 S 320 170, 380 160 S 480 150, 540 140 S 640 130, 720 120" fill="none" stroke="#C9CDD0" stroke-width="2" stroke-dasharray="5 6"/>
+          <line x1="540" x2="540" y1="80" y2="230" stroke="#1B1D1F" stroke-dasharray="3 4"/>
+          <circle cx="540" cy="80" r="6" fill="#fff" style="stroke:var(--brand)" stroke-width="3"/>
+          <g transform="translate(470,20)"><rect width="140" height="44" rx="10" fill="#1B1D1F"/><text x="12" y="18" font-size="11" fill="#A9AEB2" font-family="Plus Jakarta Sans">Sep 18</text><text x="12" y="35" font-size="14" font-weight="800" fill="#fff" font-family="Plus Jakarta Sans">₦842,500</text></g>
+        </svg>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="h3">Occupancy by property</div><i data-lucide="more-horizontal" class="muted"></i></div>
+        <div class="occ">
+          <svg width="150" height="150" viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9" fill="none" stroke="#F2F2EF" stroke-width="5"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" style="stroke:var(--brand)" stroke-width="5" stroke-dasharray="40 60" stroke-dashoffset="25"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#5FB8A6" stroke-width="5" stroke-dasharray="24 76" stroke-dashoffset="-15"/>
+            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#F2A93B" stroke-width="5" stroke-dasharray="14 86" stroke-dashoffset="-39"/>
+            <text x="21" y="21" text-anchor="middle" font-size="7" font-weight="800" font-family="Plus Jakarta Sans" fill="#1B1D1F">78%</text><text x="21" y="27" text-anchor="middle" font-size="3" fill="#80868C" font-family="Plus Jakarta Sans">avg occupancy</text></svg>
+          <div class="legend"><div><i style="background:var(--brand)"></i>Azure Lekki <b style="margin-left:auto">92%</b></div><div><i style="background:#5FB8A6"></i>The Palms VI <b style="margin-left:auto">81%</b></div><div><i style="background:#F2A93B"></i>Maitama Abuja <b style="margin-left:auto">64%</b></div><div><i style="background:#E4E4DF"></i>Ikoyi PH <b style="margin-left:auto">58%</b></div></div>
+        </div>
+        <div class="divider" style="margin:18px 0 6px"></div>
+        <div class="panel-head" style="margin:10px 0 0"><div class="h3" style="font-size:15px">Today</div><span class="badge b-brand">3 check-ins · 2 checkouts</span></div>
+        <ul class="today">
+          <li><div class="avatar"><img src="https://i.pravatar.cc/100?img=12"></div><div style="flex:1"><b>Tunde Bakare</b><div class="muted" style="font-size:12px">Azure · Unit B · 2:00 PM</div></div><span class="badge b-ok">Check-in</span></li>
+          <li><div class="avatar"><img src="https://i.pravatar.cc/100?img=44"></div><div style="flex:1"><b>Funmi Ade</b><div class="muted" style="font-size:12px">The Palms · Studio 2 · 11:00 AM</div></div><span class="badge b-info">Checkout</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px;padding-bottom:6px">
+      <div class="panel-head"><div class="h3">Recent bookings</div><a class="btn btn-sm btn-soft">View all <i data-lucide="arrow-right"></i></a></div>
+      <table>
+        <thead><tr><th>Reference</th><th>Guest</th><th>Property / Unit</th><th>Dates</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:ui-monospace,monospace;font-weight:600">HVN-7Q4K-2291</td><td>Temitope Aladesiun</td><td><div class="cell-prop"><img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=200&q=70"><div><b>Azure Lekki</b><div class="muted" style="font-size:12px">Unit A</div></div></div></td><td>Oct 12 – 16</td><td><b>₦417,500</b></td><td><span class="badge b-ok">Paid</span></td><td><span class="badge b-brand">Confirmed</span></td></tr>
+          <tr><td style="font-family:ui-monospace,monospace;font-weight:600">HVN-3M8P-2288</td><td>Chidi Okafor</td><td><div class="cell-prop"><img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=200&q=70"><div><b>The Palms VI</b><div class="muted" style="font-size:12px">Studio 2</div></div></div></td><td>Oct 3 – 5</td><td><b>₦132,000</b></td><td><span class="badge b-warn">Pending</span></td><td><span class="badge b-warn">Awaiting payment</span></td></tr>
+          <tr><td style="font-family:ui-monospace,monospace;font-weight:600">HVN-9X2L-2285</td><td>Sarah Johnson</td><td><div class="cell-prop"><img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=200&q=70"><div><b>Ikoyi Penthouse</b><div class="muted" style="font-size:12px">PH-1</div></div></div></td><td>Sep 28 – Oct 2</td><td><b>₦1,020,000</b></td><td><span class="badge b-ok">Paid</span></td><td><span class="badge b-ok">Checked in</span></td></tr>
+          <tr><td style="font-family:ui-monospace,monospace;font-weight:600">HVN-1B7D-2279</td><td>Ibrahim Musa</td><td><div class="cell-prop"><img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=200&q=70"><div><b>Maitama Abuja</b><div class="muted" style="font-size:12px">Unit 3</div></div></div></td><td>Sep 20 – 22</td><td><b>₦210,000</b></td><td><span class="badge b-danger">Refunded</span></td><td><span class="badge b-mute">Cancelled</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div></div>
+<script>lucide.createIcons();</script></body></html>

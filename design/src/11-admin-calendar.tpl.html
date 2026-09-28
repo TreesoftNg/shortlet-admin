@@ -1,0 +1,91 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Admin · Availability</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  .cal { background: #fff; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+  .cal-top { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .grid { display: grid; grid-template-columns: 220px repeat(14, 1fr); }
+  .hd { padding: 10px 0; text-align: center; font-size: 12px; color: var(--ink-3); font-weight: 600; border-bottom: 1px solid var(--line); border-left: 1px solid var(--line-2); }
+  .hd b { display: block; font-size: 16px; color: var(--ink); }
+  .hd.today { background: var(--brand-50); }
+  .hd.today b { color: var(--brand); }
+  .hd.we { background: #FBFBF9; }
+  .grp { grid-column: 1 / -1; padding: 10px 20px; background: var(--bg-soft); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-2); border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+  .unit { padding: 0 20px; height: 64px; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--line-2); font-size: 14px; }
+  .unit span { font-size: 12px; color: var(--ink-3); }
+  .cell { height: 64px; border-left: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); position: relative; font-size: 11px; color: var(--ink-3); padding: 6px; text-align: right; }
+  .cell.we { background: #FBFBF9; }
+  .cell.today { background: rgba(14,124,107,.05); }
+  .bar { position: absolute; top: 12px; height: 40px; border-radius: 10px; padding: 0 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #fff; z-index: 2; white-space: nowrap; overflow: hidden; text-align: left; }
+  .bar .av { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.25); display: grid; place-items: center; font-size: 10px; flex: none; }
+  .b-conf { background: var(--brand); }
+  .b-pend { background: #fff; color: #8A5A08; border: 1.5px dashed var(--warn); }
+  .b-ext { background: #3A6FF0; }
+  .b-block { background: repeating-linear-gradient(135deg, #EDEDEA 0 6px, #F6F6F3 6px 12px); color: var(--ink-2); border: 1px solid #DDDDD8; }
+  .b-in { background: #1B1D1F; }
+  .legend { display: flex; gap: 18px; font-size: 13px; color: var(--ink-2); }
+  .legend span { display: flex; align-items: center; gap: 7px; }
+  .legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+</style></head>
+<body><div class="frame"><div class="admin">
+<!--SIDE:cal-->
+  <main class="main">
+    <div class="topbar">
+      <div><div class="h1" style="font-size:26px">Availability</div><div class="sub">Every unit, every night — bookings, holds and blocks in one view.</div></div>
+      <div style="display:flex;gap:10px"><a class="btn btn-soft" style="height:44px;background:#fff;border:1px solid var(--line)"><i data-lucide="refresh-cw"></i>Sync Hospitable</a><a class="btn btn-primary" style="height:44px"><i data-lucide="ban"></i>Block dates</a></div>
+    </div>
+    <div class="cal">
+      <div class="cal-top">
+        <div style="display:flex;align-items:center;gap:10px"><span class="icon-btn" style="width:36px;height:36px"><i data-lucide="chevron-left"></i></span><span class="icon-btn" style="width:36px;height:36px"><i data-lucide="chevron-right"></i></span><b style="font-size:17px;margin-left:6px">Sep 26 – Oct 9, 2026</b><span class="chip" style="margin-left:8px;height:32px">Today</span></div>
+        
+        <div style="display:flex;gap:8px"><span class="chip" style="height:36px">All properties <i data-lucide="chevron-down"></i></span><div class="seg" style="display:flex;background:var(--bg-soft);border-radius:10px;padding:3px;font-size:13px;font-weight:700"><span style="padding:6px 12px;border-radius:8px;color:var(--ink-3)">Week</span><span style="padding:6px 12px;border-radius:8px;background:#fff">2 Weeks</span><span style="padding:6px 12px;border-radius:8px;color:var(--ink-3)">Month</span></div></div>
+      </div>
+      <div class="legend" style="padding:12px 20px;border-bottom:1px solid var(--line);background:#FCFCFA"><span><i style="background:var(--brand)"></i>Confirmed</span><span><i style="background:#1B1D1F"></i>Checked in</span><span><i style="border:1.5px dashed var(--warn)"></i>Awaiting payment</span><span><i style="background:#3A6FF0"></i>External (Hospitable)</span><span><i style="background:#E6E6E2"></i>Blocked</span></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </main>
+</div></div>
+<script>
+const days = [];
+const start = new Date(2026, 8, 26);
+for (let i = 0; i < 14; i++) { const d = new Date(start); d.setDate(start.getDate() + i); days.push(d); }
+const dn = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const rates = ['85k','85k','95k','95k','85k','85k','85k','85k','85k','95k','95k','85k','85k','85k'];
+const groups = [
+  { name: 'Azure Lekki', icon: 'building-2', units: [
+    { n: 'Unit A', s: '2 bed · 3rd floor', bars: [[0,2,'b-in','SJ','Sarah J.'],[3,5,'b-pend','','Chidi O. · awaiting'],[8,13,'b-conf','NE','Ngozi Eze · 5 nights']] },
+    { n: 'Unit B', s: '2 bed · 5th floor', bars: [[1,4,'b-ext','A','Airbnb · via Hospitable'],[6,9,'b-conf','TB','Tunde B.']] },
+    { n: 'Unit C', s: '2 bed · 6th floor', bars: [[2,4,'b-block','','Maintenance'],[5,12,'b-conf','JO','James Obi · 7 nights']] },
+  ]},
+  { name: 'The Palms VI', icon: 'building', units: [
+    { n: 'Studio 1', s: '1 bed · Studio', bars: [[0,3,'b-conf','AB','Aisha Bello'],[7,10,'b-conf','KE','Kunle E.']] },
+    { n: 'Studio 2', s: '1 bed · Studio', bars: [[4,7,'b-conf','FA','Funmi Ade'],[10,13,'b-ext','B','Booking.com']] },
+  ]},
+  { name: 'Maitama Abuja', icon: 'trees', units: [
+    { n: 'Unit 1', s: '2 bed · Garden', bars: [[0,6,'b-in','IM','Ibrahim M. · 6 nights']] },
+    { n: 'Unit 3', s: '3 bed · Penthouse', bars: [[9,13,'b-block','','Owner stay']] },
+  ]},
+];
+const g = document.getElementById('grid');
+let h = '<div class="hd" style="text-align:left;padding-left:20px;border-left:0">Unit</div>';
+days.forEach((d,i) => { const we = d.getDay()===0||d.getDay()===6; h += `<div class="hd ${i===0?'today':we?'we':''}">${dn[d.getDay()]}<b>${d.getDate()}</b></div>`; });
+groups.forEach(gr => {
+  h += `<div class="grp"><i data-lucide="${gr.icon}" style="width:14px;height:14px"></i>${gr.name}<span style="margin-left:auto;font-weight:600;text-transform:none;letter-spacing:0">${gr.units.length} units</span></div>`;
+  gr.units.forEach(u => {
+    h += `<div class="unit"><b>${u.n}</b><span>${u.s}</span></div>`;
+    days.forEach((d,i) => {
+      const we = d.getDay()===0||d.getDay()===6;
+      let bar = '';
+      const covered = u.bars.some(b => i >= b[0] && i <= b[1]);
+      u.bars.filter(b => b[0]===i).forEach(b => {
+        const span = b[1]-b[0];
+        bar += `<div class="bar ${b[2]}" style="left:50%;width:calc(${span*100}% - 4px)">${b[3]?`<span class="av">${b[3]}</span>`:''}${b[4]}</div>`;
+      });
+      h += `<div class="cell ${i===0?'today':we?'we':''}">${covered ? '' : '₦' + rates[i]}${bar}</div>`;
+    });
+  });
+});
+g.innerHTML = h;
+lucide.createIcons();
+</script></body></html>

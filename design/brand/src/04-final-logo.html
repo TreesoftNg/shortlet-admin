@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sunmade · Final logo</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="brand.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F7F2EA; color: #15201D; width: 1440px; }
+  .page { padding: 60px 72px 72px; }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .2em; color: #10695B; }
+  h1 { font-size: 40px; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 6px; }
+  .lead { color: #5B6360; font-size: 17px; }
+  .card { background: #fff; border-radius: 26px; position: relative; overflow: hidden; display: grid; place-items: center; }
+  .lbl { position: absolute; left: 22px; top: 18px; font-size: 12px; font-weight: 800; letter-spacing: .14em; color: #8A8276; }
+  .hero { margin-top: 32px; height: 320px; }
+  .row { display: grid; gap: 18px; margin-top: 18px; grid-template-columns: 1fr 1fr 1fr; }
+  .tile { height: 250px; }
+  .icons { display: flex; align-items: flex-end; gap: 22px; padding-top: 24px; }
+  .icons small { display: block; text-align: center; font-size: 11px; color: #8A8276; font-weight: 700; margin-top: 8px; }
+  .nav { margin-top: 18px; height: 88px; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; }
+  .nav nav { display: flex; gap: 30px; font-weight: 600; font-size: 15px; color: #4A4F55; }
+  .nav .cta { background: #10695B; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 20px; border-radius: 12px; }
+</style></head>
+<body><div class="page">
+  <div class="eyebrow">SUNMADE APARTMENTS &amp; SUITES</div>
+  <h1>Final logo</h1>
+  <p class="lead">Your chosen app icon is now the core of the logo, paired with the SUNMADE wordmark.</p>
+  <div class="card hero"><span class="lbl">PRIMARY</span><div data-final='{"size":60}'></div></div>
+  <div class="row">
+    <div class="card tile" style="background:#10695B"><span class="lbl" style="color:#9FD0C6">ON TEAL</span><div data-final='{"size":30,"color":"#fff","tile":"white"}'></div></div>
+    <div class="card tile" style="background:#15201D"><span class="lbl" style="color:#8A928F">ON DARK</span><div data-final='{"size":30,"color":"#fff"}'></div></div>
+    <div class="card tile"><span class="lbl">STACKED</span><div data-final='{"size":24,"layout":"v"}'></div></div>
+  </div>
+  <div class="row" style="grid-template-columns:2fr 1fr">
+    <div class="card tile"><span class="lbl">ICON SIZES</span>
+      <div class="icons">
+        <div><div data-tile='{"size":140}'></div><small>App icon</small></div>
+        <div><div data-tile='{"size":140,"tile":"white"}' style="border-radius:32px;box-shadow:0 4px 18px rgba(0,0,0,.08)"></div><small>On teal</small></div>
+        <div><div data-tile='{"size":64}'></div><small>64px</small></div>
+        <div><div data-tile='{"size":32}'></div><small>32px</small></div>
+        <div><div data-tile='{"size":16}'></div><small>16px</small></div>
+      </div>
+    </div>
+    <div class="card tile" style="background:#F8A42F"><span class="lbl" style="color:#0B4A40">ON GOLD</span><div data-final='{"size":24,"color":"#0B4A40","accent":"#fff"}'></div></div>
+  </div>
+  <div class="card nav"><div data-final='{"size":19}'></div><nav><span style="color:#15201D">Stays</span><span>Locations</span><span>About</span><span>Contact</span></nav><span class="cta">Book a stay</span></div>
+</div>
+<script>renderFinal();</script></body></html>

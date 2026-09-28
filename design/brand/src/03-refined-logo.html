@@ -1,0 +1,101 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sunmade · Refined logo</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="brand.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F7F2EA; color: #15201D; width: 1440px; }
+  .page { padding: 60px 72px 72px; }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .2em; color: #10695B; }
+  h1 { font-size: 40px; font-weight: 800; letter-spacing: -.02em; margin: 8px 0 6px; }
+  .lead { color: #5B6360; font-size: 17px; }
+  .card { background: #fff; border-radius: 26px; position: relative; overflow: hidden; }
+  .lbl { position: absolute; left: 22px; top: 18px; font-size: 12px; font-weight: 800; letter-spacing: .14em; color: #8A8276; }
+  .hero { margin-top: 32px; height: 320px; display: grid; place-items: center; }
+  .row { display: grid; gap: 18px; margin-top: 18px; }
+  .r3 { grid-template-columns: 1fr 1fr 1fr; }
+  .r2 { grid-template-columns: 1fr 1.25fr; }
+  .tile { height: 260px; display: grid; place-items: center; }
+  .ba { display: flex; align-items: center; justify-content: center; gap: 36px; height: 100%; padding-top: 20px; }
+  .ba small { display: block; text-align: center; margin-top: 12px; font-size: 12px; font-weight: 700; color: #8A8276; letter-spacing: .1em; }
+  .arrow { font-size: 28px; font-weight: 800; color: #10695B; }
+  .icons { display: flex; align-items: flex-end; gap: 18px; justify-content: center; padding-top: 30px; height: 100%; }
+  .icons small { display: block; text-align: center; font-size: 11px; color: #8A8276; font-weight: 700; margin-top: 8px; }
+  .nav { margin-top: 18px; height: 92px; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; }
+  .nav nav { display: flex; gap: 30px; font-weight: 600; font-size: 15px; color: #4A4F55; }
+  .nav .cta { background: #10695B; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 20px; border-radius: 12px; }
+  .notes li { list-style: none; display: flex; gap: 12px; margin-bottom: 10px; font-size: 14.5px; color: #3F4744; line-height: 1.45; }
+  .notes li b { color: #15201D; }
+  .notes li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #F8A42F; margin-top: 7px; }
+</style></head>
+<body><div class="page">
+  <div class="eyebrow">SUNMADE APARTMENTS &amp; SUITES</div>
+  <h1>Solid House + Gold Roof — refined</h1>
+  <p class="lead">Rebuilt on a strict grid: equal bands, equal gaps and one corner style, so the S reads instantly and holds up at every size.</p>
+
+  <div class="card hero"><div data-hr-lockup='{"size":62}'></div></div>
+
+  <div class="row r2">
+    <div class="card tile"><span class="lbl">BEFORE → AFTER</span>
+      <div class="ba">
+        <div><div data-icon2="solidRoof" data-opts='{"height":150}'></div><small>BEFORE</small></div>
+        <span class="arrow">→</span>
+        <div><div data-hr-mark='{"height":150}'></div><small>AFTER</small></div>
+      </div>
+    </div>
+    <div class="card tile" style="padding:34px 38px;display:block">
+      <span class="lbl">CONSTRUCTION</span>
+      <div style="display:flex;gap:34px;align-items:center;height:100%;padding-top:14px">
+        <div id="construct"></div>
+        <ul class="notes">
+          <li><span><b>Equal bands</b> (a) — every teal band is the same thickness.</span></li>
+          <li><span><b>Equal gaps</b> (b) — roof gap and both cuts match.</span></li>
+          <li><span><b>One corner style</b> — soft corners, fully rounded cut ends.</span></li>
+          <li><span><b>Roof eaves</b> overhang the house so it reads as a roof.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="row r3">
+    <div class="card tile" style="background:#10695B"><span class="lbl" style="color:#9FD0C6">ON TEAL</span><div data-hr-lockup='{"size":30,"color":"#fff","markColor":"#fff"}'></div></div>
+    <div class="card tile" style="background:#15201D"><span class="lbl" style="color:#8A928F">ON DARK</span><div data-hr-lockup='{"size":30,"color":"#fff","markColor":"#fff"}'></div></div>
+    <div class="card tile"><span class="lbl">STACKED</span><div data-hr-lockup='{"size":24,"layout":"v"}'></div></div>
+  </div>
+
+  <div class="row r3">
+    <div class="card tile"><span class="lbl">ONE COLOUR</span><div data-hr-lockup='{"size":30,"color":"#15201D","accent":"#fff","roofColor":"#15201D"}'></div></div>
+    <div class="card tile" style="grid-column:span 2"><span class="lbl">APP ICON &amp; FAVICON</span>
+      <div class="icons">
+        <div><div data-hr-icon='{"size":120}'></div><small>App icon</small></div>
+        <div><div data-hr-icon='{"size":120,"bg":"#fff","color":"#10695B"}' style="border-radius:27px;box-shadow:0 4px 18px rgba(0,0,0,.08)"></div><small>Light</small></div>
+        <div><div data-hr-icon='{"size":120,"bg":"#15201D"}'></div><small>Dark</small></div>
+        <div><div data-hr-icon='{"size":48,"radius":0.25}'></div><small>48px</small></div>
+        <div><div data-hr-icon='{"size":32,"radius":0.25}'></div><small>32px</small></div>
+        <div><div data-hr-mark='{"height":16}'></div><small>16px</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card nav"><div data-hr-lockup='{"size":20}'></div><nav><span style="color:#15201D">Stays</span><span>Locations</span><span>About</span><span>Contact</span></nav><span class="cta">Book a stay</span></div>
+</div>
+<script>
+renderHR();
+// Construction view: the mark with its grid lines and a/b labels.
+(function () {
+  const p = HR_FINAL, g = houseRoofGeometry(p), { W, G, Wr, H, s, oh } = p, E = H + oh;
+  const [x0, y0, w, h] = g.viewBox.split(' ').map(Number);
+  const ext = 26, X = E + ext;
+  const bounds = [-G - Wr, -G, 0, W, W + G, 2 * W + G, 2 * W + 2 * G];
+  const labels = [['b', -G, 0], ['a', 0, W], ['b', W, W + G], ['a', W + G, 2 * W + G], ['b', 2 * W + G, 2 * W + 2 * G]];
+  let lines = bounds.map(c => `<path d="M${-X} ${c + s * X} L0 ${c} L${X} ${c + s * X}" stroke="#E0463A" stroke-width=".6" stroke-dasharray="2 2" fill="none"/>`).join('');
+  let tags = labels.map(([t, a, b]) => {
+    const ya = a + s * X, yb = b + s * X;
+    return `<path d="M${X + 3} ${ya + .6} V${yb - .6}" stroke="#E0463A" stroke-width=".8"/><text x="${X + 7}" y="${(ya + yb) / 2 + 3}" font-size="8.5" font-weight="700" fill="#E0463A" font-family="Plus Jakarta Sans">${t}</text>`;
+  }).join('');
+  const vb = `${x0 - ext} ${y0 - 4} ${w + 2 * ext + 16} ${h + 8}`;
+  const hgt = 190, wid = hgt * (w + 2 * ext + 16) / (h + 8);
+  document.getElementById('construct').innerHTML = `<svg width="${wid}" height="${hgt}" viewBox="${vb}" style="display:block">
+    <path d="${g.roofD}" fill="#F8A42F" opacity=".9"/><path d="${g.houseD}" fill="#10695B" opacity=".9"/>${lines}${tags}</svg>`;
+})();
+</script></body></html>
