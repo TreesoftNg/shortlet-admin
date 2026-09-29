@@ -8,8 +8,6 @@ import {
   InputGroup,
   InputLeftElement,
   Select,
-  Spinner,
-  Text,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
@@ -26,14 +24,17 @@ import {
 import {
   AppModal,
   DataTable,
+  EmptyState,
+  ErrorState,
   FilterTabs,
   PageHeader,
+  PageSkeleton,
   Panel,
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function ReviewsPage() {
-  const { data, isLoading, isError, error } = useReviews();
+  const { data, isLoading, isError, error, refetch } = useReviews();
   const [filters, setFilters] = useState<ReviewFilters>(DEFAULT_REVIEW_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -52,18 +53,15 @@ export function ReviewsPage() {
   };
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="table" />;
   }
 
   if (isError) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load reviews'}
-      </Text>
+      <ErrorState
+        message={error instanceof Error ? error.message : 'Failed to load reviews'}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -150,15 +148,23 @@ export function ReviewsPage() {
           </Select>
         </Flex>
 
-        <DataTable
-          columns={getReviewColumns()}
-          data={filtered}
-          getRowId={(row) => row.id}
-          selectedId={selectedId}
-          onRowClick={(row) => setSelectedId(row.id)}
-          minWidth="860px"
-          emptyMessage="No reviews match your filters"
-        />
+        {reviews.length === 0 ? (
+          <EmptyState
+            title="No reviews yet"
+            description="When reviews are available, they will show up here."
+          />
+        ) : (
+          <DataTable
+            columns={getReviewColumns()}
+            data={filtered}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
+            onRowClick={(row) => setSelectedId(row.id)}
+            minWidth="860px"
+            emptyTitle="No matches"
+            emptyMessage="No reviews match your filters"
+          />
+        )}
       </Panel>
 
       <AppModal

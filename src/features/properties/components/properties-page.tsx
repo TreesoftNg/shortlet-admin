@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Flex,
-  IconButton,
-  Spinner,
-  Text,
-} from '@chakra-ui/react';
+import { Box, Button, IconButton } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { PropertyDetailDrawer } from '@/features/properties/components/property-detail-drawer';
@@ -29,14 +22,17 @@ import { mockUnits } from '@/mocks/data';
 import {
   AppModal,
   DataTable,
+  EmptyState,
+  ErrorState,
   FilterTabs,
   PageHeader,
+  PageSkeleton,
   Panel,
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function PropertiesPage() {
-  const { data, isLoading, isError, error } = useProperties();
+  const { data, isLoading, isError, error, refetch } = useProperties();
   const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_PROPERTY_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -63,18 +59,17 @@ export function PropertiesPage() {
   };
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="table" />;
   }
 
   if (isError) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load properties'}
-      </Text>
+      <ErrorState
+        message={
+          error instanceof Error ? error.message : 'Failed to load properties'
+        }
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -119,15 +114,23 @@ export function PropertiesPage() {
           onFiltersChange={updateFilters}
         />
 
-        <DataTable
-          columns={getPropertyColumns()}
-          data={filtered}
-          getRowId={(row) => row.id}
-          selectedId={selectedId}
-          onRowClick={(row) => setSelectedId(row.id)}
-          minWidth="820px"
-          emptyMessage="No properties match your filters"
-        />
+        {properties.length === 0 ? (
+          <EmptyState
+            title="No properties yet"
+            description="When properties are available, they will show up here."
+          />
+        ) : (
+          <DataTable
+            columns={getPropertyColumns()}
+            data={filtered}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
+            onRowClick={(row) => setSelectedId(row.id)}
+            minWidth="820px"
+            emptyTitle="No matches"
+            emptyMessage="No properties match your filters"
+          />
+        )}
       </Panel>
 
       <AppModal

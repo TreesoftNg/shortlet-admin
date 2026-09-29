@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Flex,
-  IconButton,
-  Spinner,
-  Text,
-} from '@chakra-ui/react';
+import { Box, Button, IconButton } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { UnitDetailDrawer } from '@/features/units/components/unit-detail-drawer';
@@ -26,14 +19,17 @@ import { mockProperties } from '@/mocks/data';
 import {
   AppModal,
   DataTable,
+  EmptyState,
+  ErrorState,
   FilterTabs,
   PageHeader,
+  PageSkeleton,
   Panel,
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function UnitsPage() {
-  const { data, isLoading, isError, error } = useUnits();
+  const { data, isLoading, isError, error, refetch } = useUnits();
   const [filters, setFilters] = useState<UnitFilters>(DEFAULT_UNIT_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -53,18 +49,15 @@ export function UnitsPage() {
   };
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="table" />;
   }
 
   if (isError) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load units'}
-      </Text>
+      <ErrorState
+        message={error instanceof Error ? error.message : 'Failed to load units'}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -114,15 +107,23 @@ export function UnitsPage() {
           onFiltersChange={updateFilters}
         />
 
-        <DataTable
-          columns={getUnitColumns()}
-          data={filtered}
-          getRowId={(row) => row.id}
-          selectedId={selectedId}
-          onRowClick={(row) => setSelectedId(row.id)}
-          minWidth="720px"
-          emptyMessage="No units match your filters"
-        />
+        {units.length === 0 ? (
+          <EmptyState
+            title="No units yet"
+            description="When units are available, they will show up here."
+          />
+        ) : (
+          <DataTable
+            columns={getUnitColumns()}
+            data={filtered}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
+            onRowClick={(row) => setSelectedId(row.id)}
+            minWidth="720px"
+            emptyTitle="No matches"
+            emptyMessage="No units match your filters"
+          />
+        )}
       </Panel>
 
       <AppModal

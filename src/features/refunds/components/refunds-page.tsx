@@ -8,8 +8,6 @@ import {
   InputGroup,
   InputLeftElement,
   Select,
-  Spinner,
-  Text,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
@@ -28,14 +26,17 @@ import type { RefundReason } from '@/shared/types/hospitable';
 import {
   AppModal,
   DataTable,
+  EmptyState,
+  ErrorState,
   FilterTabs,
   PageHeader,
+  PageSkeleton,
   Panel,
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function RefundsPage() {
-  const { data, isLoading, isError, error } = useRefunds();
+  const { data, isLoading, isError, error, refetch } = useRefunds();
   const [filters, setFilters] = useState<RefundFilters>(DEFAULT_REFUND_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -54,18 +55,15 @@ export function RefundsPage() {
   };
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="table" />;
   }
 
   if (isError) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load refunds'}
-      </Text>
+      <ErrorState
+        message={error instanceof Error ? error.message : 'Failed to load refunds'}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -165,15 +163,23 @@ export function RefundsPage() {
           </Select>
         </Flex>
 
-        <DataTable
-          columns={getRefundColumns()}
-          data={filtered}
-          getRowId={(row) => row.id}
-          selectedId={selectedId}
-          onRowClick={(row) => setSelectedId(row.id)}
-          minWidth="920px"
-          emptyMessage="No refunds match your filters"
-        />
+        {refunds.length === 0 ? (
+          <EmptyState
+            title="No refunds yet"
+            description="When refunds are available, they will show up here."
+          />
+        ) : (
+          <DataTable
+            columns={getRefundColumns()}
+            data={filtered}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
+            onRowClick={(row) => setSelectedId(row.id)}
+            minWidth="920px"
+            emptyTitle="No matches"
+            emptyMessage="No refunds match your filters"
+          />
+        )}
       </Panel>
 
       <AppModal

@@ -9,7 +9,6 @@ import {
   Grid,
   IconButton,
   Input,
-  Spinner,
   Switch,
   Text,
 } from '@chakra-ui/react';
@@ -20,7 +19,7 @@ import {
   NOTIFICATION_OPTIONS,
   formatSettingsUpdatedAt,
 } from '@/features/settings/utils/settings-helpers';
-import { PageHeader, Panel } from '@/shared/components/ui';
+import { ErrorState, PageHeader, PageSkeleton, Panel } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 import type {
   TenantNotificationSettings,
@@ -28,7 +27,7 @@ import type {
 } from '@/shared/types/hospitable';
 
 export function SettingsPage() {
-  const { data, isLoading, isError, error } = useSettings();
+  const { data, isLoading, isError, error, refetch } = useSettings();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
   const [org, setOrg] = useState<TenantOrganizationSettings | null>(null);
   const [notifications, setNotifications] =
@@ -41,18 +40,17 @@ export function SettingsPage() {
   }, [data]);
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="form" />;
   }
 
   if (isError || !data || !org || !notifications) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load settings'}
-      </Text>
+      <ErrorState
+        message={
+          error instanceof Error ? error.message : 'Failed to load settings'
+        }
+        onRetry={() => void refetch()}
+      />
     );
   }
 

@@ -7,12 +7,12 @@ import {
   Flex,
   Heading,
   Input,
-  Spinner,
+  Skeleton,
   Text,
 } from '@chakra-ui/react';
 import { LuSend } from 'react-icons/lu';
 import type { ConversationListItem } from '@/mocks/data/messaging';
-import { StatusBadge } from '@/shared/components/ui';
+import { EmptyState, StatusBadge } from '@/shared/components/ui';
 import type { Message } from '@/shared/types/hospitable';
 import { useConversationMessages } from '../hooks/use-messages';
 import { formatMessageTime } from '../utils/message-filters';
@@ -26,18 +26,11 @@ export function MessageThread({ conversation }: MessageThreadProps) {
 
   if (!conversation) {
     return (
-      <Flex
-        h="100%"
+      <EmptyState
+        title="Select a conversation"
+        description="Choose a thread from the list to read and reply to messages."
         minH="420px"
-        align="center"
-        justify="center"
-        color="ink.300"
-        fontSize="14px"
-        px="24px"
-        textAlign="center"
-      >
-        Select a conversation to view messages.
-      </Flex>
+      />
     );
   }
 
@@ -75,9 +68,36 @@ export function MessageThread({ conversation }: MessageThreadProps) {
 
       <Box flex="1" overflowY="auto" px="18px" py="16px" bg="bg.400">
         {isLoading ? (
-          <Flex minH="200px" align="center" justify="center">
-            <Spinner color="brand.500" />
+          <Flex direction="column" gap="12px" minH="200px">
+            <Skeleton
+              alignSelf="flex-start"
+              h="56px"
+              w="72%"
+              maxW="320px"
+              borderRadius="16px"
+            />
+            <Skeleton
+              alignSelf="flex-end"
+              h="48px"
+              w="58%"
+              maxW="260px"
+              borderRadius="16px"
+            />
+            <Skeleton
+              alignSelf="flex-start"
+              h="44px"
+              w="64%"
+              maxW="280px"
+              borderRadius="16px"
+            />
           </Flex>
+        ) : messages.length === 0 ? (
+          <EmptyState
+            title="No messages yet"
+            description="Start the conversation by sending a reply below."
+            minH="200px"
+            py="24px"
+          />
         ) : (
           <Flex direction="column" gap="12px">
             {messages.map((item) => (

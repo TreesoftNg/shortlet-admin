@@ -6,7 +6,7 @@ import {
   Flex,
   IconButton,
   Select,
-  Spinner,
+  Skeleton,
   Text,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
@@ -25,7 +25,12 @@ import {
   formatRangeLabel,
 } from '@/features/availability/utils/calendar';
 import { mockProperties } from '@/mocks/data';
-import { PageHeader } from '@/shared/components/ui';
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  PageSkeleton,
+} from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 import type { CalendarRange } from '@/shared/types/hospitable';
 
@@ -46,16 +51,30 @@ export function AvailabilityPage() {
 
   const step = range === 'week' ? 7 : range === 'month' ? 30 : 14;
 
-  const { data, isLoading, isError, error } = useAvailabilityCalendar({
+  const { data, isLoading, isError, error, refetch } = useAvailabilityCalendar({
     anchorDate,
     range,
     propertyId,
   });
 
+  const isInitialLoad = isLoading && !data;
+
   const rangeLabel = useMemo(() => {
     if (!data) return '';
     return formatRangeLabel(data.start_date, data.end_date);
   }, [data]);
+
+  if (isInitialLoad) {
+    return (
+      <Box>
+        <PageHeader
+          title="Availability"
+          description="Every unit, every night — bookings, holds and blocks in one view."
+        />
+        <PageSkeleton variant="calendar" />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -169,17 +188,23 @@ export function AvailabilityPage() {
         <CalendarLegend />
 
         {isLoading ? (
-          <Flex minH="280px" align="center" justify="center">
-            <Spinner color="brand.500" />
-          </Flex>
-        ) : isError || !data ? (
-          <Box p="24px">
-            <Text color="status.danger">
-              {error instanceof Error
-                ? error.message
-                : 'Failed to load availability calendar'}
-            </Text>
+          <Box px="20px" pb="20px">
+            <Skeleton h="360px" borderRadius="14px" />
           </Box>
+        ) : isError || !data ? (
+          <ErrorState
+            message={
+              error instanceof Error
+                ? error.message
+                : 'Failed to load availability calendar'
+            }
+            onRetry={() => void refetch()}
+          />
+        ) : data.units.length === 0 ? (
+          <EmptyState
+            title="No units to show"
+            description="There are no units in this calendar view for the selected property and date range."
+          />
         ) : (
           <AvailabilityCalendarGrid data={data} />
         )}

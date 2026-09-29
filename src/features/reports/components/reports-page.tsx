@@ -6,8 +6,6 @@ import {
   Flex,
   Grid,
   IconButton,
-  Spinner,
-  Text,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import {
@@ -25,7 +23,7 @@ import { ChannelBreakdownPanel } from '@/features/reports/components/channel-bre
 import { PropertyPerformanceTable } from '@/features/reports/components/property-performance-table';
 import { ReportsSidePanel } from '@/features/reports/components/reports-side-panel';
 import { useReports } from '@/features/reports/hooks/use-reports';
-import { KpiCard, PageHeader } from '@/shared/components/ui';
+import { ErrorState, KpiCard, PageHeader, PageSkeleton } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 import type { RevenuePeriod } from '@/shared/types/hospitable';
 
@@ -37,7 +35,7 @@ const kpiIcons: Record<string, ReactElement> = {
 };
 
 export function ReportsPage() {
-  const { data, isLoading, isError, error } = useReports();
+  const { data, isLoading, isError, error, refetch } = useReports();
   const [period, setPeriod] = useState<RevenuePeriod>('30d');
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
@@ -47,18 +45,17 @@ export function ReportsPage() {
   );
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="dashboard" />;
   }
 
   if (isError || !data || !slice) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load reports'}
-      </Text>
+      <ErrorState
+        message={
+          error instanceof Error ? error.message : 'Failed to load reports'
+        }
+        onRetry={() => void refetch()}
+      />
     );
   }
 

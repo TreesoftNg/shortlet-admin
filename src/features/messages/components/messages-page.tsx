@@ -9,8 +9,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Spinner,
-  Text,
 } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
@@ -24,11 +22,18 @@ import {
   type MessageFilters,
   type MessageStatusTab,
 } from '@/features/messages/utils/message-filters';
-import { FilterTabs, PageHeader, Panel } from '@/shared/components/ui';
+import {
+  EmptyState,
+  ErrorState,
+  FilterTabs,
+  PageHeader,
+  PageSkeleton,
+  Panel,
+} from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function MessagesPage() {
-  const { data, isLoading, isError, error } = useConversations();
+  const { data, isLoading, isError, error, refetch } = useConversations();
   const [filters, setFilters] = useState<MessageFilters>(DEFAULT_MESSAGE_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -59,18 +64,44 @@ export function MessagesPage() {
   };
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="split" />;
   }
 
   if (isError) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load messages'}
-      </Text>
+      <ErrorState
+        message={
+          error instanceof Error ? error.message : 'Failed to load messages'
+        }
+        onRetry={() => void refetch()}
+      />
+    );
+  }
+
+  if (conversations.length === 0) {
+    return (
+      <Box>
+        <PageHeader
+          title="Messages"
+          description="Guest conversations across direct and channel bookings."
+          actions={
+            <IconButton
+              aria-label="Open navigation"
+              icon={<LuMenu size={20} />}
+              display={{ base: 'inline-flex', lg: 'none' }}
+              variant="secondary"
+              borderRadius="12px"
+              h="44px"
+              w="44px"
+              onClick={openMobileNav}
+            />
+          }
+        />
+        <EmptyState
+          title="No conversations yet"
+          description="When guests message you about bookings, threads will appear here."
+        />
+      </Box>
     );
   }
 

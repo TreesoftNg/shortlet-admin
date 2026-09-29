@@ -2,7 +2,7 @@
 
 import { Avatar, Box, Flex, Text } from '@chakra-ui/react';
 import type { ConversationListItem } from '@/mocks/data/messaging';
-import { StatusBadge } from '@/shared/components/ui';
+import { EmptyState, StatusBadge } from '@/shared/components/ui';
 import { formatMessageTime } from '../utils/message-filters';
 
 type ConversationListProps = {
@@ -18,9 +18,12 @@ export function ConversationList({
 }: ConversationListProps) {
   if (conversations.length === 0) {
     return (
-      <Text color="ink.300" fontSize="14px" py="24px" textAlign="center">
-        No conversations match your filters
-      </Text>
+      <EmptyState
+        title="No matches"
+        description="No conversations match your filters."
+        minH="200px"
+        py="24px"
+      />
     );
   }
 

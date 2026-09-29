@@ -9,8 +9,6 @@ import {
   InputGroup,
   InputLeftElement,
   Select,
-  Spinner,
-  Text,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus, LuSearch } from 'react-icons/lu';
@@ -29,14 +27,17 @@ import type { StaffRole } from '@/shared/types/hospitable';
 import {
   AppModal,
   DataTable,
+  EmptyState,
+  ErrorState,
   FilterTabs,
   PageHeader,
+  PageSkeleton,
   Panel,
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function StaffPage() {
-  const { data, isLoading, isError, error } = useStaff();
+  const { data, isLoading, isError, error, refetch } = useStaff();
   const [filters, setFilters] = useState<StaffFilters>(DEFAULT_STAFF_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -55,18 +56,15 @@ export function StaffPage() {
   };
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="table" />;
   }
 
   if (isError) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load staff'}
-      </Text>
+      <ErrorState
+        message={error instanceof Error ? error.message : 'Failed to load staff'}
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -163,15 +161,23 @@ export function StaffPage() {
           </Select>
         </Flex>
 
-        <DataTable
-          columns={getStaffColumns()}
-          data={filtered}
-          getRowId={(row) => row.id}
-          selectedId={selectedId}
-          onRowClick={(row) => setSelectedId(row.id)}
-          minWidth="860px"
-          emptyMessage="No staff members match your filters"
-        />
+        {members.length === 0 ? (
+          <EmptyState
+            title="No staff yet"
+            description="When staff members are available, they will show up here."
+          />
+        ) : (
+          <DataTable
+            columns={getStaffColumns()}
+            data={filtered}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
+            onRowClick={(row) => setSelectedId(row.id)}
+            minWidth="860px"
+            emptyTitle="No matches"
+            emptyMessage="No staff members match your filters"
+          />
+        )}
       </Panel>
 
       <AppModal

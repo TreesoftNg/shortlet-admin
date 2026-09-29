@@ -33,7 +33,8 @@ export function RecentBookingsTable({ reservations }: RecentBookingsTableProps) 
         columns={getBookingColumns('dashboard')}
         data={reservations}
         getRowId={(row) => row.id}
-        emptyMessage="No recent bookings"
+        emptyTitle="No recent bookings"
+        emptyMessage="New reservations will appear here."
       />
     </Panel>
   );

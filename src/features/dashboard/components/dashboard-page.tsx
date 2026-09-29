@@ -1,9 +1,9 @@
 'use client';
 
-import { Box, Flex, Grid, Spinner, Text } from '@chakra-ui/react';
+import { Box, Grid } from '@chakra-ui/react';
 import { LuCalendarCheck, LuPercent, LuTag, LuWallet } from 'react-icons/lu';
 import type { ReactElement } from 'react';
-import { KpiCard } from '@/shared/components/ui';
+import { ErrorState, KpiCard, PageSkeleton } from '@/shared/components/ui';
 import { useDashboardSummary } from '../hooks/use-dashboard-summary';
 import { DashboardTopbar } from './dashboard-topbar';
 import { OccupancyPanel } from './occupancy-panel';
@@ -18,23 +18,20 @@ const kpiIcons: Record<string, ReactElement> = {
 };
 
 export function DashboardPage() {
-  const { data, isLoading, isError, error } = useDashboardSummary();
+  const { data, isLoading, isError, error, refetch } = useDashboardSummary();
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="dashboard" />;
   }
 
   if (isError || !data) {
     return (
-      <Box>
-        <Text color="status.danger">
-          {error instanceof Error ? error.message : 'Failed to load dashboard'}
-        </Text>
-      </Box>
+      <ErrorState
+        message={
+          error instanceof Error ? error.message : 'Failed to load dashboard'
+        }
+        onRetry={() => void refetch()}
+      />
     );
   }
 

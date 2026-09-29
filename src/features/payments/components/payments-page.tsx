@@ -7,8 +7,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Spinner,
-  Text,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
@@ -25,14 +23,17 @@ import {
 import {
   AppModal,
   DataTable,
+  EmptyState,
+  ErrorState,
   FilterTabs,
   PageHeader,
+  PageSkeleton,
   Panel,
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function PaymentsPage() {
-  const { data, isLoading, isError, error } = usePayments();
+  const { data, isLoading, isError, error, refetch } = usePayments();
   const [filters, setFilters] = useState<PaymentFilters>(DEFAULT_PAYMENT_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -51,18 +52,17 @@ export function PaymentsPage() {
   };
 
   if (isLoading) {
-    return (
-      <Flex minH="320px" align="center" justify="center">
-        <Spinner color="brand.500" size="lg" />
-      </Flex>
-    );
+    return <PageSkeleton variant="table" />;
   }
 
   if (isError) {
     return (
-      <Text color="status.danger">
-        {error instanceof Error ? error.message : 'Failed to load payments'}
-      </Text>
+      <ErrorState
+        message={
+          error instanceof Error ? error.message : 'Failed to load payments'
+        }
+        onRetry={() => void refetch()}
+      />
     );
   }
 
@@ -123,15 +123,23 @@ export function PaymentsPage() {
           </InputGroup>
         </Flex>
 
-        <DataTable
-          columns={getPaymentColumns()}
-          data={filtered}
-          getRowId={(row) => row.id}
-          selectedId={selectedId}
-          onRowClick={(row) => setSelectedId(row.id)}
-          minWidth="920px"
-          emptyMessage="No payments match your filters"
-        />
+        {payments.length === 0 ? (
+          <EmptyState
+            title="No payments yet"
+            description="When payments are available, they will show up here."
+          />
+        ) : (
+          <DataTable
+            columns={getPaymentColumns()}
+            data={filtered}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
+            onRowClick={(row) => setSelectedId(row.id)}
+            minWidth="920px"
+            emptyTitle="No matches"
+            emptyMessage="No payments match your filters"
+          />
+        )}
       </Panel>
 
       <AppModal
