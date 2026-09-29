@@ -1,12 +1,13 @@
 'use client';
 
-import { Box, Button, IconButton } from '@chakra-ui/react';
+import { Box, IconButton } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
-import { LuDownload, LuMenu } from 'react-icons/lu';
+import { LuMenu } from 'react-icons/lu';
 import { getBookingColumns } from '@/features/bookings/components/booking-table-config';
 import { BookingDetailDrawer } from '@/features/bookings/components/booking-detail-drawer';
 import { BookingsToolbar } from '@/features/bookings/components/bookings-toolbar';
 import { useReservations } from '@/features/bookings/hooks/use-reservations';
+import { bookingExportColumns } from '@/features/bookings/utils/booking-export';
 import {
   countBookingTabs,
   DEFAULT_BOOKING_FILTERS,
@@ -21,6 +22,7 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
+  ExportButton,
   FilterTabs,
   PageHeader,
   PageSkeleton,
@@ -91,14 +93,14 @@ export function BookingsPage() {
               color="ink.500"
               onClick={openMobileNav}
             />
-            <Button
+            <ExportButton
+              filename={`bookings-${filters.tab}`}
+              columns={bookingExportColumns}
+              rows={filtered}
               h="44px"
-              variant="secondary"
               color="ink.500"
-              leftIcon={<LuDownload size={16} />}
-            >
-              Export
-            </Button>
+              borderRadius="12px"
+            />
           </>
         }
       />

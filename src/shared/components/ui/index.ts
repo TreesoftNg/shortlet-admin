@@ -20,3 +20,5 @@ export { ErrorState } from './error-state';
 export type { ErrorStateProps } from './error-state';
 export { PageSkeleton } from './page-skeleton';
 export type { PageSkeletonProps, PageSkeletonVariant } from './page-skeleton';
+export { ExportButton } from './export-button';
+export type { ExportButtonProps } from './export-button';

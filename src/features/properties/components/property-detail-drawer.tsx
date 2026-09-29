@@ -20,9 +20,13 @@ import { KeyValueList, StatusBadge } from '@/shared/components/ui';
 
 type PropertyDetailDrawerProps = {
   property: PropertyListItem | null;
+  onEdit?: () => void;
 };
 
-export function PropertyDetailDrawer({ property }: PropertyDetailDrawerProps) {
+export function PropertyDetailDrawer({
+  property,
+  onEdit,
+}: PropertyDetailDrawerProps) {
   if (!property) {
     return null;
   }
@@ -155,7 +159,15 @@ export function PropertyDetailDrawer({ property }: PropertyDetailDrawerProps) {
         </Box>
 
         <Flex gap="8px" mt="4px" wrap="wrap">
-          <Button size="sm" variant="dark" flex="1" minW="120px" leftIcon={<LuPencil size={14} />}>
+          <Button
+            size="sm"
+            variant="dark"
+            flex="1"
+            minW="120px"
+            leftIcon={<LuPencil size={14} />}
+            onClick={onEdit}
+            isDisabled={!onEdit}
+          >
             Edit property
           </Button>
           <Button size="sm" variant="soft">

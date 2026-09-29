@@ -25,6 +25,11 @@ import { mockStaff } from '@/mocks/data/staff';
 import { mockTenantSettings } from '@/mocks/data/settings';
 import { buildCustomerList } from '@/features/customers/utils/customer-filters';
 import type { CustomerListItem } from '@/features/customers/utils/customer-filters';
+import {
+  buildPropertyFromForm,
+  syncUnitsForProperty,
+  type PropertyFormValues,
+} from '@/features/properties/utils/property-form';
 import { delay, ok } from '@/mocks/utils';
 import type { ApiSuccessResponse } from '@/shared/api/types';
 import type {
@@ -42,6 +47,10 @@ import type {
 } from '@/shared/types/hospitable';
 
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== 'false';
+
+function replaceUnits(next: Unit[]) {
+  mockUnits.splice(0, mockUnits.length, ...next);
+}
 
 export const mockApi = {
   async getDashboardSummary(): Promise<ApiSuccessResponse<DashboardSummary>> {
@@ -61,7 +70,7 @@ export const mockApi = {
 
   async getProperties(): Promise<ApiSuccessResponse<Property[]>> {
     await delay();
-    return ok(mockProperties, 'Properties retrieved', {
+    return ok([...mockProperties], 'Properties retrieved', {
       page: 1,
       limit: 20,
       total: mockProperties.length,
@@ -69,9 +78,34 @@ export const mockApi = {
     });
   },
 
+  async createProperty(
+    values: PropertyFormValues,
+  ): Promise<ApiSuccessResponse<Property>> {
+    await delay();
+    const property = buildPropertyFromForm(values);
+    mockProperties.unshift(property);
+    replaceUnits(syncUnitsForProperty(mockUnits, property, values.unit_count));
+    return ok(property, 'Property created');
+  },
+
+  async updateProperty(
+    id: string,
+    values: PropertyFormValues,
+  ): Promise<ApiSuccessResponse<Property>> {
+    await delay();
+    const index = mockProperties.findIndex((item) => item.id === id);
+    if (index < 0) {
+      throw new Error('Property not found');
+    }
+    const property = buildPropertyFromForm(values, mockProperties[index]);
+    mockProperties[index] = property;
+    replaceUnits(syncUnitsForProperty(mockUnits, property, values.unit_count));
+    return ok(property, 'Property updated');
+  },
+
   async getUnits(): Promise<ApiSuccessResponse<Unit[]>> {
     await delay();
-    return ok(mockUnits, 'Units retrieved', {
+    return ok([...mockUnits], 'Units retrieved', {
       page: 1,
       limit: 20,
       total: mockUnits.length,

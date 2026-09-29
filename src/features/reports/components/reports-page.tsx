@@ -2,7 +2,6 @@
 
 import {
   Box,
-  Button,
   Flex,
   Grid,
   IconButton,
@@ -10,7 +9,6 @@ import {
 import { useMemo, useState } from 'react';
 import {
   LuCalendarCheck,
-  LuDownload,
   LuMenu,
   LuPercent,
   LuTag,
@@ -23,7 +21,14 @@ import { ChannelBreakdownPanel } from '@/features/reports/components/channel-bre
 import { PropertyPerformanceTable } from '@/features/reports/components/property-performance-table';
 import { ReportsSidePanel } from '@/features/reports/components/reports-side-panel';
 import { useReports } from '@/features/reports/hooks/use-reports';
-import { ErrorState, KpiCard, PageHeader, PageSkeleton } from '@/shared/components/ui';
+import { reportPropertyExportColumns } from '@/features/reports/utils/report-export';
+import {
+  ErrorState,
+  ExportButton,
+  KpiCard,
+  PageHeader,
+  PageSkeleton,
+} from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 import type { RevenuePeriod } from '@/shared/types/hospitable';
 
@@ -67,15 +72,14 @@ export function ReportsPage() {
         actions={
           <Flex gap="8px" align="center" wrap="wrap">
             <PeriodSegment value={period} onChange={setPeriod} />
-            <Button
-              leftIcon={<LuDownload size={16} />}
-              variant="secondary"
-              borderRadius="12px"
+            <ExportButton
+              filename={`reports-property-performance-${period}`}
+              columns={reportPropertyExportColumns}
+              rows={slice.property_performance}
               h="40px"
+              borderRadius="12px"
               display={{ base: 'none', md: 'inline-flex' }}
-            >
-              Export
-            </Button>
+            />
             <IconButton
               aria-label="Open navigation"
               icon={<LuMenu size={20} />}

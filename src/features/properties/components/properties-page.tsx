@@ -4,6 +4,7 @@ import { Box, Button, IconButton } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { PropertyDetailDrawer } from '@/features/properties/components/property-detail-drawer';
+import { PropertyFormDialog } from '@/features/properties/components/property-form-dialog';
 import {
   getPropertyColumns,
   type PropertyListItem,
@@ -18,7 +19,7 @@ import {
   type PropertyFilters,
   type PropertyStatusTab,
 } from '@/features/properties/utils/property-filters';
-import { mockUnits } from '@/mocks/data';
+import { useUnits } from '@/features/units/hooks/use-units';
 import {
   AppModal,
   DataTable,
@@ -33,17 +34,19 @@ import { useUiStore } from '@/shared/store/ui-store';
 
 export function PropertiesPage() {
   const { data, isLoading, isError, error, refetch } = useProperties();
+  const { data: units = [] } = useUnits();
   const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_PROPERTY_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [formMode, setFormMode] = useState<'create' | 'edit' | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
   const properties = useMemo<PropertyListItem[]>(() => {
     const list = data ?? [];
     return list.map((property) => ({
       ...property,
-      unit_count: mockUnits.filter((unit) => unit.property_id === property.id).length,
+      unit_count: units.filter((unit) => unit.property_id === property.id).length,
     }));
-  }, [data]);
+  }, [data, units]);
 
   const tabCounts = useMemo(() => countPropertyTabs(properties), [properties]);
   const cities = useMemo(() => getPropertyCities(properties), [properties]);
@@ -57,6 +60,8 @@ export function PropertiesPage() {
   const updateFilters = (next: Partial<PropertyFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
   };
+
+  const closeForm = () => setFormMode(null);
 
   if (isLoading) {
     return <PageSkeleton variant="table" />;
@@ -90,7 +95,11 @@ export function PropertiesPage() {
               w="44px"
               onClick={openMobileNav}
             />
-            <Button h="44px" leftIcon={<LuPlus size={16} />}>
+            <Button
+              h="44px"
+              leftIcon={<LuPlus size={16} />}
+              onClick={() => setFormMode('create')}
+            >
               Add property
             </Button>
           </>
@@ -117,7 +126,7 @@ export function PropertiesPage() {
         {properties.length === 0 ? (
           <EmptyState
             title="No properties yet"
-            description="When properties are available, they will show up here."
+            description="Add your first property to start managing inventory."
           />
         ) : (
           <DataTable
@@ -134,13 +143,22 @@ export function PropertiesPage() {
       </Panel>
 
       <AppModal
-        isOpen={Boolean(selected)}
+        isOpen={Boolean(selected) && formMode !== 'edit'}
         onClose={() => setSelectedId(null)}
         title="Property details"
         size="xl"
       >
-        <PropertyDetailDrawer property={selected} />
+        <PropertyDetailDrawer
+          property={selected}
+          onEdit={() => setFormMode('edit')}
+        />
       </AppModal>
+
+      <PropertyFormDialog
+        isOpen={formMode === 'create' || (formMode === 'edit' && Boolean(selected))}
+        onClose={closeForm}
+        property={formMode === 'edit' ? selected : null}
+      />
     </Box>
   );
 }

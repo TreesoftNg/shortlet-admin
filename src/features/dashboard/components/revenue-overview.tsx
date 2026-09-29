@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Flex, Heading, useBreakpointValue } from '@chakra-ui/react';
+import { Box, Flex, Heading } from '@chakra-ui/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Panel } from '@/shared/components/ui';
 import type { RevenueOverview as RevenueOverviewData, RevenuePeriod } from '@/shared/types/hospitable';
@@ -22,7 +22,9 @@ type RevenueOverviewProps = {
   showPeriodControl?: boolean;
 };
 
+const MIN_CHART_WIDTH = 320;
 const MIN_CHART_HEIGHT = 260;
+const MAX_CHART_HEIGHT = 320;
 
 export function RevenueOverview({
   data,
@@ -40,16 +42,9 @@ export function RevenueOverview({
       setInternalPeriod(next);
     }
   };
-  const chartWidth =
-    useBreakpointValue({
-      base: 360,
-      sm: 480,
-      md: 560,
-      lg: 640,
-      xl: 720,
-    }) ?? 720;
 
   const chartHostRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(MIN_CHART_WIDTH);
   const [chartHeight, setChartHeight] = useState(MIN_CHART_HEIGHT);
 
   useEffect(() => {
@@ -59,10 +54,17 @@ export function RevenueOverview({
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
-      const nextHeight = Math.max(
-        MIN_CHART_HEIGHT,
-        Math.floor(entry.contentRect.height),
+
+      const nextWidth = Math.max(
+        MIN_CHART_WIDTH,
+        Math.floor(entry.contentRect.width),
       );
+      const nextHeight = Math.min(
+        MAX_CHART_HEIGHT,
+        Math.max(MIN_CHART_HEIGHT, Math.floor(entry.contentRect.height)),
+      );
+
+      setChartWidth((current) => (current === nextWidth ? current : nextWidth));
       setChartHeight((current) =>
         current === nextHeight ? current : nextHeight,
       );
@@ -158,18 +160,17 @@ export function RevenueOverview({
         ref={chartHostRef}
         flex="1"
         minH={`${MIN_CHART_HEIGHT}px`}
+        maxH={`${MAX_CHART_HEIGHT}px`}
         w="100%"
-        overflowX="auto"
-        overflowY="hidden"
+        overflow="hidden"
       >
-        <Box minW={{ base: '360px', md: '100%' }} h="100%">
-          <svg
-            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            width="100%"
-            height="100%"
-            role="img"
-            aria-label="Revenue overview chart"
-          >
+        <svg
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          width="100%"
+          height="100%"
+          role="img"
+          aria-label="Revenue overview chart"
+        >
             <defs>
               <linearGradient id="revenueFill" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0" stopColor="#0E7C6B" stopOpacity="0.22" />
@@ -302,7 +303,6 @@ export function RevenueOverview({
               </>
             ) : null}
           </svg>
-        </Box>
       </Box>
     </Panel>
   );
