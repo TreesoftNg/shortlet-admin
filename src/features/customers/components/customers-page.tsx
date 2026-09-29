@@ -4,13 +4,11 @@ import {
   Box,
   Button,
   Flex,
-  Grid,
   IconButton,
   Spinner,
   Text,
-  useBreakpointValue,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { CustomerDetailDrawer } from '@/features/customers/components/customer-detail-drawer';
 import {
@@ -28,6 +26,7 @@ import {
   type CustomerStatusTab,
 } from '@/features/customers/utils/customer-filters';
 import {
+  AppModal,
   DataTable,
   FilterTabs,
   PageHeader,
@@ -40,7 +39,6 @@ export function CustomersPage() {
   const [filters, setFilters] = useState<CustomerFilters>(DEFAULT_CUSTOMER_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const showDrawerInline = useBreakpointValue({ base: false, xl: true });
 
   const customers = data ?? [];
   const tabCounts = useMemo(() => countCustomerTabs(customers), [customers]);
@@ -50,19 +48,7 @@ export function CustomersPage() {
     [customers, filters],
   );
 
-  useEffect(() => {
-    if (filtered.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-    const stillVisible = filtered.some((item) => item.id === selectedId);
-    if (!stillVisible) {
-      setSelectedId(filtered[0].id);
-    }
-  }, [filtered, selectedId]);
-
-  const selected =
-    customers.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const selected = customers.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<CustomerFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -108,48 +94,43 @@ export function CustomersPage() {
         }
       />
 
-      <Grid
-        templateColumns={{ base: '1fr', xl: 'minmax(0, 1fr) 350px' }}
-        gap="18px"
-        alignItems="start"
+      <Panel pt="18px" minW={0}>
+        <FilterTabs<CustomerStatusTab>
+          value={filters.tab}
+          onChange={(tab) => updateFilters({ tab })}
+          items={[
+            { id: 'all', label: 'All', count: tabCounts.all },
+            { id: 'with_stays', label: 'With stays', count: tabCounts.with_stays },
+            { id: 'new', label: 'New', count: tabCounts.new },
+          ]}
+        />
+
+        <CustomersToolbar
+          filters={filters}
+          locations={locations}
+          onFiltersChange={updateFilters}
+        />
+
+        <DataTable
+          columns={getCustomerColumns()}
+          data={filtered}
+          getRowId={(row) => row.id}
+          selectedId={selectedId}
+          onRowClick={(row) => setSelectedId(row.id)}
+          renderMobileCard={renderCustomerMobileCard}
+          minWidth="760px"
+          emptyMessage="No customers match your filters"
+        />
+      </Panel>
+
+      <AppModal
+        isOpen={Boolean(selected)}
+        onClose={() => setSelectedId(null)}
+        title="Customer details"
+        size="xl"
       >
-        <Panel pt="18px" minW={0}>
-          <FilterTabs<CustomerStatusTab>
-            value={filters.tab}
-            onChange={(tab) => updateFilters({ tab })}
-            items={[
-              { id: 'all', label: 'All', count: tabCounts.all },
-              { id: 'with_stays', label: 'With stays', count: tabCounts.with_stays },
-              { id: 'new', label: 'New', count: tabCounts.new },
-            ]}
-          />
-
-          <CustomersToolbar
-            filters={filters}
-            locations={locations}
-            onFiltersChange={updateFilters}
-          />
-
-          <DataTable
-            columns={getCustomerColumns()}
-            data={filtered}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
-            onRowClick={(row) => setSelectedId(row.id)}
-            renderMobileCard={renderCustomerMobileCard}
-            minWidth="760px"
-            emptyMessage="No customers match your filters"
-          />
-        </Panel>
-
-        {showDrawerInline ? (
-          <CustomerDetailDrawer customer={selected} />
-        ) : selected ? (
-          <Box display={{ base: 'block', xl: 'none' }}>
-            <CustomerDetailDrawer customer={selected} />
-          </Box>
-        ) : null}
-      </Grid>
+        <CustomerDetailDrawer customer={selected} />
+      </AppModal>
     </Box>
   );
 }

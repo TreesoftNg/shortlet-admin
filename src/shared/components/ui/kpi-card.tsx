@@ -4,20 +4,15 @@ import type { ReactNode } from 'react';
 export type KpiCardProps = BoxProps & {
   label: string;
   value: string;
-  deltaPercent?: number;
-  deltaLabel?: string;
   icon?: ReactNode;
 };
 
 export function KpiCard({
   label,
   value,
-  deltaPercent,
-  deltaLabel = 'vs last period',
   icon,
   ...rest
 }: KpiCardProps) {
-  const isDown = typeof deltaPercent === 'number' && deltaPercent < 0;
 
   return (
     <Box
@@ -49,23 +44,6 @@ export function KpiCard({
       <Text fontSize="30px" fontWeight={800} letterSpacing="-0.02em" mt="10px" mb="4px">
         {value}
       </Text>
-
-      {typeof deltaPercent === 'number' ? (
-        <Text as="span" fontSize="13px">
-          <Text
-            as="span"
-            fontWeight={700}
-            color={isDown ? 'status.danger' : 'status.ok'}
-            mr="6px"
-          >
-            {isDown ? '' : '+'}
-            {deltaPercent}%
-          </Text>
-          <Text as="span" color="ink.300">
-            {deltaLabel}
-          </Text>
-        </Text>
-      ) : null}
     </Box>
   );
 }

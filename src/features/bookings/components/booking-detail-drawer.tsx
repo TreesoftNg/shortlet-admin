@@ -30,19 +30,7 @@ type BookingDetailDrawerProps = {
 
 export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
   if (!reservation) {
-    return (
-      <Box
-        bg="white"
-        border="1px solid"
-        borderColor="line.500"
-        borderRadius="22px"
-        p="24px"
-        color="ink.300"
-        fontSize="14px"
-      >
-        Select a booking to see details.
-      </Box>
-    );
+    return null;
   }
 
   const status = getReservationDisplayStatus(reservation);
@@ -83,16 +71,7 @@ export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
   ];
 
   return (
-    <Box
-      bg="white"
-      border="1px solid"
-      borderColor="line.500"
-      borderRadius="22px"
-      overflow="hidden"
-      alignSelf="start"
-      position={{ xl: 'sticky' }}
-      top={{ xl: '28px' }}
-    >
+    <Box overflow="hidden">
       {reservation.property?.picture ? (
         <Box
           as="img"
@@ -101,10 +80,12 @@ export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
           w="100%"
           h="150px"
           objectFit="cover"
+          borderRadius="12px"
+          mb="16px"
         />
       ) : null}
 
-      <Box px="22px" py="20px">
+      <Box>
         <Flex justify="space-between" align="flex-start" gap="12px">
           <Box minW={0}>
             <Text fontSize="12px" color="ink.300" fontFamily="mono">

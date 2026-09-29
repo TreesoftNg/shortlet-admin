@@ -13,3 +13,5 @@ export { MobileCardList } from './mobile-card-list';
 export { FilterTabs, FilterChip, Pagination, buildPageNumbers } from './filter-controls';
 export type { FilterTabItem } from './filter-controls';
 export { KeyValueList, ActivityTimeline } from './detail-sections';
+export { AppModal } from './app-modal';
+export type { AppModalProps } from './app-modal';

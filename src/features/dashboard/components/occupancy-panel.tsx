@@ -71,56 +71,6 @@ export function OccupancyPanel({ avgPercent, items, today }: OccupancyPanelProps
         </Box>
       </Flex>
 
-      <Box h="1px" bg="line.500" my="18px" />
-
-      <Flex
-        justify="space-between"
-        align={{ base: 'flex-start', sm: 'center' }}
-        direction={{ base: 'column', sm: 'row' }}
-        gap="8px"
-        mb="10px"
-      >
-        <Heading as="h3" fontSize="15px" fontWeight={700}>
-          Today
-        </Heading>
-        <StatusBadge tone="brand">
-          {today.check_ins} check-ins · {today.check_outs} checkouts
-        </StatusBadge>
-      </Flex>
-
-      <List spacing={0}>
-        {today.items.map((item) => (
-          <ListItem
-            key={item.id}
-            display="flex"
-            alignItems="center"
-            gap="12px"
-            py="12px"
-            borderBottom="1px solid"
-            borderColor="line.400"
-            fontSize="14px"
-            _last={{ borderBottom: 0 }}
-          >
-            <Avatar
-              size="sm"
-              name={item.guest_name}
-              src={item.guest_picture_url ?? undefined}
-              flexShrink={0}
-            />
-            <Box flex="1" minW={0}>
-              <Text fontWeight={700} noOfLines={1}>
-                {item.guest_name}
-              </Text>
-              <Text color="ink.300" fontSize="12px" noOfLines={1}>
-                {item.property_name} · {item.unit_name} · {item.time_label}
-              </Text>
-            </Box>
-            <StatusBadge tone={item.type === 'check_in' ? 'ok' : 'info'} flexShrink={0}>
-              {item.type === 'check_in' ? 'Check-in' : 'Checkout'}
-            </StatusBadge>
-          </ListItem>
-        ))}
-      </List>
     </Panel>
   );
 }

@@ -4,13 +4,11 @@ import {
   Box,
   Button,
   Flex,
-  Grid,
   IconButton,
   Spinner,
   Text,
-  useBreakpointValue,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { UnitDetailDrawer } from '@/features/units/components/unit-detail-drawer';
 import {
@@ -29,6 +27,7 @@ import {
 } from '@/features/units/utils/unit-filters';
 import { mockProperties } from '@/mocks/data';
 import {
+  AppModal,
   DataTable,
   FilterTabs,
   PageHeader,
@@ -41,7 +40,6 @@ export function UnitsPage() {
   const [filters, setFilters] = useState<UnitFilters>(DEFAULT_UNIT_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const showDrawerInline = useBreakpointValue({ base: false, xl: true });
 
   const units = useMemo(
     () => enrichUnitsWithProperty(data ?? [], mockProperties),
@@ -51,19 +49,7 @@ export function UnitsPage() {
   const tabCounts = useMemo(() => countUnitTabs(units), [units]);
   const filtered = useMemo(() => filterUnits(units, filters), [filters, units]);
 
-  useEffect(() => {
-    if (filtered.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-    const stillVisible = filtered.some((item) => item.id === selectedId);
-    if (!stillVisible) {
-      setSelectedId(filtered[0].id);
-    }
-  }, [filtered, selectedId]);
-
-  const selected =
-    units.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const selected = units.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<UnitFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -109,53 +95,48 @@ export function UnitsPage() {
         }
       />
 
-      <Grid
-        templateColumns={{ base: '1fr', xl: 'minmax(0, 1fr) 350px' }}
-        gap="18px"
-        alignItems="start"
+      <Panel pt="18px" minW={0}>
+        <FilterTabs<UnitStatusTab>
+          value={filters.tab}
+          onChange={(tab) => updateFilters({ tab })}
+          items={[
+            { id: 'all', label: 'All', count: tabCounts.all },
+            { id: 'active', label: 'Active', count: tabCounts.active },
+            {
+              id: 'maintenance',
+              label: 'Maintenance',
+              count: tabCounts.maintenance,
+            },
+            { id: 'inactive', label: 'Inactive', count: tabCounts.inactive },
+          ]}
+        />
+
+        <UnitsToolbar
+          filters={filters}
+          properties={mockProperties}
+          onFiltersChange={updateFilters}
+        />
+
+        <DataTable
+          columns={getUnitColumns()}
+          data={filtered}
+          getRowId={(row) => row.id}
+          selectedId={selectedId}
+          onRowClick={(row) => setSelectedId(row.id)}
+          renderMobileCard={renderUnitMobileCard}
+          minWidth="720px"
+          emptyMessage="No units match your filters"
+        />
+      </Panel>
+
+      <AppModal
+        isOpen={Boolean(selected)}
+        onClose={() => setSelectedId(null)}
+        title="Unit details"
+        size="lg"
       >
-        <Panel pt="18px" minW={0}>
-          <FilterTabs<UnitStatusTab>
-            value={filters.tab}
-            onChange={(tab) => updateFilters({ tab })}
-            items={[
-              { id: 'all', label: 'All', count: tabCounts.all },
-              { id: 'active', label: 'Active', count: tabCounts.active },
-              {
-                id: 'maintenance',
-                label: 'Maintenance',
-                count: tabCounts.maintenance,
-              },
-              { id: 'inactive', label: 'Inactive', count: tabCounts.inactive },
-            ]}
-          />
-
-          <UnitsToolbar
-            filters={filters}
-            properties={mockProperties}
-            onFiltersChange={updateFilters}
-          />
-
-          <DataTable
-            columns={getUnitColumns()}
-            data={filtered}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
-            onRowClick={(row) => setSelectedId(row.id)}
-            renderMobileCard={renderUnitMobileCard}
-            minWidth="720px"
-            emptyMessage="No units match your filters"
-          />
-        </Panel>
-
-        {showDrawerInline ? (
-          <UnitDetailDrawer unit={selected} />
-        ) : selected ? (
-          <Box display={{ base: 'block', xl: 'none' }}>
-            <UnitDetailDrawer unit={selected} />
-          </Box>
-        ) : null}
-      </Grid>
+        <UnitDetailDrawer unit={selected} />
+      </AppModal>
     </Box>
   );
 }

@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Flex,
-  Grid,
   IconButton,
   Input,
   InputGroup,
@@ -12,9 +11,8 @@ import {
   Select,
   Spinner,
   Text,
-  useBreakpointValue,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus, LuSearch } from 'react-icons/lu';
 import { StaffDetailDrawer } from '@/features/staff/components/staff-detail-drawer';
 import {
@@ -32,6 +30,7 @@ import {
 } from '@/features/staff/utils/staff-filters';
 import type { StaffRole } from '@/shared/types/hospitable';
 import {
+  AppModal,
   DataTable,
   FilterTabs,
   PageHeader,
@@ -44,7 +43,6 @@ export function StaffPage() {
   const [filters, setFilters] = useState<StaffFilters>(DEFAULT_STAFF_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const showDrawerInline = useBreakpointValue({ base: false, xl: true });
 
   const members = data ?? [];
   const tabCounts = useMemo(() => countStaffTabs(members), [members]);
@@ -53,19 +51,7 @@ export function StaffPage() {
     [filters, members],
   );
 
-  useEffect(() => {
-    if (filtered.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-    const stillVisible = filtered.some((item) => item.id === selectedId);
-    if (!stillVisible) {
-      setSelectedId(filtered[0].id);
-    }
-  }, [filtered, selectedId]);
-
-  const selected =
-    members.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const selected = members.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<StaffFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -116,95 +102,90 @@ export function StaffPage() {
         }
       />
 
-      <Grid
-        templateColumns={{ base: '1fr', xl: 'minmax(0, 1fr) 350px' }}
-        gap="18px"
-        alignItems="start"
-      >
-        <Panel pt="18px" minW={0}>
-          <FilterTabs<StaffStatusTab>
-            value={filters.tab}
-            onChange={(tab) => updateFilters({ tab })}
-            items={[
-              { id: 'all', label: 'All', count: tabCounts.all },
-              { id: 'active', label: 'Active', count: tabCounts.active },
-              { id: 'invited', label: 'Invited', count: tabCounts.invited },
-              {
-                id: 'suspended',
-                label: 'Suspended',
-                count: tabCounts.suspended,
-              },
-            ]}
-          />
+      <Panel pt="18px" minW={0}>
+        <FilterTabs<StaffStatusTab>
+          value={filters.tab}
+          onChange={(tab) => updateFilters({ tab })}
+          items={[
+            { id: 'all', label: 'All', count: tabCounts.all },
+            { id: 'active', label: 'Active', count: tabCounts.active },
+            { id: 'invited', label: 'Invited', count: tabCounts.invited },
+            {
+              id: 'suspended',
+              label: 'Suspended',
+              count: tabCounts.suspended,
+            },
+          ]}
+        />
 
-          <Flex gap="10px" mb="14px" wrap="wrap" align="center">
-            <InputGroup flex="1" minW={{ base: '100%', md: '240px' }}>
-              <InputLeftElement pointerEvents="none" h="40px" color="ink.300">
-                <LuSearch size={16} />
-              </InputLeftElement>
-              <Input
-                h="40px"
-                pl="40px"
-                bg="white"
-                borderColor="line.500"
-                borderRadius="12px"
-                fontSize="14px"
-                placeholder="Search name, email, role…"
-                value={filters.search}
-                onChange={(event) =>
-                  updateFilters({ search: event.target.value })
-                }
-              />
-            </InputGroup>
-
-            <Select
+        <Flex gap="10px" mb="14px" wrap="wrap" align="center">
+          <InputGroup flex="1" minW={{ base: '100%', md: '240px' }}>
+            <InputLeftElement pointerEvents="none" h="40px" color="ink.300">
+              <LuSearch size={16} />
+            </InputLeftElement>
+            <Input
               h="40px"
-              maxW="170px"
-              borderColor="line.500"
-              borderRadius="10px"
+              pl="40px"
               bg="white"
-              fontSize="13px"
-              fontWeight={600}
-              color="ink.400"
-              value={filters.role}
+              borderColor="line.500"
+              borderRadius="12px"
+              fontSize="14px"
+              placeholder="Search name, email, role…"
+              value={filters.search}
               onChange={(event) =>
-                updateFilters({
-                  role:
-                    event.target.value === 'all'
-                      ? 'all'
-                      : (event.target.value as StaffRole),
-                })
+                updateFilters({ search: event.target.value })
               }
-            >
-              <option value="all">All roles</option>
-              {STAFF_ROLE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </Flex>
+            />
+          </InputGroup>
 
-          <DataTable
-            columns={getStaffColumns()}
-            data={filtered}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
-            onRowClick={(row) => setSelectedId(row.id)}
-            renderMobileCard={renderStaffMobileCard}
-            minWidth="860px"
-            emptyMessage="No staff members match your filters"
-          />
-        </Panel>
+          <Select
+            h="40px"
+            maxW="170px"
+            borderColor="line.500"
+            borderRadius="10px"
+            bg="white"
+            fontSize="13px"
+            fontWeight={600}
+            color="ink.400"
+            value={filters.role}
+            onChange={(event) =>
+              updateFilters({
+                role:
+                  event.target.value === 'all'
+                    ? 'all'
+                    : (event.target.value as StaffRole),
+              })
+            }
+          >
+            <option value="all">All roles</option>
+            {STAFF_ROLE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        </Flex>
 
-        {showDrawerInline ? (
-          <StaffDetailDrawer member={selected} />
-        ) : selected ? (
-          <Box display={{ base: 'block', xl: 'none' }}>
-            <StaffDetailDrawer member={selected} />
-          </Box>
-        ) : null}
-      </Grid>
+        <DataTable
+          columns={getStaffColumns()}
+          data={filtered}
+          getRowId={(row) => row.id}
+          selectedId={selectedId}
+          onRowClick={(row) => setSelectedId(row.id)}
+          renderMobileCard={renderStaffMobileCard}
+          minWidth="860px"
+          emptyMessage="No staff members match your filters"
+        />
+      </Panel>
+
+      <AppModal
+        isOpen={Boolean(selected)}
+        onClose={() => setSelectedId(null)}
+        title="Staff details"
+        size="lg"
+      >
+        <StaffDetailDrawer member={selected} />
+      </AppModal>
     </Box>
   );
 }

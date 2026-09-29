@@ -62,30 +62,6 @@ export function AvailabilityPage() {
       <PageHeader
         title="Availability"
         description="Every unit, every night — bookings, holds and blocks in one view."
-        actions={
-          <>
-            <IconButton
-              aria-label="Open navigation"
-              icon={<LuMenu size={20} />}
-              display={{ base: 'inline-flex', lg: 'none' }}
-              variant="secondary"
-              borderRadius="12px"
-              h="44px"
-              w="44px"
-              onClick={openMobileNav}
-            />
-            <Button
-              h="44px"
-              variant="secondary"
-              leftIcon={<LuRefreshCw size={16} />}
-            >
-              Sync Hospitable
-            </Button>
-            <Button h="44px" leftIcon={<LuBan size={16} />}>
-              Block dates
-            </Button>
-          </>
-        }
       />
 
       <Box

@@ -3,16 +3,14 @@
 import {
   Box,
   Flex,
-  Grid,
   IconButton,
   Input,
   InputGroup,
   InputLeftElement,
   Spinner,
   Text,
-  useBreakpointValue,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
 import { PaymentDetailDrawer } from '@/features/payments/components/payment-detail-drawer';
 import {
@@ -28,6 +26,7 @@ import {
   type PaymentStatusTab,
 } from '@/features/payments/utils/payment-filters';
 import {
+  AppModal,
   DataTable,
   FilterTabs,
   PageHeader,
@@ -40,7 +39,6 @@ export function PaymentsPage() {
   const [filters, setFilters] = useState<PaymentFilters>(DEFAULT_PAYMENT_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const showDrawerInline = useBreakpointValue({ base: false, xl: true });
 
   const payments = data ?? [];
   const tabCounts = useMemo(() => countPaymentTabs(payments), [payments]);
@@ -49,19 +47,7 @@ export function PaymentsPage() {
     [filters, payments],
   );
 
-  useEffect(() => {
-    if (filtered.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-    const stillVisible = filtered.some((item) => item.id === selectedId);
-    if (!stillVisible) {
-      setSelectedId(filtered[0].id);
-    }
-  }, [filtered, selectedId]);
-
-  const selected =
-    payments.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const selected = payments.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<PaymentFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -102,69 +88,64 @@ export function PaymentsPage() {
         }
       />
 
-      <Grid
-        templateColumns={{ base: '1fr', xl: 'minmax(0, 1fr) 350px' }}
-        gap="18px"
-        alignItems="start"
+      <Panel pt="18px" minW={0}>
+        <FilterTabs<PaymentStatusTab>
+          value={filters.tab}
+          onChange={(tab) => updateFilters({ tab })}
+          items={[
+            { id: 'all', label: 'All', count: tabCounts.all },
+            {
+              id: 'successful',
+              label: 'Successful',
+              count: tabCounts.successful,
+            },
+            { id: 'pending', label: 'Pending', count: tabCounts.pending },
+            { id: 'failed', label: 'Failed', count: tabCounts.failed },
+            { id: 'refunds', label: 'Refunds', count: tabCounts.refunds },
+          ]}
+        />
+
+        <Flex gap="10px" mb="14px" wrap="wrap" align="center">
+          <InputGroup flex="1" minW={{ base: '100%', md: '240px' }}>
+            <InputLeftElement pointerEvents="none" h="40px" color="ink.300">
+              <LuSearch size={16} />
+            </InputLeftElement>
+            <Input
+              h="40px"
+              pl="40px"
+              bg="white"
+              borderColor="line.500"
+              borderRadius="12px"
+              fontSize="14px"
+              placeholder="Search reference, guest, booking…"
+              value={filters.search}
+              onChange={(event) =>
+                updateFilters({ search: event.target.value })
+              }
+            />
+          </InputGroup>
+        </Flex>
+
+        <DataTable
+          columns={getPaymentColumns()}
+          data={filtered}
+          getRowId={(row) => row.id}
+          selectedId={selectedId}
+          onRowClick={(row) => setSelectedId(row.id)}
+          renderMobileCard={renderPaymentMobileCard}
+          minWidth="920px"
+          emptyMessage="No payments match your filters"
+        />
+      </Panel>
+
+      <AppModal
+        isOpen={Boolean(selected)}
+        onClose={() => setSelectedId(null)}
+        title="Payment details"
+        size="lg"
       >
-        <Panel pt="18px" minW={0}>
-          <FilterTabs<PaymentStatusTab>
-            value={filters.tab}
-            onChange={(tab) => updateFilters({ tab })}
-            items={[
-              { id: 'all', label: 'All', count: tabCounts.all },
-              {
-                id: 'successful',
-                label: 'Successful',
-                count: tabCounts.successful,
-              },
-              { id: 'pending', label: 'Pending', count: tabCounts.pending },
-              { id: 'failed', label: 'Failed', count: tabCounts.failed },
-              { id: 'refunds', label: 'Refunds', count: tabCounts.refunds },
-            ]}
-          />
-
-          <Flex gap="10px" mb="14px" wrap="wrap" align="center">
-            <InputGroup flex="1" minW={{ base: '100%', md: '240px' }}>
-              <InputLeftElement pointerEvents="none" h="40px" color="ink.300">
-                <LuSearch size={16} />
-              </InputLeftElement>
-              <Input
-                h="40px"
-                pl="40px"
-                bg="white"
-                borderColor="line.500"
-                borderRadius="12px"
-                fontSize="14px"
-                placeholder="Search reference, guest, booking…"
-                value={filters.search}
-                onChange={(event) =>
-                  updateFilters({ search: event.target.value })
-                }
-              />
-            </InputGroup>
-          </Flex>
-
-          <DataTable
-            columns={getPaymentColumns()}
-            data={filtered}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
-            onRowClick={(row) => setSelectedId(row.id)}
-            renderMobileCard={renderPaymentMobileCard}
-            minWidth="920px"
-            emptyMessage="No payments match your filters"
-          />
-        </Panel>
-
-        {showDrawerInline ? (
-          <PaymentDetailDrawer payment={selected} />
-        ) : selected ? (
-          <Box display={{ base: 'block', xl: 'none' }}>
-            <PaymentDetailDrawer payment={selected} />
-          </Box>
-        ) : null}
-      </Grid>
+        <PaymentDetailDrawer payment={selected} />
+      </AppModal>
     </Box>
   );
 }

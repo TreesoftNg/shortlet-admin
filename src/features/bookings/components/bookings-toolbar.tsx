@@ -62,7 +62,7 @@ export function BookingsToolbar({
       >
         <LuBuilding2 size={16} />
         <Select
-          variant="unstyled"
+          variant="unstyled p-6"
           h="auto"
           fontSize="13px"
           fontWeight={600}
@@ -85,28 +85,6 @@ export function BookingsToolbar({
         </Select>
       </Flex>
 
-      <Select
-        h="40px"
-        maxW="150px"
-        borderColor="line.500"
-        borderRadius="10px"
-        bg="white"
-        fontSize="13px"
-        fontWeight={600}
-        color="ink.400"
-        value={filters.month}
-        onChange={(event) =>
-          onFiltersChange({ month: event.target.value, page: 1 })
-        }
-      >
-        <option value="all">All months</option>
-        <option value="2026-09">Sep 2026</option>
-        <option value="2026-10">Oct 2026</option>
-      </Select>
-
-      <FilterChip>
-        <LuFilter size={16} />
-      </FilterChip>
     </Flex>
   );
 }

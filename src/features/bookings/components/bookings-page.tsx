@@ -1,8 +1,8 @@
 'use client';
 
-import { Box, Button, Flex, Grid, Spinner, Text, useBreakpointValue } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
-import { LuDownload, LuMenu, LuPlus } from 'react-icons/lu';
+import { Box, Button, Flex, Spinner, Text } from '@chakra-ui/react';
+import { useMemo, useState } from 'react';
+import { LuDownload, LuMenu } from 'react-icons/lu';
 import {
   getBookingColumns,
   renderBookingMobileCard,
@@ -20,6 +20,7 @@ import {
 } from '@/features/bookings/utils/booking-filters';
 import { mockProperties } from '@/mocks/data';
 import {
+  AppModal,
   DataTable,
   FilterTabs,
   PageHeader,
@@ -35,7 +36,6 @@ export function BookingsPage() {
   const [filters, setFilters] = useState<BookingFilters>(DEFAULT_BOOKING_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const showDrawerInline = useBreakpointValue({ base: false, xl: true });
 
   const reservations = data ?? [];
 
@@ -54,22 +54,7 @@ export function BookingsPage() {
     [filtered, filters.page, filters.pageSize],
   );
 
-  useEffect(() => {
-    if (pageResult.items.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-
-    const stillVisible = pageResult.items.some((item) => item.id === selectedId);
-    if (!stillVisible) {
-      setSelectedId(pageResult.items[0].id);
-    }
-  }, [pageResult.items, selectedId]);
-
-  const selected =
-    reservations.find((item) => item.id === selectedId) ??
-    pageResult.items[0] ??
-    null;
+  const selected = reservations.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<BookingFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -117,68 +102,60 @@ export function BookingsPage() {
             >
               Export
             </Button>
-            <Button h="44px" leftIcon={<LuPlus size={16} />}>
-              New booking
-            </Button>
           </>
         }
       />
 
-      <Grid
-        templateColumns={{ base: '1fr', xl: 'minmax(0, 1fr) 350px' }}
-        gap="18px"
-        alignItems="start"
+      <Panel pt="18px" minW={0}>
+        <FilterTabs<BookingTab>
+          value={filters.tab}
+          onChange={(tab) => updateFilters({ tab, page: 1 })}
+          items={[
+            { id: 'all', label: 'All', count: tabCounts.all },
+            { id: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
+            {
+              id: 'awaiting_payment',
+              label: 'Awaiting payment',
+              count: tabCounts.awaiting_payment,
+            },
+            { id: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled },
+          ]}
+        />
+
+        <BookingsToolbar
+          filters={filters}
+          properties={mockProperties}
+          onFiltersChange={updateFilters}
+        />
+
+        <DataTable
+          columns={getBookingColumns('bookings')}
+          data={pageResult.items}
+          getRowId={(row) => row.id}
+          selectedId={selectedId}
+          onRowClick={(row) => setSelectedId(row.id)}
+          renderMobileCard={renderBookingMobileCard}
+          minWidth="760px"
+          emptyMessage="No bookings match your filters"
+        />
+
+        <Pagination
+          page={pageResult.page}
+          totalPages={pageResult.totalPages}
+          total={pageResult.total}
+          pageSize={filters.pageSize}
+          onPageChange={(page) => updateFilters({ page })}
+        />
+      </Panel>
+
+      <AppModal
+        isOpen={Boolean(selected)}
+        onClose={() => setSelectedId(null)}
+        title="Booking details"
+        size="xl"
       >
-        <Panel pt="18px" minW={0}>
-          <FilterTabs<BookingTab>
-            value={filters.tab}
-            onChange={(tab) => updateFilters({ tab, page: 1 })}
-            items={[
-              { id: 'all', label: 'All', count: tabCounts.all },
-              { id: 'upcoming', label: 'Upcoming', count: tabCounts.upcoming },
-              {
-                id: 'awaiting_payment',
-                label: 'Awaiting payment',
-                count: tabCounts.awaiting_payment,
-              },
-              { id: 'cancelled', label: 'Cancelled', count: tabCounts.cancelled },
-            ]}
-          />
-
-          <BookingsToolbar
-            filters={filters}
-            properties={mockProperties}
-            onFiltersChange={updateFilters}
-          />
-
-          <DataTable
-            columns={getBookingColumns('bookings')}
-            data={pageResult.items}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
-            onRowClick={(row) => setSelectedId(row.id)}
-            renderMobileCard={renderBookingMobileCard}
-            minWidth="760px"
-            emptyMessage="No bookings match your filters"
-          />
-
-          <Pagination
-            page={pageResult.page}
-            totalPages={pageResult.totalPages}
-            total={pageResult.total}
-            pageSize={filters.pageSize}
-            onPageChange={(page) => updateFilters({ page })}
-          />
-        </Panel>
-
-        {showDrawerInline ? (
-          <BookingDetailDrawer reservation={selected} />
-        ) : selected ? (
-          <Box display={{ base: 'block', xl: 'none' }}>
-            <BookingDetailDrawer reservation={selected} />
-          </Box>
-        ) : null}
-      </Grid>
+        <BookingDetailDrawer reservation={selected} />
+      </AppModal>
     </Box>
   );
 }

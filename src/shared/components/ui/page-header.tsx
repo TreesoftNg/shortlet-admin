@@ -6,13 +6,11 @@ import type { ReactNode } from 'react';
 type PageHeaderProps = FlexProps & {
   title: string;
   description?: string;
-  actions?: ReactNode;
 };
 
 export function PageHeader({
   title,
   description,
-  actions,
   children,
   ...rest
 }: PageHeaderProps) {
@@ -40,11 +38,6 @@ export function PageHeader({
           </Text>
         ) : null}
       </Box>
-      {(actions || children) && (
-        <Flex gap="10px" wrap="wrap" align="center">
-          {actions ?? children}
-        </Flex>
-      )}
     </Flex>
   );
 }

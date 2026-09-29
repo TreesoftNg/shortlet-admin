@@ -32,7 +32,6 @@ import {
 import type { IconType } from 'react-icons';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useUiStore } from '@/shared/store/ui-store';
-import { StatusBadge } from '@/shared/components/ui';
 import { SunmadeLogo } from '@/shared/components/brand';
 
 type NavItem = {
@@ -97,9 +96,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     >
       <Flex align="center" gap="10px" px="10px" pb="22px">
         <SunmadeLogo size="18px" tagline={false} />
-        <StatusBadge tone="mute" fontSize="10px">
-          Admin
-        </StatusBadge>
       </Flex>
 
       {navSections.map((section) => (

@@ -4,13 +4,11 @@ import {
   Box,
   Button,
   Flex,
-  Grid,
   IconButton,
   Spinner,
   Text,
-  useBreakpointValue,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { PropertyDetailDrawer } from '@/features/properties/components/property-detail-drawer';
 import {
@@ -30,6 +28,7 @@ import {
 } from '@/features/properties/utils/property-filters';
 import { mockUnits } from '@/mocks/data';
 import {
+  AppModal,
   DataTable,
   FilterTabs,
   PageHeader,
@@ -42,7 +41,6 @@ export function PropertiesPage() {
   const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_PROPERTY_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const showDrawerInline = useBreakpointValue({ base: false, xl: true });
 
   const properties = useMemo<PropertyListItem[]>(() => {
     const list = data ?? [];
@@ -59,19 +57,7 @@ export function PropertiesPage() {
     [filters, properties],
   );
 
-  useEffect(() => {
-    if (filtered.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-    const stillVisible = filtered.some((item) => item.id === selectedId);
-    if (!stillVisible) {
-      setSelectedId(filtered[0].id);
-    }
-  }, [filtered, selectedId]);
-
-  const selected =
-    properties.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+  const selected = properties.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<PropertyFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -117,48 +103,43 @@ export function PropertiesPage() {
         }
       />
 
-      <Grid
-        templateColumns={{ base: '1fr', xl: 'minmax(0, 1fr) 350px' }}
-        gap="18px"
-        alignItems="start"
+      <Panel pt="18px" minW={0}>
+        <FilterTabs<PropertyStatusTab>
+          value={filters.tab}
+          onChange={(tab) => updateFilters({ tab })}
+          items={[
+            { id: 'all', label: 'All', count: tabCounts.all },
+            { id: 'listed', label: 'Listed', count: tabCounts.listed },
+            { id: 'unlisted', label: 'Unlisted', count: tabCounts.unlisted },
+          ]}
+        />
+
+        <PropertiesToolbar
+          filters={filters}
+          cities={cities}
+          onFiltersChange={updateFilters}
+        />
+
+        <DataTable
+          columns={getPropertyColumns()}
+          data={filtered}
+          getRowId={(row) => row.id}
+          selectedId={selectedId}
+          onRowClick={(row) => setSelectedId(row.id)}
+          renderMobileCard={renderPropertyMobileCard}
+          minWidth="820px"
+          emptyMessage="No properties match your filters"
+        />
+      </Panel>
+
+      <AppModal
+        isOpen={Boolean(selected)}
+        onClose={() => setSelectedId(null)}
+        title="Property details"
+        size="xl"
       >
-        <Panel pt="18px" minW={0}>
-          <FilterTabs<PropertyStatusTab>
-            value={filters.tab}
-            onChange={(tab) => updateFilters({ tab })}
-            items={[
-              { id: 'all', label: 'All', count: tabCounts.all },
-              { id: 'listed', label: 'Listed', count: tabCounts.listed },
-              { id: 'unlisted', label: 'Unlisted', count: tabCounts.unlisted },
-            ]}
-          />
-
-          <PropertiesToolbar
-            filters={filters}
-            cities={cities}
-            onFiltersChange={updateFilters}
-          />
-
-          <DataTable
-            columns={getPropertyColumns()}
-            data={filtered}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
-            onRowClick={(row) => setSelectedId(row.id)}
-            renderMobileCard={renderPropertyMobileCard}
-            minWidth="820px"
-            emptyMessage="No properties match your filters"
-          />
-        </Panel>
-
-        {showDrawerInline ? (
-          <PropertyDetailDrawer property={selected} />
-        ) : selected ? (
-          <Box display={{ base: 'block', xl: 'none' }}>
-            <PropertyDetailDrawer property={selected} />
-          </Box>
-        ) : null}
-      </Grid>
+        <PropertyDetailDrawer property={selected} />
+      </AppModal>
     </Box>
   );
 }

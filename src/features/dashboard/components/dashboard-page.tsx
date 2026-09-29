@@ -58,7 +58,6 @@ export function DashboardPage() {
             key={kpi.key}
             label={kpi.label}
             value={kpi.formatted_value}
-            deltaPercent={kpi.delta_percent}
             icon={kpiIcons[kpi.key]}
           />
         ))}

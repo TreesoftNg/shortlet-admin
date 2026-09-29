@@ -17,21 +17,10 @@ describe('StatusBadge', () => {
 });
 
 describe('KpiCard', () => {
-  it('renders value and positive delta', () => {
-    renderWithChakra(
-      <KpiCard label="Revenue" value="₦18.4M" deltaPercent={12.5} />,
-    );
+  it('renders label and value', () => {
+    renderWithChakra(<KpiCard label="Revenue" value="₦18.4M" />);
 
     expect(screen.getByText('Revenue')).toBeInTheDocument();
     expect(screen.getByText('₦18.4M')).toBeInTheDocument();
-    expect(screen.getByText('+12.5%')).toBeInTheDocument();
-  });
-
-  it('renders negative delta without plus sign', () => {
-    renderWithChakra(
-      <KpiCard label="Avg. nightly rate" value="₦92k" deltaPercent={-1.8} />,
-    );
-
-    expect(screen.getByText('-1.8%')).toBeInTheDocument();
   });
 });
