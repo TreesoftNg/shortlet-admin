@@ -24,7 +24,7 @@ function buildPeriodSlice(
 
   const propertyPerformance = [
     {
-      property_id: 'prop-azure',
+      property_id: 1,
       property_name: 'Azure Lekki',
       revenue: scaleKpiValue(7200000, factor),
       currency: 'NGN',
@@ -34,7 +34,7 @@ function buildPeriodSlice(
       nights_booked: scaleKpiValue(156, factor),
     },
     {
-      property_id: 'prop-palms',
+      property_id: 2,
       property_name: 'The Palms VI',
       revenue: scaleKpiValue(5100000, factor),
       currency: 'NGN',
@@ -44,7 +44,7 @@ function buildPeriodSlice(
       nights_booked: scaleKpiValue(128, factor),
     },
     {
-      property_id: 'prop-maitama',
+      property_id: 3,
       property_name: 'Maitama Abuja',
       revenue: scaleKpiValue(3800000, factor),
       currency: 'NGN',
@@ -54,7 +54,7 @@ function buildPeriodSlice(
       nights_booked: scaleKpiValue(94, factor),
     },
     {
-      property_id: 'prop-ikoyi',
+      property_id: 4,
       property_name: 'Ikoyi PH',
       revenue: scaleKpiValue(2300000, factor),
       currency: 'NGN',

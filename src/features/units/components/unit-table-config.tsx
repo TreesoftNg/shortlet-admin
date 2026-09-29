@@ -6,6 +6,7 @@ import type { DataTableColumn } from '@/shared/components/ui/data-table';
 import { PropertyCell, StatusBadge } from '@/shared/components/ui';
 import type { UnitListItem } from '../utils/unit-filters';
 import { getUnitStatusDisplay } from '../utils/unit-filters';
+import { formatUnitSubtitle } from '../utils/unit-form';
 
 export function getUnitColumns(): DataTableColumn<UnitListItem>[] {
   return [
@@ -15,7 +16,7 @@ export function getUnitColumns(): DataTableColumn<UnitListItem>[] {
       cell: (row) => (
         <PropertyCell
           name={row.name}
-          subtitle={`Code ${row.code}`}
+          subtitle={formatUnitSubtitle(row)}
           imageUrl={row.picture}
         />
       ),
@@ -39,11 +40,30 @@ export function getUnitColumns(): DataTableColumn<UnitListItem>[] {
       cell: (row) => `${row.capacity} guests`,
     },
     {
+      id: 'rate',
+      header: 'Base rate',
+      cell: (row) =>
+        row.base_rate === null
+          ? '—'
+          : new Intl.NumberFormat('en-NG', {
+              style: 'currency',
+              currency: row.property_currency,
+              maximumFractionDigits: 0,
+            }).format(row.base_rate),
+    },
+    {
       id: 'status',
       header: 'Status',
       cell: (row) => {
         const status = getUnitStatusDisplay(row.status);
-        return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
+        return (
+          <Flex direction="column" gap="4px" align="flex-start">
+            <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+            {!row.bookable ? (
+              <StatusBadge tone="mute">Closed</StatusBadge>
+            ) : null}
+          </Flex>
+        );
       },
     },
   ];
@@ -65,7 +85,8 @@ export function renderUnitMobileCard(unit: UnitListItem): ReactNode {
         </StatusBadge>
       </Flex>
       <Text fontSize="13px" color="ink.400">
-        Code {unit.code} · Sleeps {unit.capacity} · {unit.property_city}
+        {formatUnitSubtitle(unit)} · Sleeps {unit.capacity} ·{' '}
+        {unit.property_city}
       </Text>
     </>
   );

@@ -1,10 +1,11 @@
 'use client';
 
 import { Box, Button, IconButton } from '@chakra-ui/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { PropertyDetailDrawer } from '@/features/properties/components/property-detail-drawer';
-import { PropertyFormDialog } from '@/features/properties/components/property-form-dialog';
 import {
   getPropertyColumns,
   type PropertyListItem,
@@ -33,11 +34,11 @@ import {
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function PropertiesPage() {
+  const router = useRouter();
   const { data, isLoading, isError, error, refetch } = useProperties();
   const { data: units = [] } = useUnits();
   const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_PROPERTY_FILTERS);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [formMode, setFormMode] = useState<'create' | 'edit' | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
   const properties = useMemo<PropertyListItem[]>(() => {
@@ -60,8 +61,6 @@ export function PropertiesPage() {
   const updateFilters = (next: Partial<PropertyFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
   };
-
-  const closeForm = () => setFormMode(null);
 
   if (isLoading) {
     return <PageSkeleton variant="table" />;
@@ -96,9 +95,10 @@ export function PropertiesPage() {
               onClick={openMobileNav}
             />
             <Button
+              as={Link}
+              href="/properties/new"
               h="44px"
               leftIcon={<LuPlus size={16} />}
-              onClick={() => setFormMode('create')}
             >
               Add property
             </Button>
@@ -132,8 +132,8 @@ export function PropertiesPage() {
           <DataTable
             columns={getPropertyColumns()}
             data={filtered}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
+            getRowId={(row) => String(row.id)}
+            selectedId={selectedId === null ? null : String(selectedId)}
             onRowClick={(row) => setSelectedId(row.id)}
             minWidth="820px"
             emptyTitle="No matches"
@@ -143,22 +143,25 @@ export function PropertiesPage() {
       </Panel>
 
       <AppModal
-        isOpen={Boolean(selected) && formMode !== 'edit'}
+        isOpen={Boolean(selected)}
         onClose={() => setSelectedId(null)}
         title="Property details"
         size="xl"
       >
         <PropertyDetailDrawer
           property={selected}
-          onEdit={() => setFormMode('edit')}
+          onEdit={() => {
+            if (!selected) return;
+            setSelectedId(null);
+            router.push(`/properties/${selected.id}/edit`);
+          }}
+          onManageUnits={() => {
+            if (!selected) return;
+            setSelectedId(null);
+            router.push(`/units?propertyId=${selected.id}`);
+          }}
         />
       </AppModal>
-
-      <PropertyFormDialog
-        isOpen={formMode === 'create' || (formMode === 'edit' && Boolean(selected))}
-        onClose={closeForm}
-        property={formMode === 'edit' ? selected : null}
-      />
     </Box>
   );
 }

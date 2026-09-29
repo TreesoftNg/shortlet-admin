@@ -30,7 +30,7 @@ export function useUpdateProperty() {
       id,
       values,
     }: {
-      id: string;
+      id: number;
       values: PropertyFormValues;
     }) => updateProperty(id, values),
     onSuccess: async () => {

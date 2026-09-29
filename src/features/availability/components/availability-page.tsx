@@ -9,7 +9,8 @@ import {
   Skeleton,
   Text,
 } from '@chakra-ui/react';
-import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import {
   LuBan,
   LuChevronLeft,
@@ -24,7 +25,7 @@ import {
   addDays,
   formatRangeLabel,
 } from '@/features/availability/utils/calendar';
-import { mockProperties } from '@/mocks/data';
+import { useProperties } from '@/features/properties/hooks/use-properties';
 import {
   EmptyState,
   ErrorState,
@@ -33,6 +34,11 @@ import {
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 import type { CalendarRange } from '@/shared/types/hospitable';
+import {
+  parsePropertyIdFilter,
+  propertyIdFilterToInputValue,
+  type PropertyIdFilter,
+} from '@/shared/utils/property-id';
 
 const DEFAULT_ANCHOR = '2026-09-26';
 const TODAY = '2026-09-26';
@@ -44,10 +50,31 @@ const RANGE_OPTIONS: Array<{ value: CalendarRange; label: string }> = [
 ];
 
 export function AvailabilityPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: properties = [] } = useProperties();
   const [anchorDate, setAnchorDate] = useState(DEFAULT_ANCHOR);
   const [range, setRange] = useState<CalendarRange>('2weeks');
-  const [propertyId, setPropertyId] = useState<string | 'all'>('all');
+  const [propertyId, setPropertyId] = useState<PropertyIdFilter>('all');
+  const [highlightedUnitId, setHighlightedUnitId] = useState<number | null>(
+    null,
+  );
   const openMobileNav = useUiStore((state) => state.openMobileNav);
+
+  useEffect(() => {
+    const propertyParam = searchParams.get('propertyId');
+    if (propertyParam) {
+      setPropertyId(parsePropertyIdFilter(propertyParam));
+    }
+
+    const unitParam = searchParams.get('unitId');
+    if (unitParam) {
+      const parsed = Number(unitParam);
+      setHighlightedUnitId(Number.isFinite(parsed) && parsed > 0 ? parsed : null);
+    } else {
+      setHighlightedUnitId(null);
+    }
+  }, [searchParams]);
 
   const step = range === 'week' ? 7 : range === 'month' ? 30 : 14;
 
@@ -63,6 +90,27 @@ export function AvailabilityPage() {
     if (!data) return '';
     return formatRangeLabel(data.start_date, data.end_date);
   }, [data]);
+
+  const highlightedUnitName = useMemo(() => {
+    if (!highlightedUnitId || !data) return null;
+    return data.units.find((unit) => unit.id === highlightedUnitId)?.name ?? null;
+  }, [data, highlightedUnitId]);
+
+  const updatePropertyId = (next: PropertyIdFilter) => {
+    setPropertyId(next);
+    setHighlightedUnitId(null);
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === 'all') {
+      params.delete('propertyId');
+    } else {
+      params.set('propertyId', String(next));
+    }
+    params.delete('unitId');
+    const query = params.toString();
+    router.replace(query ? `/availability?${query}` : '/availability', {
+      scroll: false,
+    });
+  };
 
   if (isInitialLoad) {
     return (
@@ -80,7 +128,23 @@ export function AvailabilityPage() {
     <Box>
       <PageHeader
         title="Availability"
-        description="Every unit, every night — bookings, holds and blocks in one view."
+        description={
+          highlightedUnitName
+            ? `Focused on ${highlightedUnitName}.`
+            : 'Every unit, every night — bookings, holds and blocks in one view.'
+        }
+        actions={
+          <IconButton
+            aria-label="Open navigation"
+            icon={<LuMenu size={20} />}
+            display={{ base: 'inline-flex', lg: 'none' }}
+            variant="secondary"
+            borderRadius="12px"
+            h="44px"
+            w="44px"
+            onClick={openMobileNav}
+          />
+        }
       />
 
       <Box
@@ -100,29 +164,27 @@ export function AvailabilityPage() {
           borderBottom="1px solid"
           borderColor="line.500"
         >
-          <Flex align="center" gap="10px" wrap="wrap">
+          <Flex gap="8px" align="center" wrap="wrap">
             <IconButton
               aria-label="Previous range"
-              icon={<LuChevronLeft size={16} />}
-              w="36px"
-              h="36px"
-              minW="36px"
+              icon={<LuChevronLeft size={18} />}
               variant="secondary"
-              borderRadius="12px"
+              borderRadius="10px"
+              h="36px"
+              w="36px"
               onClick={() => setAnchorDate((current) => addDays(current, -step))}
             />
             <IconButton
               aria-label="Next range"
-              icon={<LuChevronRight size={16} />}
-              w="36px"
-              h="36px"
-              minW="36px"
+              icon={<LuChevronRight size={18} />}
               variant="secondary"
-              borderRadius="12px"
+              borderRadius="10px"
+              h="36px"
+              w="36px"
               onClick={() => setAnchorDate((current) => addDays(current, step))}
             />
-            <Text fontSize="17px" fontWeight={700} ml={{ base: 0, sm: '6px' }}>
-              {rangeLabel || 'Loading…'}
+            <Text fontWeight={700} fontSize="14px" minW="160px">
+              {rangeLabel || 'Loading range…'}
             </Text>
             <Button
               h="32px"
@@ -135,6 +197,15 @@ export function AvailabilityPage() {
             >
               Today
             </Button>
+            <IconButton
+              aria-label="Refresh calendar"
+              icon={<LuRefreshCw size={16} />}
+              variant="secondary"
+              borderRadius="10px"
+              h="36px"
+              w="36px"
+              onClick={() => void refetch()}
+            />
           </Flex>
 
           <Flex gap="8px" wrap="wrap" align="center">
@@ -146,12 +217,14 @@ export function AvailabilityPage() {
               bg="white"
               fontSize="13px"
               fontWeight={600}
-              value={propertyId}
-              onChange={(event) => setPropertyId(event.target.value)}
+              value={propertyIdFilterToInputValue(propertyId)}
+              onChange={(event) =>
+                updatePropertyId(parsePropertyIdFilter(event.target.value))
+              }
             >
               <option value="all">All properties</option>
-              {mockProperties.map((property) => (
-                <option key={property.id} value={property.id}>
+              {properties.map((property) => (
+                <option key={property.id} value={String(property.id)}>
                   {property.name}
                 </option>
               ))}
@@ -204,9 +277,13 @@ export function AvailabilityPage() {
           <EmptyState
             title="No units to show"
             description="There are no units in this calendar view for the selected property and date range."
+            icon={<LuBan size={24} />}
           />
         ) : (
-          <AvailabilityCalendarGrid data={data} />
+          <AvailabilityCalendarGrid
+            data={data}
+            highlightedUnitId={highlightedUnitId}
+          />
         )}
       </Box>
     </Box>

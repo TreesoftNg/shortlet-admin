@@ -7,50 +7,50 @@ import type {
 
 export const mockCalendarUnits: CalendarUnitRow[] = [
   {
-    id: 'unit-azure-a',
-    property_id: 'prop-azure',
+    id: 1,
+    property_id: 1,
     property_name: 'Azure Lekki',
     name: 'Unit A',
     subtitle: '2 bed · 3rd floor',
   },
   {
-    id: 'unit-azure-b',
-    property_id: 'prop-azure',
+    id: 2,
+    property_id: 1,
     property_name: 'Azure Lekki',
     name: 'Unit B',
     subtitle: '2 bed · 5th floor',
   },
   {
-    id: 'unit-azure-c',
-    property_id: 'prop-azure',
+    id: 3,
+    property_id: 1,
     property_name: 'Azure Lekki',
     name: 'Unit C',
     subtitle: '2 bed · 6th floor',
   },
   {
-    id: 'unit-palms-s1',
-    property_id: 'prop-palms',
+    id: 4,
+    property_id: 2,
     property_name: 'The Palms VI',
     name: 'Studio 1',
     subtitle: '1 bed · Studio',
   },
   {
-    id: 'unit-palms-s2',
-    property_id: 'prop-palms',
+    id: 5,
+    property_id: 2,
     property_name: 'The Palms VI',
     name: 'Studio 2',
     subtitle: '1 bed · Studio',
   },
   {
-    id: 'unit-maitama-1',
-    property_id: 'prop-maitama',
+    id: 6,
+    property_id: 3,
     property_name: 'Maitama Abuja',
     name: 'Unit 1',
     subtitle: '2 bed · Garden',
   },
   {
-    id: 'unit-maitama-3',
-    property_id: 'prop-maitama',
+    id: 7,
+    property_id: 3,
     property_name: 'Maitama Abuja',
     name: 'Unit 3',
     subtitle: '3 bed · Penthouse',
@@ -60,7 +60,7 @@ export const mockCalendarUnits: CalendarUnitRow[] = [
 const barsForWindow: CalendarBar[] = [
   {
     id: 'bar-1',
-    unit_id: 'unit-azure-a',
+    unit_id: 1,
     start_date: '2026-09-26',
     end_date: '2026-09-28',
     kind: 'checked_in',
@@ -70,7 +70,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-2',
-    unit_id: 'unit-azure-a',
+    unit_id: 1,
     start_date: '2026-09-29',
     end_date: '2026-10-01',
     kind: 'awaiting_payment',
@@ -80,7 +80,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-3',
-    unit_id: 'unit-azure-a',
+    unit_id: 1,
     start_date: '2026-10-04',
     end_date: '2026-10-09',
     kind: 'confirmed',
@@ -90,7 +90,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-4',
-    unit_id: 'unit-azure-b',
+    unit_id: 2,
     start_date: '2026-09-27',
     end_date: '2026-09-30',
     kind: 'external',
@@ -100,7 +100,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-5',
-    unit_id: 'unit-azure-b',
+    unit_id: 2,
     start_date: '2026-10-02',
     end_date: '2026-10-05',
     kind: 'confirmed',
@@ -110,7 +110,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-6',
-    unit_id: 'unit-azure-c',
+    unit_id: 3,
     start_date: '2026-09-28',
     end_date: '2026-09-30',
     kind: 'blocked',
@@ -120,7 +120,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-7',
-    unit_id: 'unit-azure-c',
+    unit_id: 3,
     start_date: '2026-10-01',
     end_date: '2026-10-08',
     kind: 'confirmed',
@@ -130,7 +130,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-8',
-    unit_id: 'unit-palms-s1',
+    unit_id: 4,
     start_date: '2026-09-26',
     end_date: '2026-09-29',
     kind: 'confirmed',
@@ -140,7 +140,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-9',
-    unit_id: 'unit-palms-s1',
+    unit_id: 4,
     start_date: '2026-10-03',
     end_date: '2026-10-06',
     kind: 'confirmed',
@@ -150,7 +150,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-10',
-    unit_id: 'unit-palms-s2',
+    unit_id: 5,
     start_date: '2026-09-30',
     end_date: '2026-10-03',
     kind: 'confirmed',
@@ -160,7 +160,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-11',
-    unit_id: 'unit-palms-s2',
+    unit_id: 5,
     start_date: '2026-10-06',
     end_date: '2026-10-09',
     kind: 'external',
@@ -170,7 +170,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-12',
-    unit_id: 'unit-maitama-1',
+    unit_id: 6,
     start_date: '2026-09-26',
     end_date: '2026-10-02',
     kind: 'checked_in',
@@ -180,7 +180,7 @@ const barsForWindow: CalendarBar[] = [
   },
   {
     id: 'bar-13',
-    unit_id: 'unit-maitama-3',
+    unit_id: 7,
     start_date: '2026-10-05',
     end_date: '2026-10-09',
     kind: 'blocked',
@@ -208,7 +208,7 @@ function buildNightlyRates(startDate: string, days: number): Record<string, numb
 export function buildMockAvailabilityCalendar(
   anchorDate = '2026-09-26',
   range: CalendarRange = '2weeks',
-  propertyId: string | 'all' = 'all',
+  propertyId: number | 'all' = 'all',
 ): AvailabilityCalendar {
   const dayCount = range === 'week' ? 7 : range === 'month' ? 30 : 14;
   const start = new Date(`${anchorDate}T00:00:00`);

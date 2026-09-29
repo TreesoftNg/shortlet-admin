@@ -5,7 +5,7 @@ import type { AvailabilityCalendar, CalendarRange } from '@/shared/types/hospita
 export type AvailabilityCalendarParams = {
   anchorDate: string;
   range: CalendarRange;
-  propertyId?: string | 'all';
+  propertyId?: number | 'all';
 };
 
 export async function fetchAvailabilityCalendar(params: AvailabilityCalendarParams) {
@@ -16,7 +16,10 @@ export async function fetchAvailabilityCalendar(params: AvailabilityCalendarPara
   const query = new URLSearchParams({
     anchorDate: params.anchorDate,
     range: params.range,
-    propertyId: params.propertyId ?? 'all',
+    propertyId:
+      params.propertyId === undefined || params.propertyId === 'all'
+        ? 'all'
+        : String(params.propertyId),
   });
 
   return apiClient<AvailabilityCalendar>(`/availability/calendar?${query.toString()}`);

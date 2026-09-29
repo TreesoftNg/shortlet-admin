@@ -1,8 +1,11 @@
 'use client';
 
 import { Box, Button, IconButton } from '@chakra-ui/react';
-import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
+import { useProperties } from '@/features/properties/hooks/use-properties';
 import { UnitDetailDrawer } from '@/features/units/components/unit-detail-drawer';
 import { getUnitColumns } from '@/features/units/components/unit-table-config';
 import { UnitsToolbar } from '@/features/units/components/units-toolbar';
@@ -15,7 +18,6 @@ import {
   type UnitFilters,
   type UnitStatusTab,
 } from '@/features/units/utils/unit-filters';
-import { mockProperties } from '@/mocks/data';
 import {
   AppModal,
   DataTable,
@@ -27,26 +29,63 @@ import {
   Panel,
 } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
+import { parsePropertyIdFilter } from '@/shared/utils/property-id';
 
 export function UnitsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { data, isLoading, isError, error, refetch } = useUnits();
+  const { data: properties = [] } = useProperties();
   const [filters, setFilters] = useState<UnitFilters>(DEFAULT_UNIT_FILTERS);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
+  useEffect(() => {
+    const propertyIdParam = searchParams.get('propertyId');
+    if (!propertyIdParam) return;
+    const propertyId = parsePropertyIdFilter(propertyIdParam);
+    setFilters((current) =>
+      current.propertyId === propertyId
+        ? current
+        : { ...current, propertyId },
+    );
+  }, [searchParams]);
+
   const units = useMemo(
-    () => enrichUnitsWithProperty(data ?? [], mockProperties),
-    [data],
+    () => enrichUnitsWithProperty(data ?? [], properties),
+    [data, properties],
   );
 
   const tabCounts = useMemo(() => countUnitTabs(units), [units]);
   const filtered = useMemo(() => filterUnits(units, filters), [filters, units]);
 
   const selected = units.find((item) => item.id === selectedId) ?? null;
+  const filteredProperty =
+    filters.propertyId === 'all'
+      ? null
+      : properties.find((item) => item.id === filters.propertyId) ?? null;
 
   const updateFilters = (next: Partial<UnitFilters>) => {
-    setFilters((current) => ({ ...current, ...next }));
+    setFilters((current) => {
+      const merged = { ...current, ...next };
+      if (next.propertyId !== undefined) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (merged.propertyId === 'all') {
+          params.delete('propertyId');
+        } else {
+          params.set('propertyId', String(merged.propertyId));
+        }
+        const query = params.toString();
+        router.replace(query ? `/units?${query}` : '/units', { scroll: false });
+      }
+      return merged;
+    });
   };
+
+  const addUnitHref =
+    filters.propertyId === 'all'
+      ? '/units/new'
+      : `/units/new?propertyId=${filters.propertyId}`;
 
   if (isLoading) {
     return <PageSkeleton variant="table" />;
@@ -65,7 +104,11 @@ export function UnitsPage() {
     <Box>
       <PageHeader
         title="Units"
-        description="Bookable inventory under each property."
+        description={
+          filteredProperty
+            ? `Inventory for ${filteredProperty.name}.`
+            : 'Bookable inventory under each property.'
+        }
         actions={
           <>
             <IconButton
@@ -78,7 +121,12 @@ export function UnitsPage() {
               w="44px"
               onClick={openMobileNav}
             />
-            <Button h="44px" leftIcon={<LuPlus size={16} />}>
+            <Button
+              as={Link}
+              href={addUnitHref}
+              h="44px"
+              leftIcon={<LuPlus size={16} />}
+            >
               Add unit
             </Button>
           </>
@@ -103,25 +151,29 @@ export function UnitsPage() {
 
         <UnitsToolbar
           filters={filters}
-          properties={mockProperties}
+          properties={properties}
           onFiltersChange={updateFilters}
         />
 
         {units.length === 0 ? (
           <EmptyState
             title="No units yet"
-            description="When units are available, they will show up here."
+            description="Add your first unit to start managing inventory."
           />
         ) : (
           <DataTable
             columns={getUnitColumns()}
             data={filtered}
-            getRowId={(row) => row.id}
-            selectedId={selectedId}
+            getRowId={(row) => String(row.id)}
+            selectedId={selectedId === null ? null : String(selectedId)}
             onRowClick={(row) => setSelectedId(row.id)}
             minWidth="720px"
             emptyTitle="No matches"
-            emptyMessage="No units match your filters"
+            emptyMessage={
+              filteredProperty
+                ? `No units found for ${filteredProperty.name}`
+                : 'No units match your filters'
+            }
           />
         )}
       </Panel>
@@ -132,7 +184,21 @@ export function UnitsPage() {
         title="Unit details"
         size="lg"
       >
-        <UnitDetailDrawer unit={selected} />
+        <UnitDetailDrawer
+          unit={selected}
+          onEdit={() => {
+            if (!selected) return;
+            setSelectedId(null);
+            router.push(`/units/${selected.id}/edit`);
+          }}
+          onAvailability={() => {
+            if (!selected) return;
+            setSelectedId(null);
+            router.push(
+              `/availability?propertyId=${selected.property_id}&unitId=${selected.id}`,
+            );
+          }}
+        />
       </AppModal>
     </Box>
   );

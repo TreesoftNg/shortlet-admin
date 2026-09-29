@@ -1,11 +1,12 @@
 import type { Reservation } from '@/shared/types/hospitable';
+import type { PropertyIdFilter } from '@/shared/utils/property-id';
 
 export type BookingTab = 'all' | 'upcoming' | 'awaiting_payment' | 'cancelled';
 
 export type BookingFilters = {
   tab: BookingTab;
   search: string;
-  propertyId: string | 'all';
+  propertyId: PropertyIdFilter;
   /** YYYY-MM, e.g. 2026-10 */
   month: string | 'all';
   page: number;
@@ -60,7 +61,10 @@ function matchesSearch(reservation: Reservation, search: string): boolean {
   return haystack.includes(query);
 }
 
-function matchesProperty(reservation: Reservation, propertyId: string | 'all'): boolean {
+function matchesProperty(
+  reservation: Reservation,
+  propertyId: PropertyIdFilter,
+): boolean {
   if (propertyId === 'all') return true;
   return reservation.property?.id === propertyId;
 }

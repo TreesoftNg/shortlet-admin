@@ -6,6 +6,7 @@ describe('getUnitColumns', () => {
       'unit',
       'property',
       'capacity',
+      'rate',
       'status',
     ]);
   });

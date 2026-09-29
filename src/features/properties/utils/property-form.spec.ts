@@ -50,7 +50,7 @@ describe('property-form utils', () => {
 
   it('preserves id when updating an existing property', () => {
     const existing = {
-      id: 'prop-existing',
+      id: 99,
       created_at: '2025-01-01T00:00:00Z',
     } as Property;
     const property = buildPropertyFromForm(
@@ -62,7 +62,7 @@ describe('property-form utils', () => {
       },
       existing,
     );
-    expect(property.id).toBe('prop-existing');
+    expect(property.id).toBe(99);
     expect(property.created_at).toBe('2025-01-01T00:00:00Z');
   });
 });

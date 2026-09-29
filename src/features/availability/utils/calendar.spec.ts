@@ -51,17 +51,17 @@ describe('calendar utils', () => {
   it('groups units by property', () => {
     const groups = groupUnitsByProperty([
       {
-        property_id: 'p1',
+        property_id: 1,
         property_name: 'Azure',
         id: 'u1',
       },
       {
-        property_id: 'p1',
+        property_id: 1,
         property_name: 'Azure',
         id: 'u2',
       },
       {
-        property_id: 'p2',
+        property_id: 2,
         property_name: 'Palms',
         id: 'u3',
       },

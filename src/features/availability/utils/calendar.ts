@@ -97,10 +97,10 @@ export function getBarLayout(
   };
 }
 
-export function groupUnitsByProperty<T extends { property_id: string; property_name: string }>(
+export function groupUnitsByProperty<T extends { property_id: number; property_name: string }>(
   units: T[],
-): Array<{ propertyId: string; propertyName: string; units: T[] }> {
-  const groups: Array<{ propertyId: string; propertyName: string; units: T[] }> = [];
+): Array<{ propertyId: number; propertyName: string; units: T[] }> {
+  const groups: Array<{ propertyId: number; propertyName: string; units: T[] }> = [];
 
   units.forEach((unit) => {
     const existing = groups.find((group) => group.propertyId === unit.property_id);

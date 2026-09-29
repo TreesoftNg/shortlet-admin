@@ -22,7 +22,7 @@ export async function createProperty(values: PropertyFormValues) {
   });
 }
 
-export async function updateProperty(id: string, values: PropertyFormValues) {
+export async function updateProperty(id: number, values: PropertyFormValues) {
   if (isMockMode()) {
     return mockApi.updateProperty(id, values);
   }

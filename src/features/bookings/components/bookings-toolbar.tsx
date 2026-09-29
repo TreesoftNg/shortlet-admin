@@ -2,16 +2,18 @@
 
 import {
   Flex,
-  IconButton,
   Input,
   InputGroup,
   InputLeftElement,
   Select,
 } from '@chakra-ui/react';
-import { LuBuilding2, LuFilter, LuSearch } from 'react-icons/lu';
+import { LuBuilding2, LuSearch } from 'react-icons/lu';
 import type { BookingFilters } from '@/features/bookings/utils/booking-filters';
-import { FilterChip } from '@/shared/components/ui';
 import type { Property } from '@/shared/types/hospitable';
+import {
+  parsePropertyIdFilter,
+  propertyIdFilterToInputValue,
+} from '@/shared/utils/property-id';
 
 type BookingsToolbarProps = {
   filters: BookingFilters;
@@ -66,10 +68,10 @@ export function BookingsToolbar({
           h="auto"
           fontSize="13px"
           fontWeight={600}
-          value={filters.propertyId}
+          value={propertyIdFilterToInputValue(filters.propertyId)}
           onChange={(event) =>
             onFiltersChange({
-              propertyId: event.target.value,
+              propertyId: parsePropertyIdFilter(event.target.value),
               page: 1,
             })
           }
@@ -78,13 +80,12 @@ export function BookingsToolbar({
         >
           <option value="all">All properties</option>
           {properties.map((property) => (
-            <option key={property.id} value={property.id}>
+            <option key={property.id} value={String(property.id)}>
               {property.name}
             </option>
           ))}
         </Select>
       </Flex>
-
     </Flex>
   );
 }

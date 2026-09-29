@@ -177,6 +177,7 @@ export function formValuesToPropertyImages(
 export function buildPropertyFromForm(
   values: PropertyFormValues,
   existing?: Property | null,
+  nextId?: number,
 ): Property {
   const now = new Date().toISOString();
   const images = formValuesToPropertyImages(values.images);
@@ -184,7 +185,7 @@ export function buildPropertyFromForm(
   const display = buildAddressDisplay(values);
 
   return {
-    id: existing?.id ?? `prop-${Date.now()}`,
+    id: existing?.id ?? nextId ?? 0,
     name: values.name.trim(),
     public_name: values.public_name.trim() || null,
     picture,
@@ -242,21 +243,34 @@ export function syncUnitsForProperty(
     ...unit,
     code: unit.code || unitCodeForIndex(index),
     name: unit.name || `Unit ${unitCodeForIndex(index)}`,
-    capacity: property.capacity.max,
-    picture: property.picture,
+    capacity: unit.capacity || property.capacity.max,
+    bedrooms: unit.bedrooms || property.capacity.bedrooms,
+    beds: unit.beds || property.capacity.beds,
+    bathrooms: unit.bathrooms || property.capacity.bathrooms,
+    picture: unit.picture ?? property.picture,
     updated_at: now,
   }));
 
   while (kept.length < nextCount) {
     const index = kept.length;
     const code = unitCodeForIndex(index);
+    const nextId =
+      [...others, ...kept].reduce((max, unit) => Math.max(max, unit.id), 0) + 1;
     kept.push({
-      id: `unit-${property.id}-${code.toLowerCase()}-${Date.now()}-${index}`,
+      id: nextId,
       property_id: property.id,
       code,
       name: `Unit ${code}`,
-      capacity: property.capacity.max,
       status: 'active',
+      bookable: true,
+      floor: null,
+      capacity: property.capacity.max,
+      bedrooms: property.capacity.bedrooms,
+      beds: property.capacity.beds,
+      bathrooms: property.capacity.bathrooms,
+      base_rate: null,
+      summary: null,
+      notes: null,
       picture: property.picture,
       created_at: now,
       updated_at: now,

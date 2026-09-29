@@ -1,12 +1,13 @@
 import type { StatusTone } from '@/shared/components/ui';
 import type { Property, Unit } from '@/shared/types/hospitable';
+import type { PropertyIdFilter } from '@/shared/utils/property-id';
 
 export type UnitStatusTab = 'all' | 'active' | 'maintenance' | 'inactive';
 
 export type UnitFilters = {
   tab: UnitStatusTab;
   search: string;
-  propertyId: string | 'all';
+  propertyId: PropertyIdFilter;
 };
 
 export type UnitTabCount = Record<UnitStatusTab, number>;
@@ -14,6 +15,8 @@ export type UnitTabCount = Record<UnitStatusTab, number>;
 export type UnitListItem = Unit & {
   property_name: string;
   property_city: string;
+  property_currency: string;
+  property_amenities: string[];
 };
 
 export const DEFAULT_UNIT_FILTERS: UnitFilters = {
@@ -32,6 +35,8 @@ export function enrichUnitsWithProperty(
       ...unit,
       property_name: property?.name ?? 'Unknown property',
       property_city: property?.address.city ?? '—',
+      property_currency: property?.currency ?? 'NGN',
+      property_amenities: property?.amenities ?? [],
     };
   });
 }
@@ -58,7 +63,7 @@ function matchesSearch(unit: UnitListItem, search: string): boolean {
   return haystack.includes(query);
 }
 
-function matchesProperty(unit: Unit, propertyId: string | 'all'): boolean {
+function matchesProperty(unit: Unit, propertyId: PropertyIdFilter): boolean {
   if (propertyId === 'all') return true;
   return unit.property_id === propertyId;
 }

@@ -10,6 +10,10 @@ import {
 import { LuSearch } from 'react-icons/lu';
 import type { UnitFilters } from '@/features/units/utils/unit-filters';
 import type { Property } from '@/shared/types/hospitable';
+import {
+  parsePropertyIdFilter,
+  propertyIdFilterToInputValue,
+} from '@/shared/utils/property-id';
 
 type UnitsToolbarProps = {
   filters: UnitFilters;
@@ -50,12 +54,16 @@ export function UnitsToolbar({
         fontSize="13px"
         fontWeight={600}
         color="ink.400"
-        value={filters.propertyId}
-        onChange={(event) => onFiltersChange({ propertyId: event.target.value })}
+        value={propertyIdFilterToInputValue(filters.propertyId)}
+        onChange={(event) =>
+          onFiltersChange({
+            propertyId: parsePropertyIdFilter(event.target.value),
+          })
+        }
       >
         <option value="all">All properties</option>
         {properties.map((property) => (
-          <option key={property.id} value={property.id}>
+          <option key={property.id} value={String(property.id)}>
             {property.name}
           </option>
         ))}

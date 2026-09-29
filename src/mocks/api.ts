@@ -30,6 +30,10 @@ import {
   syncUnitsForProperty,
   type PropertyFormValues,
 } from '@/features/properties/utils/property-form';
+import {
+  buildUnitFromForm,
+  type UnitFormValues,
+} from '@/features/units/utils/unit-form';
 import { delay, ok } from '@/mocks/utils';
 import type { ApiSuccessResponse } from '@/shared/api/types';
 import type {
@@ -50,6 +54,10 @@ const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== 'false';
 
 function replaceUnits(next: Unit[]) {
   mockUnits.splice(0, mockUnits.length, ...next);
+}
+
+function nextUnitId(): number {
+  return mockUnits.reduce((max, item) => Math.max(max, item.id), 0) + 1;
 }
 
 export const mockApi = {
@@ -82,14 +90,16 @@ export const mockApi = {
     values: PropertyFormValues,
   ): Promise<ApiSuccessResponse<Property>> {
     await delay();
-    const property = buildPropertyFromForm(values);
+    const nextId =
+      mockProperties.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+    const property = buildPropertyFromForm(values, null, nextId);
     mockProperties.unshift(property);
     replaceUnits(syncUnitsForProperty(mockUnits, property, values.unit_count));
     return ok(property, 'Property created');
   },
 
   async updateProperty(
-    id: string,
+    id: number,
     values: PropertyFormValues,
   ): Promise<ApiSuccessResponse<Property>> {
     await delay();
@@ -111,6 +121,29 @@ export const mockApi = {
       total: mockUnits.length,
       totalPages: 1,
     });
+  },
+
+  async createUnit(
+    values: UnitFormValues,
+  ): Promise<ApiSuccessResponse<Unit>> {
+    await delay();
+    const unit = buildUnitFromForm(values, null, nextUnitId());
+    mockUnits.unshift(unit);
+    return ok(unit, 'Unit created');
+  },
+
+  async updateUnit(
+    id: number,
+    values: UnitFormValues,
+  ): Promise<ApiSuccessResponse<Unit>> {
+    await delay();
+    const index = mockUnits.findIndex((item) => item.id === id);
+    if (index < 0) {
+      throw new Error('Unit not found');
+    }
+    const unit = buildUnitFromForm(values, mockUnits[index]);
+    mockUnits[index] = unit;
+    return ok(unit, 'Unit updated');
   },
 
   async getCustomers(): Promise<ApiSuccessResponse<CustomerListItem[]>> {
@@ -199,7 +232,7 @@ export const mockApi = {
   async getAvailabilityCalendar(params: {
     anchorDate: string;
     range: CalendarRange;
-    propertyId?: string | 'all';
+    propertyId?: number | 'all';
   }): Promise<ApiSuccessResponse<AvailabilityCalendar>> {
     await delay();
     return ok(

@@ -21,11 +21,13 @@ import { KeyValueList, StatusBadge } from '@/shared/components/ui';
 type PropertyDetailDrawerProps = {
   property: PropertyListItem | null;
   onEdit?: () => void;
+  onManageUnits?: () => void;
 };
 
 export function PropertyDetailDrawer({
   property,
   onEdit,
+  onManageUnits,
 }: PropertyDetailDrawerProps) {
   if (!property) {
     return null;
@@ -170,7 +172,12 @@ export function PropertyDetailDrawer({
           >
             Edit property
           </Button>
-          <Button size="sm" variant="soft">
+          <Button
+            size="sm"
+            variant="soft"
+            onClick={onManageUnits}
+            isDisabled={!onManageUnits}
+          >
             Manage units
           </Button>
         </Flex>

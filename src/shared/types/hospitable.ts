@@ -94,7 +94,7 @@ export type Listing = {
 };
 
 export type Property = {
-  id: string;
+  id: number;
   name: string;
   public_name: string | null;
   picture: string | null;
@@ -191,14 +191,31 @@ export type TenantSettings = {
   updated_at: string;
 };
 
-/** Bookable inventory under a property (platform extension; maps to Hospitable property/unit). */
+/** Bookable inventory under a property (multi-unit extension).
+ * Shared listing content (address, amenities, house rules, photos gallery)
+ * lives on Property — units only store what differs per room/apartment.
+ */
 export type Unit = {
-  id: string;
-  property_id: string;
+  id: number;
+  property_id: number;
+  /** Short internal code (e.g. A, S1, PH-1). */
   code: string;
   name: string;
-  capacity: number;
   status: 'active' | 'inactive' | 'maintenance';
+  /** Accept new bookings independently of ops status. */
+  bookable: boolean;
+  /** Floor / wing / location within the property. */
+  floor: string | null;
+  capacity: number;
+  bedrooms: number;
+  beds: number;
+  bathrooms: number;
+  /** Nightly rate override; null inherits property/channel pricing. */
+  base_rate: number | null;
+  /** Short label for calendars/lists (e.g. "Lagoon view corner"). */
+  summary: string | null;
+  /** Internal ops notes — never guest-facing. */
+  notes: string | null;
   picture: string | null;
   created_at: string;
   updated_at: string;
@@ -269,7 +286,7 @@ export type Reservation = {
   created_at: string;
   updated_at: string;
   /** Local bookable unit (extension for multi-unit properties). */
-  unit_id?: string;
+  unit_id?: number;
   property?: Property;
   guest?: Guest;
   listing?: Listing;
@@ -311,7 +328,7 @@ export type CalendarRange = 'week' | '2weeks' | 'month';
 
 export type CalendarBar = {
   id: string;
-  unit_id: string;
+  unit_id: number;
   /** Inclusive start date YYYY-MM-DD within the visible window. */
   start_date: string;
   /** Inclusive end date YYYY-MM-DD within the visible window. */
@@ -323,8 +340,8 @@ export type CalendarBar = {
 };
 
 export type CalendarUnitRow = {
-  id: string;
-  property_id: string;
+  id: number;
+  property_id: number;
   property_name: string;
   name: string;
   subtitle: string;
@@ -467,7 +484,7 @@ export type DashboardKpi = {
 };
 
 export type OccupancyByProperty = {
-  property_id: string;
+  property_id: number;
   property_name: string;
   occupancy_percent: number;
   color: string;
@@ -521,7 +538,7 @@ export type DashboardSummary = {
 
 /** Admin reports payload (finance + ops rollups). */
 export type PropertyPerformanceRow = {
-  property_id: string;
+  property_id: number;
   property_name: string;
   revenue: number;
   currency: string;

@@ -117,7 +117,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
           <VStack align="stretch" spacing="4px">
             {section.items.map((item) => {
-              const active = pathname === item.href;
+              const active =
+                item.href === '/'
+                  ? pathname === '/'
+                  : pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
               const Icon = item.icon;
 
               return (
