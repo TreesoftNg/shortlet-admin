@@ -1,12 +1,9 @@
 'use client';
 
-import { Box, Button, Flex, Spinner, Text } from '@chakra-ui/react';
+import { Box, Button, Flex, IconButton, Spinner, Text } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuDownload, LuMenu } from 'react-icons/lu';
-import {
-  getBookingColumns,
-  renderBookingMobileCard,
-} from '@/features/bookings/components/booking-table-config';
+import { getBookingColumns } from '@/features/bookings/components/booking-table-config';
 import { BookingDetailDrawer } from '@/features/bookings/components/booking-detail-drawer';
 import { BookingsToolbar } from '@/features/bookings/components/bookings-toolbar';
 import { useReservations } from '@/features/bookings/hooks/use-reservations';
@@ -83,21 +80,21 @@ export function BookingsPage() {
         description="Manage reservations, payments and guest stays."
         actions={
           <>
-            <Button
+            <IconButton
               aria-label="Open navigation"
+              icon={<LuMenu size={20} />}
               display={{ base: 'inline-flex', lg: 'none' }}
               variant="secondary"
               borderRadius="12px"
               h="44px"
               w="44px"
-              minW="44px"
+              color="ink.500"
               onClick={openMobileNav}
-            >
-              <LuMenu size={20} />
-            </Button>
+            />
             <Button
               h="44px"
               variant="secondary"
+              color="ink.500"
               leftIcon={<LuDownload size={16} />}
             >
               Export
@@ -134,7 +131,6 @@ export function BookingsPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderBookingMobileCard}
           minWidth="760px"
           emptyMessage="No bookings match your filters"
         />

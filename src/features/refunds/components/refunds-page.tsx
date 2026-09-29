@@ -14,10 +14,7 @@ import {
 import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
 import { RefundDetailDrawer } from '@/features/refunds/components/refund-detail-drawer';
-import {
-  getRefundColumns,
-  renderRefundMobileCard,
-} from '@/features/refunds/components/refund-table-config';
+import { getRefundColumns } from '@/features/refunds/components/refund-table-config';
 import { useRefunds } from '@/features/refunds/hooks/use-refunds';
 import {
   countRefundTabs,
@@ -174,7 +171,6 @@ export function RefundsPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderRefundMobileCard}
           minWidth="920px"
           emptyMessage="No refunds match your filters"
         />

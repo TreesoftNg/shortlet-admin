@@ -3,10 +3,7 @@
 import { Button } from '@chakra-ui/react';
 import Link from 'next/link';
 import { LuArrowRight } from 'react-icons/lu';
-import {
-  getBookingColumns,
-  renderBookingMobileCard,
-} from '@/features/bookings/components/booking-table-config';
+import { getBookingColumns } from '@/features/bookings/components/booking-table-config';
 import { DataTable, Panel, PanelHeader } from '@/shared/components/ui';
 import type { Reservation } from '@/shared/types/hospitable';
 
@@ -36,7 +33,6 @@ export function RecentBookingsTable({ reservations }: RecentBookingsTableProps) 
         columns={getBookingColumns('dashboard')}
         data={reservations}
         getRowId={(row) => row.id}
-        renderMobileCard={renderBookingMobileCard}
         emptyMessage="No recent bookings"
       />
     </Panel>

@@ -14,10 +14,7 @@ import {
 import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
 import { ReviewDetailDrawer } from '@/features/reviews/components/review-detail-drawer';
-import {
-  getReviewColumns,
-  renderReviewMobileCard,
-} from '@/features/reviews/components/review-table-config';
+import { getReviewColumns } from '@/features/reviews/components/review-table-config';
 import { useReviews } from '@/features/reviews/hooks/use-reviews';
 import {
   countReviewTabs,
@@ -159,7 +156,6 @@ export function ReviewsPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderReviewMobileCard}
           minWidth="860px"
           emptyMessage="No reviews match your filters"
         />

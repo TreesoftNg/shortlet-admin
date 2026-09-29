@@ -13,10 +13,7 @@ import {
 import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
 import { PaymentDetailDrawer } from '@/features/payments/components/payment-detail-drawer';
-import {
-  getPaymentColumns,
-  renderPaymentMobileCard,
-} from '@/features/payments/components/payment-table-config';
+import { getPaymentColumns } from '@/features/payments/components/payment-table-config';
 import { usePayments } from '@/features/payments/hooks/use-payments';
 import {
   countPaymentTabs,
@@ -132,7 +129,6 @@ export function PaymentsPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderPaymentMobileCard}
           minWidth="920px"
           emptyMessage="No payments match your filters"
         />

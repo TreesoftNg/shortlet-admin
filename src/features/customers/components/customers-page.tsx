@@ -11,10 +11,7 @@ import {
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { CustomerDetailDrawer } from '@/features/customers/components/customer-detail-drawer';
-import {
-  getCustomerColumns,
-  renderCustomerMobileCard,
-} from '@/features/customers/components/customer-table-config';
+import { getCustomerColumns } from '@/features/customers/components/customer-table-config';
 import { CustomersToolbar } from '@/features/customers/components/customers-toolbar';
 import { useCustomers } from '@/features/customers/hooks/use-customers';
 import {
@@ -117,7 +114,6 @@ export function CustomersPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderCustomerMobileCard}
           minWidth="760px"
           emptyMessage="No customers match your filters"
         />

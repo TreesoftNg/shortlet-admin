@@ -12,7 +12,6 @@ import {
   type TableProps,
 } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
-import { MobileCardList } from './mobile-card-list';
 
 export type DataTableColumn<T> = {
   id: string;
@@ -34,12 +33,11 @@ export type DataTableProps<T> = {
   minWidth?: string | number;
   selectedId?: string | null;
   onRowClick?: (row: T) => void;
-  /** When provided, cards replace the table below the `lg` breakpoint. */
-  renderMobileCard?: (row: T) => ReactNode;
   emptyMessage?: string;
   size?: TableProps['size'];
 };
 
+/** Scrollable data table used on all breakpoints (row click opens detail modal). */
 export function DataTable<T>({
   columns,
   data,
@@ -47,12 +45,11 @@ export function DataTable<T>({
   minWidth = '860px',
   selectedId,
   onRowClick,
-  renderMobileCard,
   emptyMessage = 'No records found',
   size = 'sm',
 }: DataTableProps<T>) {
-  const table = (
-    <Box overflowX="auto">
+  return (
+    <Box overflowX="auto" mx={{ base: '-6px', md: 0 }} px={{ base: '6px', md: 0 }}>
       <Table size={size} fontSize="14px" minW={minWidth}>
         <Thead>
           <Tr>
@@ -91,7 +88,9 @@ export function DataTable<T>({
                   key={rowId}
                   cursor={onRowClick ? 'pointer' : 'default'}
                   bg={isSelected ? 'brand.50' : undefined}
-                  boxShadow={isSelected ? 'inset 3px 0 0 var(--brand)' : undefined}
+                  boxShadow={
+                    isSelected ? 'inset 3px 0 0 var(--brand)' : undefined
+                  }
                   _hover={
                     onRowClick
                       ? { bg: isSelected ? 'brand.50' : 'bg.400' }
@@ -119,23 +118,5 @@ export function DataTable<T>({
         </Tbody>
       </Table>
     </Box>
-  );
-
-  if (!renderMobileCard) {
-    return table;
-  }
-
-  return (
-    <>
-      <Box display={{ base: 'block', lg: 'none' }}>
-        <MobileCardList
-          data={data}
-          getRowId={getRowId}
-          renderCard={renderMobileCard}
-          emptyMessage={emptyMessage}
-        />
-      </Box>
-      <Box display={{ base: 'none', lg: 'block' }}>{table}</Box>
-    </>
   );
 }

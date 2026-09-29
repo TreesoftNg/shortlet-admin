@@ -13,7 +13,6 @@ import { LuMenu, LuPlus } from 'react-icons/lu';
 import { PropertyDetailDrawer } from '@/features/properties/components/property-detail-drawer';
 import {
   getPropertyColumns,
-  renderPropertyMobileCard,
   type PropertyListItem,
 } from '@/features/properties/components/property-table-config';
 import { PropertiesToolbar } from '@/features/properties/components/properties-toolbar';
@@ -126,7 +125,6 @@ export function PropertiesPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderPropertyMobileCard}
           minWidth="820px"
           emptyMessage="No properties match your filters"
         />

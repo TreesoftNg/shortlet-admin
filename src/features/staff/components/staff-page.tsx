@@ -15,10 +15,7 @@ import {
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus, LuSearch } from 'react-icons/lu';
 import { StaffDetailDrawer } from '@/features/staff/components/staff-detail-drawer';
-import {
-  getStaffColumns,
-  renderStaffMobileCard,
-} from '@/features/staff/components/staff-table-config';
+import { getStaffColumns } from '@/features/staff/components/staff-table-config';
 import { useStaff } from '@/features/staff/hooks/use-staff';
 import {
   countStaffTabs,
@@ -172,7 +169,6 @@ export function StaffPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderStaffMobileCard}
           minWidth="860px"
           emptyMessage="No staff members match your filters"
         />

@@ -11,10 +11,7 @@ import {
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { UnitDetailDrawer } from '@/features/units/components/unit-detail-drawer';
-import {
-  getUnitColumns,
-  renderUnitMobileCard,
-} from '@/features/units/components/unit-table-config';
+import { getUnitColumns } from '@/features/units/components/unit-table-config';
 import { UnitsToolbar } from '@/features/units/components/units-toolbar';
 import { useUnits } from '@/features/units/hooks/use-units';
 import {
@@ -123,7 +120,6 @@ export function UnitsPage() {
           getRowId={(row) => row.id}
           selectedId={selectedId}
           onRowClick={(row) => setSelectedId(row.id)}
-          renderMobileCard={renderUnitMobileCard}
           minWidth="720px"
           emptyMessage="No units match your filters"
         />
