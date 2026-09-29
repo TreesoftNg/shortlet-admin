@@ -4,8 +4,8 @@ import { AdminShell } from '@/shared/components/layout/admin-shell';
 import '@/shared/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Haven Admin',
-  description: 'Shortlet apartment booking admin dashboard',
+  title: 'Sunmade Admin',
+  description: 'Sunmade Apartments & Suites — shortlet booking admin dashboard',
 };
 
 export default function RootLayout({

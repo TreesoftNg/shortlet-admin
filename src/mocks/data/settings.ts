@@ -2,9 +2,9 @@ import type { TenantSettings } from '@/shared/types/hospitable';
 
 export const mockTenantSettings: TenantSettings = {
   organization: {
-    name: 'Haven Shortlets',
-    legal_name: 'Haven Hospitality Ltd',
-    support_email: 'hello@haven.ng',
+    name: 'Sunmade Apartments & Suites',
+    legal_name: 'Sunmade Apartments & Suites Ltd',
+    support_email: 'hello@sunmadeapartments.com',
     support_phone: '+2348010000099',
     timezone: 'Africa/Lagos',
     currency: 'NGN',
@@ -22,7 +22,7 @@ export const mockTenantSettings: TenantSettings = {
   payments: {
     provider: 'flutterwave',
     public_key_hint: 'FLWPUBK_TEST-••••••a91f',
-    webhook_url: 'https://api.haven.ng/webhooks/flutterwave',
+    webhook_url: 'https://api.sunmadeapartments.com/webhooks/flutterwave',
     connected: true,
     settlement_currency: 'NGN',
   },

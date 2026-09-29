@@ -836,7 +836,7 @@ export const mockDashboardSummary: DashboardSummary = {
       property_id: 'prop-azure',
       property_name: 'Azure Lekki',
       occupancy_percent: 92,
-      color: '#0E7C6B',
+      color: '#10695B',
     },
     {
       property_id: 'prop-palms',
@@ -848,7 +848,7 @@ export const mockDashboardSummary: DashboardSummary = {
       property_id: 'prop-maitama',
       property_name: 'Maitama Abuja',
       occupancy_percent: 64,
-      color: '#F2A93B',
+      color: '#F8A42F',
     },
     {
       property_id: 'prop-ikoyi',

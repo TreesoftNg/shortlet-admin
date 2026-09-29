@@ -33,6 +33,7 @@ import type { IconType } from 'react-icons';
 import { useAuthStore } from '@/shared/store/auth-store';
 import { useUiStore } from '@/shared/store/ui-store';
 import { StatusBadge } from '@/shared/components/ui';
+import { SunmadeLogo } from '@/shared/components/brand';
 
 type NavItem = {
   label: string;
@@ -94,27 +95,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       px="16px"
       gap="4px"
     >
-      <Flex
-        align="center"
-        gap="10px"
-        px="10px"
-        pb="22px"
-        fontWeight={800}
-        fontSize="20px"
-        color="brand.500"
-      >
-        <Flex
-          w="34px"
-          h="34px"
-          borderRadius="10px"
-          bg="brand.500"
-          color="white"
-          align="center"
-          justify="center"
-        >
-          <LuBuilding2 size={18} />
-        </Flex>
-        Haven
+      <Flex align="center" gap="10px" px="10px" pb="22px">
+        <SunmadeLogo size="18px" tagline={false} />
         <StatusBadge tone="mute" fontSize="10px">
           Admin
         </StatusBadge>
