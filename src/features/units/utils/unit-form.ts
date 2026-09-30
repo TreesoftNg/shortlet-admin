@@ -1,8 +1,8 @@
 import type { Unit } from '@/shared/types/hospitable';
 
 /**
- * Unit form — inventory fields only.
- * Address, amenities, long description, and currency inherit from Property.
+ * Unit form — inventory + unit-specific amenities.
+ * Address, long description, and currency inherit from Property.
  */
 export type UnitFormValues = {
   property_id: number | '';
@@ -16,6 +16,7 @@ export type UnitFormValues = {
   beds: number;
   bathrooms: number;
   base_rate: number | '';
+  amenities: string[];
   summary: string;
   notes: string;
   picture: string | null;
@@ -47,6 +48,7 @@ export function createEmptyUnitForm(
     beds: 1,
     bathrooms: 1,
     base_rate: '',
+    amenities: ['wifi'],
     summary: '',
     notes: '',
     picture: null,
@@ -66,6 +68,7 @@ export function unitToFormValues(unit: Unit): UnitFormValues {
     beds: unit.beds,
     bathrooms: unit.bathrooms,
     base_rate: unit.base_rate ?? '',
+    amenities: [...unit.amenities],
     summary: unit.summary ?? '',
     notes: unit.notes ?? '',
     picture: unit.picture,
@@ -131,6 +134,7 @@ export function buildUnitFromForm(
     beds: values.beds,
     bathrooms: values.bathrooms,
     base_rate: values.base_rate === '' ? null : Number(values.base_rate),
+    amenities: [...values.amenities],
     summary: values.summary.trim() || null,
     notes: values.notes.trim() || null,
     picture: values.picture,

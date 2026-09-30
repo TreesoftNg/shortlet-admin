@@ -68,12 +68,114 @@ export const mockApi = {
 
   async getReservations(): Promise<ApiSuccessResponse<Reservation[]>> {
     await delay();
-    return ok(mockReservations, 'Reservations retrieved', {
+    return ok([...mockReservations], 'Reservations retrieved', {
       page: 1,
       limit: 20,
       total: mockReservations.length,
       totalPages: 1,
     });
+  },
+
+  async checkInReservation(
+    id: string,
+  ): Promise<ApiSuccessResponse<Reservation>> {
+    await delay();
+    const reservation = mockReservations.find((item) => item.id === id);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+
+    const { category, sub_category } = reservation.reservation_status.current;
+    if (category === 'cancelled' || sub_category === 'voided') {
+      throw new Error('Cancelled bookings cannot be checked in');
+    }
+    if (sub_category === 'checked_in') {
+      return ok(reservation, 'Guest already checked in');
+    }
+    if (sub_category === 'completed') {
+      throw new Error('Completed stays cannot be checked in');
+    }
+    if (sub_category === 'request for payment') {
+      throw new Error('Guest must complete payment before check-in');
+    }
+
+    const changed_at = new Date().toISOString();
+    reservation.reservation_status = {
+      current: { category: 'accepted', sub_category: 'checked_in' },
+      history: [
+        { category: 'accepted', sub_category: 'checked_in', changed_at },
+        ...reservation.reservation_status.history,
+      ],
+    };
+    reservation.updated_at = changed_at;
+
+    return ok(reservation, 'Guest checked in');
+  },
+
+  async cancelReservation(
+    id: string,
+  ): Promise<ApiSuccessResponse<Reservation>> {
+    await delay();
+    const reservation = mockReservations.find((item) => item.id === id);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+
+    const { category, sub_category } = reservation.reservation_status.current;
+    if (category === 'cancelled' || sub_category === 'voided' || sub_category === 'refunded') {
+      return ok(reservation, 'Booking already cancelled');
+    }
+    if (sub_category === 'completed') {
+      throw new Error('Completed stays cannot be cancelled');
+    }
+
+    const changed_at = new Date().toISOString();
+    reservation.reservation_status = {
+      current: { category: 'cancelled', sub_category: 'voided' },
+      history: [
+        { category: 'cancelled', sub_category: 'voided', changed_at },
+        ...reservation.reservation_status.history,
+      ],
+    };
+    reservation.updated_at = changed_at;
+
+    return ok(reservation, 'Booking cancelled');
+  },
+
+  async refundReservation(
+    id: string,
+  ): Promise<ApiSuccessResponse<Reservation>> {
+    await delay();
+    const reservation = mockReservations.find((item) => item.id === id);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+
+    const { category, sub_category } = reservation.reservation_status.current;
+    if (category === 'cancelled' || sub_category === 'voided' || sub_category === 'refunded') {
+      throw new Error('This booking has already been refunded or cancelled');
+    }
+    if (sub_category === 'request for payment') {
+      throw new Error('No payment to refund');
+    }
+    if (reservation.platform === 'airbnb' || sub_category === 'external') {
+      throw new Error('Refunds for external bookings are handled on the channel');
+    }
+    if (!reservation.financials || reservation.financials.total <= 0) {
+      throw new Error('No payment to refund');
+    }
+
+    const changed_at = new Date().toISOString();
+    reservation.reservation_status = {
+      current: { category: 'cancelled', sub_category: 'refunded' },
+      history: [
+        { category: 'cancelled', sub_category: 'refunded', changed_at },
+        ...reservation.reservation_status.history,
+      ],
+    };
+    reservation.updated_at = changed_at;
+
+    return ok(reservation, 'Refund issued');
   },
 
   async getProperties(): Promise<ApiSuccessResponse<Property[]>> {

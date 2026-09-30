@@ -126,6 +126,30 @@ export function UnitDetailDrawer({
           ]}
         />
 
+        {unit.amenities.length > 0 ? (
+          <Box py="16px" borderTop="1px solid" borderColor="line.500">
+            <Text
+              fontSize="12px"
+              textTransform="uppercase"
+              letterSpacing="0.05em"
+              color="ink.300"
+              fontWeight={700}
+              mb="10px"
+            >
+              Unit amenities
+            </Text>
+            <Wrap spacing="8px">
+              {unit.amenities.map((amenity) => (
+                <WrapItem key={amenity}>
+                  <StatusBadge tone="mute">
+                    {amenity.replace(/_/g, ' ')}
+                  </StatusBadge>
+                </WrapItem>
+              ))}
+            </Wrap>
+          </Box>
+        ) : null}
+
         {unit.property_amenities.length > 0 ? (
           <Box py="16px" borderTop="1px solid" borderColor="line.500">
             <Text
@@ -136,7 +160,7 @@ export function UnitDetailDrawer({
               fontWeight={700}
               mb="10px"
             >
-              Amenities (from property)
+              Property amenities
             </Text>
             <Wrap spacing="8px">
               {unit.property_amenities.map((amenity) => (

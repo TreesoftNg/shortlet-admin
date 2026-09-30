@@ -3,6 +3,7 @@
 import {
   Box,
   Button,
+  Checkbox,
   Flex,
   FormControl,
   FormErrorMessage,
@@ -20,6 +21,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { LuArrowLeft, LuMenu, LuTrash2, LuUpload } from 'react-icons/lu';
+import { AMENITY_OPTIONS } from '@/features/properties/utils/property-form';
 import { useProperties } from '@/features/properties/hooks/use-properties';
 import {
   useCreateUnit,
@@ -119,6 +121,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
             bedrooms: defaultProperty.capacity.bedrooms,
             beds: defaultProperty.capacity.beds,
             bathrooms: defaultProperty.capacity.bathrooms,
+            amenities: [...defaultProperty.amenities],
           }
         : createEmptyUnitForm(),
     );
@@ -142,6 +145,18 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
       const next = { ...current };
       delete next[key];
       return next;
+    });
+  };
+
+  const toggleAmenity = (amenity: string) => {
+    setValues((current) => {
+      const exists = current.amenities.includes(amenity);
+      return {
+        ...current,
+        amenities: exists
+          ? current.amenities.filter((item) => item !== amenity)
+          : [...current.amenities, amenity],
+      };
     });
   };
 
@@ -255,7 +270,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     <Box maxW="820px">
       <PageHeader
         title={isEdit ? 'Edit unit' : 'Add unit'}
-        description="Inventory only — address, amenities, and listing content inherit from the property."
+        description="Configure inventory and unit amenities. Address and gallery stay on the property."
         actions={
           <>
             <IconButton
@@ -302,8 +317,9 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
             borderColor="line.500"
           >
             <Text fontSize="13px" color="ink.400">
-              Property owns shared listing data (location, amenities, gallery).
-              This form only captures what differs per unit.
+              Address, currency, and gallery stay on the property. Amenities are
+              set per unit — seed from the property when you pick one, then
+              customise.
             </Text>
           </Box>
 
@@ -331,6 +347,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                             bedrooms: nextProperty.capacity.bedrooms,
                             beds: nextProperty.capacity.beds,
                             bathrooms: nextProperty.capacity.bathrooms,
+                            amenities: [...nextProperty.amenities],
                           }
                         : {}),
                     }));
@@ -485,6 +502,28 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                   {...inputProps}
                 />
               </Field>
+            </Grid>
+          </Section>
+
+          <Section title="Amenities">
+            <Text fontSize="13px" color="ink.300" mb="12px">
+              Unit amenities shown to guests for this inventory. Property-level
+              amenities stay separate.
+            </Text>
+            <Grid
+              templateColumns={{ base: '1fr 1fr', md: 'repeat(3, 1fr)' }}
+              gap="10px"
+            >
+              {AMENITY_OPTIONS.map((option) => (
+                <Checkbox
+                  key={option.value}
+                  isChecked={values.amenities.includes(option.value)}
+                  onChange={() => toggleAmenity(option.value)}
+                  borderColor="line.500"
+                >
+                  {option.label}
+                </Checkbox>
+              ))}
             </Grid>
           </Section>
 

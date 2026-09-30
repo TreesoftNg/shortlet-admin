@@ -192,8 +192,8 @@ export type TenantSettings = {
 };
 
 /** Bookable inventory under a property (multi-unit extension).
- * Shared listing content (address, amenities, house rules, photos gallery)
- * lives on Property — units only store what differs per room/apartment.
+ * Shared listing content (address, house rules, photos gallery) lives on
+ * Property. Amenities are set per unit (can differ within the same property).
  */
 export type Unit = {
   id: number;
@@ -212,6 +212,8 @@ export type Unit = {
   bathrooms: number;
   /** Nightly rate override; null inherits property/channel pricing. */
   base_rate: number | null;
+  /** Unit-specific amenities (independent of property amenities). */
+  amenities: string[];
   /** Short label for calendars/lists (e.g. "Lagoon view corner"). */
   summary: string | null;
   /** Internal ops notes — never guest-facing. */

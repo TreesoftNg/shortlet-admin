@@ -8,10 +8,19 @@ import {
   Heading,
   IconButton,
   Text,
+  useToast,
 } from '@chakra-ui/react';
 import { LuMessageCircle } from 'react-icons/lu';
+import {
+  useCancelReservation,
+  useCheckInReservation,
+  useRefundReservation,
+} from '@/features/bookings/hooks/use-booking-mutations';
 import { getUnitName } from '@/features/bookings/utils/get-unit-name';
 import {
+  canCancelBooking,
+  canCheckInGuest,
+  canRefundBooking,
   formatDateTimeLabel,
   formatGuestsLabel,
   formatMoney,
@@ -29,11 +38,29 @@ type BookingDetailDrawerProps = {
 };
 
 export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
+  const toast = useToast();
+  const checkInMutation = useCheckInReservation();
+  const cancelMutation = useCancelReservation();
+  const refundMutation = useRefundReservation();
+
   if (!reservation) {
     return null;
   }
 
   const status = getReservationDisplayStatus(reservation);
+  const alreadyCheckedIn =
+    reservation.reservation_status.current.sub_category === 'checked_in';
+  const alreadyCancelled =
+    reservation.reservation_status.current.category === 'cancelled';
+  const alreadyRefunded =
+    reservation.reservation_status.current.sub_category === 'refunded';
+  const checkInEnabled = canCheckInGuest(reservation);
+  const cancelEnabled = canCancelBooking(reservation);
+  const refundEnabled = canRefundBooking(reservation);
+  const actionPending =
+    checkInMutation.isPending ||
+    cancelMutation.isPending ||
+    refundMutation.isPending;
   const fees =
     (reservation.financials?.cleaning_fee ?? 0) +
     (reservation.financials?.linen_fee ?? 0) +
@@ -43,6 +70,9 @@ export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
     (reservation.financials?.pass_through_taxes ?? 0);
   const otherFees = reservation.financials?.other_fees ?? [];
   const currency = reservation.financials?.currency ?? 'NGN';
+  const refundAmount = reservation.financials
+    ? formatMoney(reservation.financials.total, currency)
+    : null;
 
   const activity = [
     ...reservation.reservation_status.history.map((entry, index) => ({
@@ -52,15 +82,17 @@ export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
           ? 'Payment confirmed'
           : entry.sub_category === 'voided'
             ? 'Booking cancelled'
-            : entry.sub_category === 'request for payment'
-              ? 'Awaiting payment'
-              : entry.sub_category === 'checked_in'
-                ? 'Guest checked in'
-                : entry.sub_category === 'completed'
-                  ? 'Stay completed'
-                  : entry.sub_category === 'external'
-                    ? 'External reservation synced'
-                    : 'Status updated',
+            : entry.sub_category === 'refunded'
+              ? 'Refund issued'
+              : entry.sub_category === 'request for payment'
+                ? 'Awaiting payment'
+                : entry.sub_category === 'checked_in'
+                  ? 'Guest checked in'
+                  : entry.sub_category === 'completed'
+                    ? 'Stay completed'
+                    : entry.sub_category === 'external'
+                      ? 'External reservation synced'
+                      : 'Status updated',
       timestamp: formatDateTimeLabel(entry.changed_at),
     })),
     {
@@ -69,6 +101,87 @@ export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
       timestamp: formatDateTimeLabel(reservation.created_at),
     },
   ];
+
+  const handleCheckIn = async () => {
+    if (!checkInEnabled || actionPending) {
+      return;
+    }
+
+    try {
+      await checkInMutation.mutateAsync(reservation.id);
+      toast({
+        title: 'Guest checked in',
+        description: reservation.guest?.full_name
+          ? `${reservation.guest.full_name} is now checked in`
+          : undefined,
+        status: 'success',
+        duration: 2500,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not check in guest',
+        description: error instanceof Error ? error.message : undefined,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!cancelEnabled || actionPending) {
+      return;
+    }
+
+    try {
+      await cancelMutation.mutateAsync(reservation.id);
+      toast({
+        title: 'Booking cancelled',
+        description: reservation.platform_id
+          ? `${reservation.platform_id} was cancelled`
+          : undefined,
+        status: 'success',
+        duration: 2500,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not cancel booking',
+        description: error instanceof Error ? error.message : undefined,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleRefund = async () => {
+    if (!refundEnabled || actionPending) {
+      return;
+    }
+
+    try {
+      await refundMutation.mutateAsync(reservation.id);
+      toast({
+        title: 'Refund issued',
+        description: refundAmount
+          ? `${refundAmount} will be returned to the guest`
+          : undefined,
+        status: 'success',
+        duration: 2500,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not issue refund',
+        description: error instanceof Error ? error.message : undefined,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
     <Box overflow="hidden">
@@ -187,14 +300,35 @@ export function BookingDetailDrawer({ reservation }: BookingDetailDrawerProps) {
         <ActivityTimeline items={activity} />
 
         <Flex gap="8px" mt="4px" wrap="wrap">
-          <Button size="sm" variant="dark" flex="1" minW="120px">
-            Check in guest
+          <Button
+            size="sm"
+            variant="dark"
+            flex="1"
+            minW="120px"
+            onClick={handleCheckIn}
+            isLoading={checkInMutation.isPending}
+            isDisabled={!checkInEnabled || actionPending}
+          >
+            {alreadyCheckedIn ? 'Checked in' : 'Check in guest'}
           </Button>
-          <Button size="sm" variant="soft">
-            Refund
+          <Button
+            size="sm"
+            variant="soft"
+            onClick={handleRefund}
+            isLoading={refundMutation.isPending}
+            isDisabled={!refundEnabled || actionPending}
+          >
+            {alreadyRefunded ? 'Refunded' : 'Refund'}
           </Button>
-          <Button size="sm" variant="soft" color="status.danger">
-            Cancel
+          <Button
+            size="sm"
+            variant="soft"
+            color="status.danger"
+            onClick={handleCancel}
+            isLoading={cancelMutation.isPending}
+            isDisabled={!cancelEnabled || actionPending}
+          >
+            {alreadyCancelled ? 'Cancelled' : 'Cancel'}
           </Button>
         </Flex>
       </Box>

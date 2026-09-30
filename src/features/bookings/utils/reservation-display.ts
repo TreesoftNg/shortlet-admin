@@ -38,6 +38,55 @@ export function getReservationDisplayStatus(
   return { label: category, tone: 'mute' };
 }
 
+export function canCheckInGuest(reservation: Reservation): boolean {
+  const { category, sub_category } = reservation.reservation_status.current;
+
+  if (category === 'cancelled' || sub_category === 'voided' || sub_category === 'refunded') {
+    return false;
+  }
+  if (
+    sub_category === 'checked_in' ||
+    sub_category === 'completed' ||
+    sub_category === 'request for payment'
+  ) {
+    return false;
+  }
+
+  return category === 'accepted' || sub_category === 'external';
+}
+
+export function canCancelBooking(reservation: Reservation): boolean {
+  const { category, sub_category } = reservation.reservation_status.current;
+
+  if (category === 'cancelled' || sub_category === 'voided' || sub_category === 'refunded') {
+    return false;
+  }
+  if (sub_category === 'completed') {
+    return false;
+  }
+
+  return true;
+}
+
+export function canRefundBooking(reservation: Reservation): boolean {
+  const { category, sub_category } = reservation.reservation_status.current;
+
+  if (category === 'cancelled' || sub_category === 'voided' || sub_category === 'refunded') {
+    return false;
+  }
+  if (sub_category === 'request for payment') {
+    return false;
+  }
+  if (reservation.platform === 'airbnb' || sub_category === 'external') {
+    return false;
+  }
+  if (!reservation.financials || reservation.financials.total <= 0) {
+    return false;
+  }
+
+  return category === 'accepted';
+}
+
 export function getPaymentDisplayStatus(
   reservation: Reservation,
 ): BookingDisplayStatus {

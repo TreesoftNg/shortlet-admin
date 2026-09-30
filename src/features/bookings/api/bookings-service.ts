@@ -9,3 +9,33 @@ export async function fetchReservations() {
 
   return apiClient<Reservation[]>('/bookings');
 }
+
+export async function checkInReservation(id: string) {
+  if (isMockMode()) {
+    return mockApi.checkInReservation(id);
+  }
+
+  return apiClient<Reservation>(`/bookings/${id}/check-in`, {
+    method: 'POST',
+  });
+}
+
+export async function cancelReservation(id: string) {
+  if (isMockMode()) {
+    return mockApi.cancelReservation(id);
+  }
+
+  return apiClient<Reservation>(`/bookings/${id}/cancel`, {
+    method: 'POST',
+  });
+}
+
+export async function refundReservation(id: string) {
+  if (isMockMode()) {
+    return mockApi.refundReservation(id);
+  }
+
+  return apiClient<Reservation>(`/bookings/${id}/refund`, {
+    method: 'POST',
+  });
+}

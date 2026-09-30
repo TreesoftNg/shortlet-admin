@@ -1,5 +1,8 @@
 import { mockReservations } from '@/mocks/data';
 import {
+  canCancelBooking,
+  canCheckInGuest,
+  canRefundBooking,
   formatMoney,
   formatStayDates,
   getPaymentDisplayStatus,
@@ -28,6 +31,22 @@ describe('reservation-display', () => {
       label: 'Refunded',
       tone: 'danger',
     });
+  });
+
+  it('allows check-in only for eligible reservations', () => {
+    expect(canCheckInGuest(mockReservations[0])).toBe(true);
+    expect(canCheckInGuest(mockReservations[1])).toBe(false);
+    expect(canCheckInGuest(mockReservations[3])).toBe(false);
+  });
+
+  it('allows cancel and refund only for eligible reservations', () => {
+    expect(canCancelBooking(mockReservations[0])).toBe(true);
+    expect(canCancelBooking(mockReservations[1])).toBe(true);
+    expect(canCancelBooking(mockReservations[3])).toBe(false);
+
+    expect(canRefundBooking(mockReservations[0])).toBe(true);
+    expect(canRefundBooking(mockReservations[1])).toBe(false);
+    expect(canRefundBooking(mockReservations[3])).toBe(false);
   });
 
   it('formats NGN money without decimals', () => {

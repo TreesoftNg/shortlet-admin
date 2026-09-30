@@ -14,7 +14,7 @@ describe('unit-form utils', () => {
     expect(errors.name).toBeTruthy();
   });
 
-  it('builds inventory-only unit payload', () => {
+  it('builds unit payload with its own amenities', () => {
     const unit = buildUnitFromForm(
       {
         ...createEmptyUnitForm(1),
@@ -28,6 +28,7 @@ describe('unit-form utils', () => {
         bathrooms: 1,
         base_rate: 90000,
         bookable: true,
+        amenities: ['wifi', 'workspace'],
         summary: 'Quiet corner unit',
         notes: 'Prefer midweek only',
       },
@@ -38,8 +39,8 @@ describe('unit-form utils', () => {
     expect(unit.code).toBe('D');
     expect(unit.floor).toBe('4th floor');
     expect(unit.base_rate).toBe(90000);
+    expect(unit.amenities).toEqual(['wifi', 'workspace']);
     expect(formatUnitSubtitle(unit)).toBe('1 bed · 4th floor');
-    expect(unit).not.toHaveProperty('amenities');
     expect(unit).not.toHaveProperty('description');
     expect(unit).not.toHaveProperty('currency');
   });

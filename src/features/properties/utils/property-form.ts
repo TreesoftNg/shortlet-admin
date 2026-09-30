@@ -247,6 +247,8 @@ export function syncUnitsForProperty(
     bedrooms: unit.bedrooms || property.capacity.bedrooms,
     beds: unit.beds || property.capacity.beds,
     bathrooms: unit.bathrooms || property.capacity.bathrooms,
+    amenities:
+      unit.amenities?.length > 0 ? unit.amenities : [...property.amenities],
     picture: unit.picture ?? property.picture,
     updated_at: now,
   }));
@@ -269,6 +271,7 @@ export function syncUnitsForProperty(
       beds: property.capacity.beds,
       bathrooms: property.capacity.bathrooms,
       base_rate: null,
+      amenities: [...property.amenities],
       summary: null,
       notes: null,
       picture: property.picture,
