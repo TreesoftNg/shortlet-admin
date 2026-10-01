@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { DashboardSummary } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchDashboardSummary(period = '30d') {
-  if (isMockMode()) {
-    return mockApi.getDashboardSummary();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<DashboardSummary>(`/reports/summary?period=${period}`);
+export function fetchDashboardSummary() {
+  return mockApi.getDashboardSummary();
 }

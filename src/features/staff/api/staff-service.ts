@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { StaffMember } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchStaff() {
-  if (isMockMode()) {
-    return mockApi.getStaff();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<StaffMember[]>('/staff');
+export function fetchStaff() {
+  return mockApi.getStaff();
 }

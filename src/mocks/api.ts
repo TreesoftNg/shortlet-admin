@@ -56,8 +56,6 @@ import type {
   Unit,
 } from '@/shared/types/hospitable';
 
-const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== 'false';
-
 function replaceUnits(next: Unit[]) {
   mockUnits.splice(0, mockUnits.length, ...next);
 }
@@ -400,7 +398,3 @@ export const mockApi = {
     );
   },
 };
-
-export function isMockMode(): boolean {
-  return USE_MOCKS;
-}

@@ -7,7 +7,7 @@ import { fetchDashboardSummary } from '../api/dashboard-service';
 export function useDashboardSummary(period = '30d') {
   return useQuery({
     queryKey: queryKeys.dashboard.summary(period),
-    queryFn: () => fetchDashboardSummary(period),
+    queryFn: fetchDashboardSummary,
     select: (response) => response.data,
   });
 }

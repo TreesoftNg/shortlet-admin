@@ -1,106 +1,52 @@
-import { ApiClientError, type ApiResponse, type ApiSuccessResponse } from './types';
+import { sendRequest, type HttpRequest } from './http';
+import { endSession, getAccessToken, refreshAccessToken } from './session';
+import { ApiClientError, type ApiSuccessResponse } from './types';
 
-export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+export type { HttpMethod } from './http';
 
-export type RequestOptions = {
-  method?: HttpMethod;
-  body?: unknown;
-  headers?: Record<string, string>;
-  signal?: AbortSignal;
-  /** Skip Authorization header (login/register/public). */
-  skipAuth?: boolean;
+export type RequestOptions = HttpRequest & {
+  /** Set false for endpoints that work without signing in (e.g. login). */
+  auth?: boolean;
 };
 
-type TokenGetter = () => string | null;
-
-let accessTokenGetter: TokenGetter = () => null;
-
-/** Wire auth token from Zustand (or future auth module) without circular imports. */
-export function setAccessTokenGetter(getter: TokenGetter): void {
-  accessTokenGetter = getter;
-}
-
-function getBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_BASE_URL ?? '/api/v1';
-}
-
-async function parseJsonSafe(response: Response): Promise<unknown> {
-  const text = await response.text();
-  if (!text) return null;
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return null;
-  }
-}
-
-function isApiSuccess<T>(payload: unknown): payload is ApiSuccessResponse<T> {
-  return (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'success' in payload &&
-    (payload as ApiResponse<T>).success === true &&
-    'data' in payload
-  );
-}
-
-function isApiError(payload: unknown): payload is { success: false; error: { code: string; message: string; details?: Record<string, unknown> }; meta?: { requestId?: string } } {
-  return (
-    typeof payload === 'object' &&
-    payload !== null &&
-    'success' in payload &&
-    (payload as { success: boolean }).success === false &&
-    'error' in payload
-  );
+function authenticationRequired(): ApiClientError {
+  return new ApiClientError('Please sign in to continue.', { code: 'AUTHENTICATION_REQUIRED', status: 401 });
 }
 
 /**
- * Single entry point for all HTTP calls.
- * Expects the PRD success/error envelope. Throws ApiClientError on failure.
+ * Single entry point for Shortlet API calls. Sends the access token and, if
+ * the API rejects it, refreshes once and retries before signing the user out.
  */
-export async function apiClient<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<ApiSuccessResponse<T>> {
-  const { method = 'GET', body, headers = {}, signal, skipAuth = false } = options;
-  const token = skipAuth ? null : accessTokenGetter();
-
-  const response = await fetch(`${getBaseUrl()}${path}`, {
-    method,
-    signal,
-    headers: {
-      Accept: 'application/json',
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-
-  const payload = await parseJsonSafe(response);
-
-  if (!response.ok) {
-    if (isApiError(payload)) {
-      throw new ApiClientError(payload.error.message, {
-        code: payload.error.code,
-        status: response.status,
-        details: payload.error.details,
-        requestId: payload.meta?.requestId,
-      });
-    }
-
-    throw new ApiClientError('Request failed', {
-      code: 'INTERNAL_ERROR',
-      status: response.status,
-    });
+export async function apiClient<T>(path: string, options: RequestOptions = {}): Promise<ApiSuccessResponse<T>> {
+  const { auth = true, ...request } = options;
+  if (!auth) {
+    return sendRequest<T>(path, request);
   }
 
-  if (!isApiSuccess<T>(payload)) {
-    throw new ApiClientError('Invalid API response shape', {
-      code: 'INTERNAL_ERROR',
-      status: response.status,
-    });
+  // Null means signed out; the session layer has already announced it.
+  const token = await getAccessToken();
+  if (!token) {
+    throw authenticationRequired();
   }
 
-  return payload;
+  try {
+    return await sendRequest<T>(path, withBearer(request, token));
+  } catch (error) {
+    if (!(error instanceof ApiClientError) || error.status !== 401) throw error;
+  }
+
+  const refreshed = await refreshAccessToken();
+  if (!refreshed) {
+    throw authenticationRequired();
+  }
+  try {
+    return await sendRequest<T>(path, withBearer(request, refreshed));
+  } catch (error) {
+    if (error instanceof ApiClientError && error.status === 401) endSession();
+    throw error;
+  }
+}
+
+function withBearer(request: HttpRequest, token: string): HttpRequest {
+  return { ...request, headers: { ...request.headers, Authorization: `Bearer ${token}` } };
 }

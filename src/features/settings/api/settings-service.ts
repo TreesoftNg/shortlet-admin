@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { TenantSettings } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchSettings() {
-  if (isMockMode()) {
-    return mockApi.getSettings();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<TenantSettings>('/settings');
+export function fetchSettings() {
+  return mockApi.getSettings();
 }

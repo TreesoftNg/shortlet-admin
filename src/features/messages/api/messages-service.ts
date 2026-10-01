@@ -1,20 +1,11 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { ConversationListItem } from '@/mocks/data/messaging';
-import type { Message } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchConversations() {
-  if (isMockMode()) {
-    return mockApi.getConversations();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<ConversationListItem[]>('/conversations');
+export function fetchConversations() {
+  return mockApi.getConversations();
 }
 
-export async function fetchConversationMessages(conversationId: string) {
-  if (isMockMode()) {
-    return mockApi.getConversationMessages(conversationId);
-  }
-
-  return apiClient<Message[]>(`/conversations/${conversationId}/messages`);
+export function fetchConversationMessages(conversationId: string) {
+  return mockApi.getConversationMessages(conversationId);
 }

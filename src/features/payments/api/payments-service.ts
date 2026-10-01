@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import type { PaymentListItem } from '@/mocks/data/payments';
-import { apiClient } from '@/shared/api/client';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchPayments() {
-  if (isMockMode()) {
-    return mockApi.getPayments();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<PaymentListItem[]>('/payments');
+export function fetchPayments() {
+  return mockApi.getPayments();
 }

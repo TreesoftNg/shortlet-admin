@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { CustomerListItem } from '../utils/customer-filters';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchCustomers() {
-  if (isMockMode()) {
-    return mockApi.getCustomers();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<CustomerListItem[]>('/customers');
+export function fetchCustomers() {
+  return mockApi.getCustomers();
 }

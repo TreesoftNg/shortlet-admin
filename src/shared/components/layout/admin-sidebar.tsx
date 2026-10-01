@@ -7,6 +7,7 @@ import {
   DrawerContent,
   DrawerOverlay,
   Flex,
+  IconButton,
   Text,
   VStack,
   useBreakpointValue,
@@ -21,7 +22,9 @@ import {
   LuChartBar,
   LuDoorOpen,
   LuLayoutDashboard,
+  LuLogOut,
   LuMessageSquare,
+  LuRefreshCw,
   LuSettings,
   LuStar,
   LuUndo2,
@@ -30,7 +33,8 @@ import {
   LuWallet,
 } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
-import { useAuthStore } from '@/shared/store/auth-store';
+import { useLogout, useMe } from '@/features/auth/hooks/use-auth';
+import { displayName, initials } from '@/features/auth/utils/auth-helpers';
 import { useUiStore } from '@/shared/store/ui-store';
 import { SunmadeLogo } from '@/shared/components/brand';
 
@@ -54,6 +58,7 @@ const navSections: NavSection[] = [
       { label: 'Availability', href: '/availability', icon: LuCalendarDays },
       { label: 'Properties', href: '/properties', icon: LuBuilding2 },
       { label: 'Units', href: '/units', icon: LuDoorOpen },
+      { label: 'Calendar sync', href: '/calendar-sync', icon: LuRefreshCw },
     ],
   },
   {
@@ -83,7 +88,8 @@ const navSections: NavSection[] = [
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const user = useAuthStore((state) => state.user);
+  const { data: profile } = useMe();
+  const signOut = useLogout();
 
   return (
     <Flex
@@ -173,22 +179,38 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         borderTop="1px solid"
         borderColor="line.500"
       >
-        <Box
-          as="img"
-          src={user?.avatarUrl ?? undefined}
-          alt=""
+        <Flex
           w="32px"
           h="32px"
+          flexShrink={0}
           borderRadius="full"
-          objectFit="cover"
+          align="center"
+          justify="center"
           bg="brand.500"
-        />
-        <Box fontSize="13px">
-          <Text fontWeight={700}>
-            {user ? `${user.firstName} ${user.lastName}` : 'Admin'}
+          color="white"
+          fontSize="12px"
+          fontWeight={700}
+          aria-hidden
+        >
+          {profile ? initials(profile) : ''}
+        </Flex>
+        <Box fontSize="13px" minW={0}>
+          <Text fontWeight={700} noOfLines={1}>
+            {profile ? displayName(profile) : 'Admin'}
           </Text>
-          <Text color="ink.300">{user?.roleLabel ?? 'Staff'}</Text>
+          <Text color="ink.300" noOfLines={1}>
+            {profile?.role.name ?? ''}
+          </Text>
         </Box>
+        <IconButton
+          ml="auto"
+          size="sm"
+          variant="ghost"
+          aria-label="Sign out"
+          icon={<LuLogOut size={16} />}
+          isLoading={signOut.isPending}
+          onClick={() => signOut.mutate()}
+        />
       </Flex>
     </Flex>
   );

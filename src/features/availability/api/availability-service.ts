@@ -1,6 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { AvailabilityCalendar, CalendarRange } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
+import type { CalendarRange } from '@/shared/types/hospitable';
+
+// Local mock data until this feature is connected to the Shortlet API.
 
 export type AvailabilityCalendarParams = {
   anchorDate: string;
@@ -8,19 +9,6 @@ export type AvailabilityCalendarParams = {
   propertyId?: number | 'all';
 };
 
-export async function fetchAvailabilityCalendar(params: AvailabilityCalendarParams) {
-  if (isMockMode()) {
-    return mockApi.getAvailabilityCalendar(params);
-  }
-
-  const query = new URLSearchParams({
-    anchorDate: params.anchorDate,
-    range: params.range,
-    propertyId:
-      params.propertyId === undefined || params.propertyId === 'all'
-        ? 'all'
-        : String(params.propertyId),
-  });
-
-  return apiClient<AvailabilityCalendar>(`/availability/calendar?${query.toString()}`);
+export function fetchAvailabilityCalendar(params: AvailabilityCalendarParams) {
+  return mockApi.getAvailabilityCalendar(params);
 }

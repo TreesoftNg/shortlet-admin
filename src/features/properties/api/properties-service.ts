@@ -1,34 +1,16 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { Property } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
 import type { PropertyFormValues } from '../utils/property-form';
 
-export async function fetchProperties() {
-  if (isMockMode()) {
-    return mockApi.getProperties();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<Property[]>('/properties');
+export function fetchProperties() {
+  return mockApi.getProperties();
 }
 
-export async function createProperty(values: PropertyFormValues) {
-  if (isMockMode()) {
-    return mockApi.createProperty(values);
-  }
-
-  return apiClient<Property>('/properties', {
-    method: 'POST',
-    body: values,
-  });
+export function createProperty(values: PropertyFormValues) {
+  return mockApi.createProperty(values);
 }
 
-export async function updateProperty(id: number, values: PropertyFormValues) {
-  if (isMockMode()) {
-    return mockApi.updateProperty(id, values);
-  }
-
-  return apiClient<Property>(`/properties/${id}`, {
-    method: 'PATCH',
-    body: values,
-  });
+export function updateProperty(id: number, values: PropertyFormValues) {
+  return mockApi.updateProperty(id, values);
 }

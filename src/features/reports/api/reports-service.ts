@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { ReportsSummary } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchReports() {
-  if (isMockMode()) {
-    return mockApi.getReports();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<ReportsSummary>('/reports');
+export function fetchReports() {
+  return mockApi.getReports();
 }

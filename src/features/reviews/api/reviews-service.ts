@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import { apiClient } from '@/shared/api/client';
-import type { Review } from '@/shared/types/hospitable';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchReviews() {
-  if (isMockMode()) {
-    return mockApi.getReviews();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<Review[]>('/reviews');
+export function fetchReviews() {
+  return mockApi.getReviews();
 }

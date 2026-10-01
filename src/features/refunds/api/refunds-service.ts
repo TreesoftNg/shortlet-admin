@@ -1,11 +1,7 @@
-import { isMockMode, mockApi } from '@/mocks/api';
-import type { RefundListItem } from '@/mocks/data/refunds';
-import { apiClient } from '@/shared/api/client';
+import { mockApi } from '@/mocks/api';
 
-export async function fetchRefunds() {
-  if (isMockMode()) {
-    return mockApi.getRefunds();
-  }
+// Local mock data until this feature is connected to the Shortlet API.
 
-  return apiClient<RefundListItem[]>('/refunds');
+export function fetchRefunds() {
+  return mockApi.getRefunds();
 }

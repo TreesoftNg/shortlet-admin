@@ -1,4 +1,15 @@
 export const queryKeys = {
+  auth: {
+    me: () => ['auth', 'me'] as const,
+  },
+  calendarSync: {
+    all: ['calendar-sync'] as const,
+    units: () => ['calendar-sync', 'units'] as const,
+    importFeed: (unitId: string) => ['calendar-sync', 'units', unitId, 'import'] as const,
+    bookings: (unitId: string, scope: string) => ['calendar-sync', 'units', unitId, 'bookings', scope] as const,
+    blocks: (unitId: string) => ['calendar-sync', 'units', unitId, 'blocks'] as const,
+    exportFeed: (unitId: string) => ['calendar-sync', 'units', unitId, 'export'] as const,
+  },
   dashboard: {
     all: ['dashboard'] as const,
     summary: (period?: string) => ['dashboard', 'summary', period ?? '30d'] as const,
