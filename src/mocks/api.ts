@@ -26,6 +26,11 @@ import { mockTenantSettings } from '@/mocks/data/settings';
 import { buildCustomerList } from '@/features/customers/utils/customer-filters';
 import type { CustomerListItem } from '@/features/customers/utils/customer-filters';
 import {
+  buildGuestFromForm,
+  buildReservationFromForm,
+  type BookingFormValues,
+} from '@/features/bookings/utils/booking-form';
+import {
   buildPropertyFromForm,
   syncUnitsForProperty,
   type PropertyFormValues,
@@ -40,6 +45,7 @@ import type {
   AvailabilityCalendar,
   CalendarRange,
   DashboardSummary,
+  Guest,
   Message,
   Property,
   ReportsSummary,
@@ -74,6 +80,53 @@ export const mockApi = {
       total: mockReservations.length,
       totalPages: 1,
     });
+  },
+
+  async createReservation(
+    values: BookingFormValues,
+  ): Promise<ApiSuccessResponse<Reservation>> {
+    await delay();
+
+    const property = mockProperties.find(
+      (item) => item.id === Number(values.property_id),
+    );
+    if (!property) {
+      throw new Error('Property not found');
+    }
+
+    const unit = mockUnits.find((item) => item.id === Number(values.unit_id));
+    if (!unit) {
+      throw new Error('Unit not found');
+    }
+    if (unit.property_id !== property.id) {
+      throw new Error('Unit does not belong to the selected property');
+    }
+    if (!unit.bookable || unit.status === 'inactive') {
+      throw new Error('Selected unit is not bookable');
+    }
+
+    let guest: Guest;
+    if (values.guest_mode === 'existing') {
+      const existing = mockGuests.find((item) => item.id === values.guest_id);
+      if (!existing) {
+        throw new Error('Customer not found');
+      }
+      guest = existing;
+    } else {
+      const nextGuestId = `gst-${String(mockGuests.length + 1).padStart(3, '0')}`;
+      guest = buildGuestFromForm(values, nextGuestId);
+      mockGuests.unshift(guest);
+    }
+
+    const nextId = `rsv-${String(mockReservations.length + 1).padStart(3, '0')}`;
+    const reservation = buildReservationFromForm(values, {
+      guest,
+      property,
+      unit,
+      nextId,
+    });
+    mockReservations.unshift(reservation);
+    return ok(reservation, 'Booking created');
   },
 
   async checkInReservation(

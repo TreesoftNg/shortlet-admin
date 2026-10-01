@@ -5,8 +5,10 @@ import { queryKeys } from '@/shared/api/query-keys';
 import {
   cancelReservation,
   checkInReservation,
+  createReservation,
   refundReservation,
 } from '../api/bookings-service';
+import type { BookingFormValues } from '../utils/booking-form';
 
 async function invalidateBookingQueries(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -17,7 +19,19 @@ async function invalidateBookingQueries(
     queryClient.invalidateQueries({ queryKey: queryKeys.availability.all }),
     queryClient.invalidateQueries({ queryKey: queryKeys.payments.all }),
     queryClient.invalidateQueries({ queryKey: queryKeys.refunds.all }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
   ]);
+}
+
+export function useCreateReservation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (values: BookingFormValues) => createReservation(values),
+    onSuccess: async () => {
+      await invalidateBookingQueries(queryClient);
+    },
+  });
 }
 
 export function useCheckInReservation() {

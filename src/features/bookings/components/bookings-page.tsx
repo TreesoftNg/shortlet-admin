@@ -1,8 +1,9 @@
 'use client';
 
-import { Box, IconButton } from '@chakra-ui/react';
+import { Box, Button, IconButton } from '@chakra-ui/react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { LuMenu } from 'react-icons/lu';
+import { LuMenu, LuPlus } from 'react-icons/lu';
 import { getBookingColumns } from '@/features/bookings/components/booking-table-config';
 import { BookingDetailDrawer } from '@/features/bookings/components/booking-detail-drawer';
 import { BookingsToolbar } from '@/features/bookings/components/bookings-toolbar';
@@ -101,6 +102,14 @@ export function BookingsPage() {
               color="ink.500"
               borderRadius="12px"
             />
+            <Button
+              as={Link}
+              href="/bookings/new"
+              h="44px"
+              leftIcon={<LuPlus size={16} />}
+            >
+              Add booking
+            </Button>
           </>
         }
       />
@@ -130,7 +139,7 @@ export function BookingsPage() {
         {reservations.length === 0 ? (
           <EmptyState
             title="No bookings yet"
-            description="When bookings are available, they will show up here."
+            description="Create a booking on behalf of a guest to get started."
           />
         ) : (
           <>

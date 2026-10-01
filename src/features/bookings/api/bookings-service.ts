@@ -1,6 +1,7 @@
 import { isMockMode, mockApi } from '@/mocks/api';
 import { apiClient } from '@/shared/api/client';
 import type { Reservation } from '@/shared/types/hospitable';
+import type { BookingFormValues } from '../utils/booking-form';
 
 export async function fetchReservations() {
   if (isMockMode()) {
@@ -8,6 +9,17 @@ export async function fetchReservations() {
   }
 
   return apiClient<Reservation[]>('/bookings');
+}
+
+export async function createReservation(values: BookingFormValues) {
+  if (isMockMode()) {
+    return mockApi.createReservation(values);
+  }
+
+  return apiClient<Reservation>('/bookings', {
+    method: 'POST',
+    body: values,
+  });
 }
 
 export async function checkInReservation(id: string) {
