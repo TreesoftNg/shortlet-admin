@@ -12,3 +12,27 @@ export function logout() {
 export function fetchMe() {
   return apiClient<AdminProfile>('/auth/me');
 }
+
+export type StaffInvitePreview = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  roleName: string;
+  tenantName: string;
+};
+
+export function fetchStaffInvite(token: string) {
+  return apiClient<StaffInvitePreview>(
+    `/staff-invites/preview?token=${encodeURIComponent(token)}`,
+    { auth: false },
+  );
+}
+
+export function acceptStaffInvite(input: { token: string; password: string }) {
+  return apiClient<{ email: string; tenantSlug: string }>('/staff-invites/accept', {
+    method: 'POST',
+    body: input,
+    auth: false,
+  });
+}
