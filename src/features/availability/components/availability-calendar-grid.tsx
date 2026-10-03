@@ -11,12 +11,14 @@ import {
   groupUnitsByProperty,
   isWeekend,
 } from '@/features/availability/utils/calendar';
+import { unitMatchesAvailabilityHighlight } from '@/shared/utils/calendar-deep-links';
 import type { AvailabilityCalendar, CalendarBar } from '@/shared/types/hospitable';
 import { CalendarEventBar } from './calendar-event-bar';
 
 type AvailabilityCalendarGridProps = {
   data: AvailabilityCalendar;
-  highlightedUnitId?: number | null;
+  highlightedUnitId?: string | null;
+  highlightedUnitName?: string | null;
 };
 
 function formatRate(amount: number, currency: string): string {
@@ -29,6 +31,7 @@ function formatRate(amount: number, currency: string): string {
 export function AvailabilityCalendarGrid({
   data,
   highlightedUnitId = null,
+  highlightedUnitName = null,
 }: AvailabilityCalendarGridProps) {
   const dates = eachDateInRange(data.start_date, data.end_date);
   const groups = groupUnitsByProperty(data.units);
@@ -37,6 +40,7 @@ export function AvailabilityCalendarGrid({
   const dayColMin = dayCount > 14 ? 56 : 72;
   const gridTemplateColumns = `${unitColWidth}px repeat(${dayCount}, minmax(${dayColMin}px, 1fr))`;
   const highlightRef = useRef<HTMLDivElement>(null);
+  const hasHighlight = Boolean(highlightedUnitId || highlightedUnitName);
 
   const barsByUnit = data.bars.reduce<Record<number, CalendarBar[]>>((acc, bar) => {
     if (!acc[bar.unit_id]) acc[bar.unit_id] = [];
@@ -45,12 +49,12 @@ export function AvailabilityCalendarGrid({
   }, {});
 
   useEffect(() => {
-    if (!highlightedUnitId || !highlightRef.current) return;
+    if (!hasHighlight || !highlightRef.current) return;
     highlightRef.current.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
     });
-  }, [highlightedUnitId, data.units]);
+  }, [hasHighlight, highlightedUnitId, highlightedUnitName, data.units]);
 
   return (
     <Box overflowX="auto">
@@ -136,7 +140,11 @@ export function AvailabilityCalendarGrid({
 
               {group.units.map((unit) => {
                 const unitBars = barsByUnit[unit.id] ?? [];
-                const isHighlighted = highlightedUnitId === unit.id;
+                const isHighlighted = unitMatchesAvailabilityHighlight(
+                  unit,
+                  highlightedUnitId,
+                  highlightedUnitName,
+                );
 
                 return (
                   <Box key={unit.id} display="contents">

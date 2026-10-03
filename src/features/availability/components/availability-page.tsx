@@ -9,6 +9,7 @@ import {
   Skeleton,
   Text,
 } from '@chakra-ui/react';
+import NextLink from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -25,6 +26,10 @@ import {
   addDays,
   formatRangeLabel,
 } from '@/features/availability/utils/calendar';
+import {
+  calendarSyncHref,
+  unitMatchesAvailabilityHighlight,
+} from '@/shared/utils/calendar-deep-links';
 import { useProperties } from '@/features/properties/hooks/use-properties';
 import {
   EmptyState,
@@ -56,7 +61,8 @@ export function AvailabilityPage() {
   const [anchorDate, setAnchorDate] = useState(DEFAULT_ANCHOR);
   const [range, setRange] = useState<CalendarRange>('2weeks');
   const [propertyId, setPropertyId] = useState<PropertyIdFilter>('all');
-  const [highlightedUnitId, setHighlightedUnitId] = useState<number | null>(
+  const [highlightedUnitId, setHighlightedUnitId] = useState<string | null>(null);
+  const [highlightedUnitName, setHighlightedUnitName] = useState<string | null>(
     null,
   );
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -67,13 +73,10 @@ export function AvailabilityPage() {
       setPropertyId(parsePropertyIdFilter(propertyParam));
     }
 
-    const unitParam = searchParams.get('unitId');
-    if (unitParam) {
-      const parsed = Number(unitParam);
-      setHighlightedUnitId(Number.isFinite(parsed) && parsed > 0 ? parsed : null);
-    } else {
-      setHighlightedUnitId(null);
-    }
+    const unitParam = searchParams.get('unitId')?.trim() || null;
+    const unitNameParam = searchParams.get('unitName')?.trim() || null;
+    setHighlightedUnitId(unitParam);
+    setHighlightedUnitName(unitNameParam);
   }, [searchParams]);
 
   const step = range === 'week' ? 7 : range === 'month' ? 30 : 14;
@@ -91,14 +94,29 @@ export function AvailabilityPage() {
     return formatRangeLabel(data.start_date, data.end_date);
   }, [data]);
 
-  const highlightedUnitName = useMemo(() => {
-    if (!highlightedUnitId || !data) return null;
-    return data.units.find((unit) => unit.id === highlightedUnitId)?.name ?? null;
-  }, [data, highlightedUnitId]);
+  const focusedUnit = useMemo(() => {
+    if (!data || (!highlightedUnitId && !highlightedUnitName)) return null;
+    return (
+      data.units.find((unit) =>
+        unitMatchesAvailabilityHighlight(
+          unit,
+          highlightedUnitId,
+          highlightedUnitName,
+        ),
+      ) ?? null
+    );
+  }, [data, highlightedUnitId, highlightedUnitName]);
+
+  const calendarSyncLink = useMemo(() => {
+    if (highlightedUnitId) return calendarSyncHref(highlightedUnitId);
+    if (focusedUnit) return calendarSyncHref(focusedUnit.id);
+    return null;
+  }, [focusedUnit, highlightedUnitId]);
 
   const updatePropertyId = (next: PropertyIdFilter) => {
     setPropertyId(next);
     setHighlightedUnitId(null);
+    setHighlightedUnitName(null);
     const params = new URLSearchParams(searchParams.toString());
     if (next === 'all') {
       params.delete('propertyId');
@@ -106,6 +124,7 @@ export function AvailabilityPage() {
       params.set('propertyId', String(next));
     }
     params.delete('unitId');
+    params.delete('unitName');
     const query = params.toString();
     router.replace(query ? `/availability?${query}` : '/availability', {
       scroll: false,
@@ -129,21 +148,34 @@ export function AvailabilityPage() {
       <PageHeader
         title="Availability"
         description={
-          highlightedUnitName
-            ? `Focused on ${highlightedUnitName}.`
+          focusedUnit
+            ? `Focused on ${focusedUnit.name}.`
             : 'Every unit, every night — bookings, holds and blocks in one view.'
         }
         actions={
-          <IconButton
-            aria-label="Open navigation"
-            icon={<LuMenu size={20} />}
-            display={{ base: 'inline-flex', lg: 'none' }}
-            variant="secondary"
-            borderRadius="12px"
-            h="44px"
-            w="44px"
-            onClick={openMobileNav}
-          />
+          <Flex gap="8px" align="center">
+            {calendarSyncLink ? (
+              <Button
+                as={NextLink}
+                href={calendarSyncLink}
+                size="sm"
+                variant="soft"
+                leftIcon={<LuRefreshCw size={14} />}
+              >
+                Calendar sync
+              </Button>
+            ) : null}
+            <IconButton
+              aria-label="Open navigation"
+              icon={<LuMenu size={20} />}
+              display={{ base: 'inline-flex', lg: 'none' }}
+              variant="secondary"
+              borderRadius="12px"
+              h="44px"
+              w="44px"
+              onClick={openMobileNav}
+            />
+          </Flex>
         }
       />
 
@@ -283,6 +315,7 @@ export function AvailabilityPage() {
           <AvailabilityCalendarGrid
             data={data}
             highlightedUnitId={highlightedUnitId}
+            highlightedUnitName={highlightedUnitName}
           />
         )}
       </Box>

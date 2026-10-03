@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type UnitCalendarTab = 'import' | 'bookings' | 'blocks' | 'export';
+export type UnitCalendarTab = 'timeline' | 'import' | 'bookings' | 'blocks' | 'export';
 
 type CalendarSyncUiState = {
   /** Unit whose calendar dialog is open, if any. */
@@ -15,7 +15,7 @@ type CalendarSyncUiState = {
 export const useCalendarSyncUiStore = create<CalendarSyncUiState>((set) => ({
   selectedUnitId: null,
   activeTab: 'import',
-  openUnit: (unitId, tab = 'import') => set({ selectedUnitId: unitId, activeTab: tab }),
+  openUnit: (unitId, tab = 'timeline') => set({ selectedUnitId: unitId, activeTab: tab }),
   setTab: (tab) => set({ activeTab: tab }),
   close: () => set({ selectedUnitId: null }),
 }));

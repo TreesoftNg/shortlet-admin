@@ -12,9 +12,15 @@ import { CalendarSyncPage } from './calendar-sync-page';
 import { ExportTab } from './export-tab';
 import { ImportTab } from './import-tab';
 import { BookingsTab } from './bookings-tab';
+import { TimelineTab } from './timeline-tab';
 
 jest.mock('../api/calendar-sync-api');
 const api = jest.mocked(calendarApi);
+
+let search = new URLSearchParams();
+jest.mock('next/navigation', () => ({
+  useSearchParams: () => search,
+}));
 
 const HOSPITABLE_URL = 'https://api.hospitable.com/v1/properties/reservations.ics?key=1&token=example';
 const ALL_PERMISSIONS = ['integration.manage', 'availability.read', 'availability.manage'];
@@ -61,7 +67,11 @@ function renderAs(ui: React.ReactElement, permissions = ALL_PERMISSIONS) {
 
 beforeEach(() => {
   jest.resetAllMocks();
-  useCalendarSyncUiStore.setState({ selectedUnitId: null, activeTab: 'import' });
+  search = new URLSearchParams();
+  useCalendarSyncUiStore.setState({ selectedUnitId: null, activeTab: 'timeline' });
+  api.fetchImportedBookings.mockResolvedValue([]);
+  api.fetchBlocks.mockResolvedValue([]);
+  api.fetchExportFeed.mockResolvedValue(null);
 });
 
 describe('CalendarSyncPage', () => {
@@ -72,11 +82,42 @@ describe('CalendarSyncPage', () => {
     const row = (await screen.findByText('Charming 1bedroom')).closest('tr')!;
     expect(within(row).getByText('Syncing')).toBeInTheDocument();
     expect(within(row).getByText('Not set up')).toBeInTheDocument();
-    expect(screen.getByText('Not connected')).toBeInTheDocument();
+    const disconnectedRow = screen.getByText('Elegant studio').closest('tr')!;
+    expect(within(disconnectedRow).getByText('Not connected')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Sync all connected/i })).toBeInTheDocument();
 
     await userEvent.click(row);
     expect(useCalendarSyncUiStore.getState().selectedUnitId).toBe('unit-1');
-    expect(await screen.findByRole('tab', { name: 'Blocked dates' })).toBeInTheDocument();
+    expect(await screen.findByRole('tab', { name: 'Timeline' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Blocked dates' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Open in Availability/i })).toHaveAttribute(
+      'href',
+      '/availability?unitId=unit-1&unitName=Charming+1bedroom',
+    );
+  });
+
+  it('opens a unit from the unitId query param', async () => {
+    search = new URLSearchParams('unitId=unit-1');
+    api.fetchCalendarUnits.mockResolvedValue([unit({ feed })]);
+    renderAs(<CalendarSyncPage />);
+
+    await waitFor(() => {
+      expect(useCalendarSyncUiStore.getState().selectedUnitId).toBe('unit-1');
+    });
+    expect(await screen.findByRole('tab', { name: 'Timeline' })).toBeInTheDocument();
+  });
+
+  it('filters the list by health tab', async () => {
+    api.fetchCalendarUnits.mockResolvedValue([
+      unit({ feed }),
+      unit({ unitId: 'unit-2', name: 'Elegant studio' }),
+    ]);
+    renderAs(<CalendarSyncPage />);
+
+    await screen.findByText('Charming 1bedroom');
+    await userEvent.click(screen.getByRole('button', { name: /Not connected/i }));
+    expect(screen.queryByText('Charming 1bedroom')).not.toBeInTheDocument();
+    expect(screen.getByText('Elegant studio')).toBeInTheDocument();
   });
 
   it('explains when the role has no access, without calling the API', () => {
@@ -94,8 +135,43 @@ describe('ImportTab', () => {
     await userEvent.type(screen.getByLabelText(/hospitable ical link/i), 'https://example.com/calendar');
     await userEvent.click(screen.getByRole('button', { name: 'Connect' }));
 
-    expect(await screen.findByText(/Paste the full https:\/\/api.hospitable.com/)).toBeInTheDocument();
+    expect(await screen.findByText(/Use the Hospitable export link/)).toBeInTheDocument();
     expect(api.connectImportFeed).not.toHaveBeenCalled();
+  });
+
+  it('rejects an incomplete Hospitable link missing token', async () => {
+    renderAs(<ImportTab unit={unit()} />);
+
+    fireEvent.change(screen.getByLabelText(/hospitable ical link/i), {
+      target: { value: 'https://api.hospitable.com/v1/properties/reservations.ics?key=1' },
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Connect' }));
+
+    expect(await screen.findByText(/including key and token/)).toBeInTheDocument();
+    expect(api.connectImportFeed).not.toHaveBeenCalled();
+  });
+
+  it('explains empty-feed confirmation and shows Sync now', () => {
+    renderAs(
+      <ImportTab
+        unit={unit({
+          feed: { ...feed, awaitingEmptyFeedConfirmation: true },
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/Empty feed — confirming/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sync now' })).toBeInTheDocument();
+  });
+
+  it('maps a conflict error when sync is already running', async () => {
+    api.syncImportFeed.mockRejectedValue(
+      new ApiClientError('Conflict', { code: 'RESOURCE_CONFLICT', status: 409 }),
+    );
+    renderAs(<ImportTab unit={unit({ feed })} />);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sync now' }));
+    expect((await screen.findAllByText(/already running/i)).length).toBeGreaterThan(0);
   });
 
   it('connects a Hospitable link', async () => {
@@ -147,6 +223,53 @@ describe('ImportTab', () => {
   });
 });
 
+describe('TimelineTab', () => {
+  it('renders imported bookings and blocks on a day grid', async () => {
+    api.fetchImportedBookings.mockResolvedValue([
+      {
+        id: 'e1',
+        source: 'hospitable',
+        externalUid: 'x',
+        reservationCode: 'QGUIPR',
+        guestName: 'Ada Okafor',
+        guestEmail: null,
+        guestPhone: null,
+        adults: 2,
+        children: 0,
+        checkIn: '',
+        checkOut: '',
+        startDate: '2026-10-02',
+        endDate: '2026-10-05',
+        status: 'active',
+        firstSeenAt: '',
+        lastSeenAt: '',
+        removedAt: null,
+      },
+    ]);
+    api.fetchBlocks.mockResolvedValue([
+      {
+        id: 'b1',
+        unitId: 'unit-1',
+        startDate: '2026-10-10',
+        endDate: '2026-10-12',
+        nights: 2,
+        reason: 'maintenance',
+        note: 'AC service',
+        createdAt: '',
+      },
+    ]);
+
+    renderAs(<TimelineTab unit={unit({ feed })} initialAnchorDate="2026-10-01" />);
+
+    expect(await screen.findByText(/Ada Okafor/)).toBeInTheDocument();
+    expect(screen.getByText('AC service')).toBeInTheDocument();
+    expect(screen.getByText('Hospitable booking')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    expect(screen.getByText(/Ada Okafor|AC service|No stays or blocks/)).toBeInTheDocument();
+  });
+});
+
 describe('BookingsTab', () => {
   it('lists imported bookings with guest details and marks cancellations', async () => {
     api.fetchImportedBookings.mockResolvedValue([
@@ -160,11 +283,16 @@ describe('BookingsTab', () => {
     renderAs(<BookingsTab unit={unit({ feed })} />);
 
     expect(await screen.findByText('Ada Okafor')).toBeInTheDocument();
-    expect(screen.getByText(/Fri, 2 Oct 2026 → Sun, 4 Oct 2026 · 2 nights/)).toBeInTheDocument();
+    expect(screen.getByText(/Fri, 2 Oct 2026 → Sun, 4 Oct 2026/)).toBeInTheDocument();
+    expect(screen.getByText(/2 nights/)).toBeInTheDocument();
     expect(screen.getByText(/ada@example.com/)).toBeInTheDocument();
     expect(screen.getByText('Cancelled')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View in Bookings/i })).toHaveAttribute(
+      'href',
+      '/bookings?search=QGUIPR',
+    );
 
-    await userEvent.click(screen.getByText('All, including cancelled'));
+    await userEvent.click(screen.getByRole('button', { name: /^All/i }));
     await waitFor(() => expect(api.fetchImportedBookings).toHaveBeenLastCalledWith('unit-1', 'all'));
   });
 });
@@ -209,16 +337,35 @@ describe('BlockedDatesTab', () => {
     api.deleteBlock.mockResolvedValue();
     renderAs(<BlockedDatesTab unit={unit()} />);
 
-    expect(await screen.findByText('2 nights · Maintenance · AC service')).toBeInTheDocument();
+    expect(await screen.findByText('AC service')).toBeInTheDocument();
+    expect(screen.getByText(/Sat, 10 Oct 2099 → Mon, 12 Oct 2099/)).toBeInTheDocument();
+    expect(screen.getByText('2 nights')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Remove block starting 2099-10-10' }));
+    expect(api.deleteBlock).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Remove block' }));
     await waitFor(() => expect(api.deleteBlock).toHaveBeenCalledWith('unit-1', 'b1'));
+  });
+
+  it('warns when the new range overlaps an existing block', async () => {
+    api.fetchBlocks.mockResolvedValue([block]);
+    renderAs(<BlockedDatesTab unit={unit()} />);
+
+    fireEvent.change(await screen.findByLabelText(/first night/i), {
+      target: { value: '2099-10-11' },
+    });
+    fireEvent.change(screen.getByLabelText(/checkout day/i), {
+      target: { value: '2099-10-13' },
+    });
+
+    expect(await screen.findByText(/Overlaps an existing block/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Block dates' })).toBeDisabled();
   });
 
   it('is read-only without availability.manage', async () => {
     api.fetchBlocks.mockResolvedValue([block]);
     renderAs(<BlockedDatesTab unit={unit()} />, ['integration.manage', 'availability.read']);
 
-    expect(await screen.findByText('2 nights · Maintenance · AC service')).toBeInTheDocument();
+    expect(await screen.findByText('AC service')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Block dates' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Remove block/ })).not.toBeInTheDocument();
   });
@@ -236,7 +383,7 @@ describe('ExportTab', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Create export link' }));
 
     expect(await screen.findByDisplayValue(STAGING_URL)).toBeInTheDocument();
-    expect(screen.getByText(/will not be shown again/)).toBeInTheDocument();
+    expect(screen.getAllByText(/will not be shown again/).length).toBeGreaterThan(0);
     expect(screen.getByText('Add it in Hospitable')).toBeInTheDocument();
     expect(screen.queryByText(/local address/)).not.toBeInTheDocument();
   });
@@ -253,20 +400,33 @@ describe('ExportTab', () => {
     expect(await screen.findByText(/local address/)).toBeInTheDocument();
   });
 
-  it('shows an existing link as status only, and confirms before replacing it', async () => {
+  it('shows an existing link as status only, and confirms before rotating it', async () => {
     api.fetchExportFeed.mockResolvedValue(exportFeed);
     api.issueExportFeed.mockResolvedValue({ url: STAGING_URL, rotated: true, feed: exportFeed });
     renderAs(<ExportTab unit={unit()} />);
 
     expect(await screen.findByText('Waiting for Hospitable')).toBeInTheDocument();
+    expect(screen.getByText(/first fetch/i)).toBeInTheDocument();
     expect(screen.queryByDisplayValue(/\.ics$/)).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Get a new link' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Rotate link' }));
     expect(screen.getByText(/stops working immediately/)).toBeInTheDocument();
     expect(api.issueExportFeed).not.toHaveBeenCalled();
-    await userEvent.click(screen.getAllByRole('button', { name: 'Get a new link' })[0]);
+    await userEvent.click(screen.getAllByRole('button', { name: 'Rotate link' })[0]);
 
     expect(await screen.findByDisplayValue(STAGING_URL)).toBeInTheDocument();
+    expect(screen.getByText(/New link — copy it now/i)).toBeInTheDocument();
+  });
+
+  it('guides when Hospitable has not fetched recently', async () => {
+    api.fetchExportFeed.mockResolvedValue({
+      ...exportFeed,
+      lastAccessedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    });
+    renderAs(<ExportTab unit={unit()} />);
+
+    expect((await screen.findAllByText('Not fetched recently')).length).toBeGreaterThan(0);
+    expect(screen.getByText(/has not requested this feed/i)).toBeInTheDocument();
   });
 
   it('disables the link after confirmation', async () => {

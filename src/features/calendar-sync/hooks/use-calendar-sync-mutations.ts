@@ -13,10 +13,14 @@ import {
 } from '../api/calendar-sync-api';
 import type { CreateBlockInput } from '../types';
 
-/** Every calendar-sync view can change after a mutation, so refresh them all. */
+/** Calendar-sync mutations can change Availability bars too — refresh both. */
 function useRefreshCalendarSync() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: queryKeys.calendarSync.all });
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendarSync.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.availability.all }),
+    ]);
 }
 
 export function useConnectImportFeed(unitId: string) {
@@ -28,6 +32,20 @@ export function useSyncImportFeed(unitId: string) {
   const refresh = useRefreshCalendarSync();
   // A failed sync is still recorded on the feed, so refresh either way.
   return useMutation({ mutationFn: () => syncImportFeed(unitId), onSettled: refresh });
+}
+
+/** Sync every connected unit; continues after individual failures. */
+export function useSyncAllImportFeeds() {
+  const refresh = useRefreshCalendarSync();
+  return useMutation({
+    mutationFn: async (unitIds: string[]) => {
+      const results = await Promise.allSettled(unitIds.map((unitId) => syncImportFeed(unitId)));
+      const succeeded = results.filter((item) => item.status === 'fulfilled').length;
+      const failed = results.length - succeeded;
+      return { total: results.length, succeeded, failed };
+    },
+    onSettled: refresh,
+  });
 }
 
 export function useDisconnectImportFeed(unitId: string) {

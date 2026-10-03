@@ -4,6 +4,7 @@ import {
   Alert,
   AlertDescription,
   AlertIcon,
+  AlertTitle,
   Box,
   Button,
   Flex,
@@ -27,12 +28,17 @@ import {
 } from '../hooks/use-calendar-sync-mutations';
 import type { UnitCalendarSummary } from '../types';
 import {
+  describeCalendarApiError,
+  describeIcalUrlIssue,
+  describeImportGuidance,
   describeImportHealth,
   describeSyncResult,
-  errorMessage,
   formatNextSync,
   formatRelativeTime,
+  icalUrlIssueMessage,
   looksLikeHospitableIcalUrl,
+  normalizeIcalUrl,
+  syncToastStatus,
 } from '../utils/calendar-sync-format';
 
 export function ImportTab({ unit }: { unit: UnitCalendarSummary }) {
@@ -57,19 +63,42 @@ function FeedStatus({ unit, onReplace }: { unit: UnitCalendarSummary; onReplace:
   const sync = useSyncImportFeed(unit.unitId);
   const disconnect = useDisconnectImportFeed(unit.unitId);
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const feed = unit.feed!;
   const health = describeImportHealth(feed);
+  const guidance = describeImportGuidance(feed);
 
-  const syncNow = () =>
+  const syncNow = () => {
+    setSyncError(null);
     sync.mutate(undefined, {
-      onSuccess: (result) =>
+      onSuccess: (result) => {
+        if (result.outcome === 'failed') {
+          setSyncError(describeSyncResult(result));
+        }
         toast({
-          status: result.outcome === 'failed' ? 'error' : 'success',
-          title: result.outcome === 'failed' ? 'Sync failed' : 'Calendar synced',
+          status: syncToastStatus(result.outcome),
+          title:
+            result.outcome === 'failed'
+              ? 'Sync failed'
+              : result.outcome === 'locked'
+                ? 'Sync already running'
+                : result.outcome === 'awaiting_confirmation'
+                  ? 'Empty feed — confirming'
+                  : 'Calendar synced',
           description: describeSyncResult(result),
-        }),
-      onError: (error) => toast({ status: 'error', title: 'Sync failed', description: errorMessage(error) }),
+        });
+      },
+      onError: (error) => {
+        const message = describeCalendarApiError(error);
+        setSyncError(message);
+        toast({
+          status: 'error',
+          title: 'Sync failed',
+          description: message,
+        });
+      },
     });
+  };
 
   const disconnectFeed = () =>
     disconnect.mutate(undefined, {
@@ -79,7 +108,12 @@ function FeedStatus({ unit, onReplace }: { unit: UnitCalendarSummary; onReplace:
           title: 'Import disconnected',
           description: `${releasedEvents} upcoming booking(s) no longer block this unit.`,
         }),
-      onError: (error) => toast({ status: 'error', title: 'Could not disconnect', description: errorMessage(error) }),
+      onError: (error) =>
+        toast({
+          status: 'error',
+          title: 'Could not disconnect',
+          description: describeCalendarApiError(error),
+        }),
     });
 
   return (
@@ -91,21 +125,33 @@ function FeedStatus({ unit, onReplace }: { unit: UnitCalendarSummary; onReplace:
           { label: 'Last synced', value: formatRelativeTime(feed.lastSucceededAt) },
           { label: 'Next sync', value: formatNextSync(feed.nextFetchAt) },
           { label: 'Upcoming bookings', value: String(feed.upcomingEventCount) },
+          ...(feed.consecutiveFailures > 0
+            ? [
+                {
+                  label: 'Failed attempts',
+                  value: String(feed.consecutiveFailures),
+                },
+              ]
+            : []),
         ]}
       />
-      {feed.lastError ? (
-        <Alert status="error" borderRadius="12px">
-          <AlertIcon />
-          <AlertDescription>{feed.lastError}</AlertDescription>
+
+      {guidance ? (
+        <Alert status={guidance.tone} borderRadius="12px" alignItems="flex-start">
+          <AlertIcon mt="2px" />
+          <Box>
+            <AlertTitle fontSize="14px" mb="4px">
+              {guidance.title}
+            </AlertTitle>
+            <AlertDescription>{guidance.body}</AlertDescription>
+          </Box>
         </Alert>
       ) : null}
-      {feed.awaitingEmptyFeedConfirmation ? (
-        <Alert status="warning" borderRadius="12px">
+
+      {syncError ? (
+        <Alert status="error" borderRadius="12px">
           <AlertIcon />
-          <AlertDescription>
-            Hospitable returned no bookings. Nights stay blocked until the next sync confirms it, in case this was a
-            temporary outage.
-          </AlertDescription>
+          <AlertDescription>{syncError}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -162,18 +208,26 @@ function ConnectFeedForm({
   const connect = useConnectImportFeed(unit.unitId);
   const [url, setUrl] = useState('');
   const [touched, setTouched] = useState(false);
-  const formatError =
-    touched && !looksLikeHospitableIcalUrl(url)
-      ? 'Paste the full https://api.hospitable.com/… .ics link from Hospitable.'
-      : undefined;
+  const issue = touched ? describeIcalUrlIssue(url) : null;
+  const formatError = issue ? icalUrlIssueMessage(issue) : undefined;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     setTouched(true);
-    if (!looksLikeHospitableIcalUrl(url)) return;
-    connect.mutate(url.trim(), {
+    const cleaned = normalizeIcalUrl(url);
+    if (!looksLikeHospitableIcalUrl(cleaned)) return;
+    connect.mutate(cleaned, {
       onSuccess: ({ sync }) => {
-        toast({ status: 'success', title: 'Calendar connected', description: describeSyncResult(sync) });
+        toast({
+          status: syncToastStatus(sync.outcome),
+          title:
+            sync.outcome === 'failed'
+              ? 'Connected, but sync failed'
+              : sync.outcome === 'awaiting_confirmation'
+                ? 'Connected — confirming empty feed'
+                : 'Calendar connected',
+          description: describeSyncResult(sync),
+        });
         setUrl('');
         onDone();
       },
@@ -193,7 +247,9 @@ function ConnectFeedForm({
           <ListItem>
             Go to the calendar settings and copy the <b>Property iCal</b> export link.
           </ListItem>
-          <ListItem>Paste it below. Treat it like a password: anyone with it can read bookings.</ListItem>
+          <ListItem>
+            Paste it below. It must include <b>key</b> and <b>token</b>. Treat it like a password.
+          </ListItem>
         </OrderedList>
       </Box>
 
@@ -203,6 +259,13 @@ function ConnectFeedForm({
           value={url}
           onChange={(event) => setUrl(event.target.value)}
           onBlur={() => setTouched(true)}
+          onPaste={(event) => {
+            const pasted = event.clipboardData.getData('text');
+            if (!pasted) return;
+            event.preventDefault();
+            setUrl(normalizeIcalUrl(pasted));
+            setTouched(true);
+          }}
           placeholder="https://api.hospitable.com/v1/properties/reservations.ics?…"
           autoComplete="off"
           spellCheck={false}
@@ -214,14 +277,16 @@ function ConnectFeedForm({
         {formatError ? (
           <FormErrorMessage>{formatError}</FormErrorMessage>
         ) : (
-          <FormHelperText>We check the link and import bookings straight away. It is stored encrypted.</FormHelperText>
+          <FormHelperText>
+            We validate the link, store it encrypted, and import bookings straight away.
+          </FormHelperText>
         )}
       </FormControl>
 
       {connect.isError ? (
         <Alert status="error" borderRadius="12px">
           <AlertIcon />
-          <AlertDescription>{errorMessage(connect.error)}</AlertDescription>
+          <AlertDescription>{describeCalendarApiError(connect.error)}</AlertDescription>
         </Alert>
       ) : null}
 

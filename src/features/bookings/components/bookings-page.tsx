@@ -2,7 +2,8 @@
 
 import { Box, Button, IconButton } from '@chakra-ui/react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { LuMenu, LuPlus } from 'react-icons/lu';
 import { getBookingColumns } from '@/features/bookings/components/booking-table-config';
 import { BookingDetailDrawer } from '@/features/bookings/components/booking-detail-drawer';
@@ -35,10 +36,19 @@ import { useUiStore } from '@/shared/store/ui-store';
 const TODAY = '2026-09-28';
 
 export function BookingsPage() {
+  const searchParams = useSearchParams();
   const { data, isLoading, isError, error, refetch } = useReservations();
   const [filters, setFilters] = useState<BookingFilters>(DEFAULT_BOOKING_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
+
+  useEffect(() => {
+    const search = searchParams.get('search')?.trim() ?? '';
+    if (!search) return;
+    setFilters((current) =>
+      current.search === search ? current : { ...current, search, page: 1 },
+    );
+  }, [searchParams]);
 
   const reservations = data ?? [];
 
