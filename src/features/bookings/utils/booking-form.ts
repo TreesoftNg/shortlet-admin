@@ -16,8 +16,8 @@ export type BookingFormValues = {
   last_name: string;
   email: string;
   phone: string;
-  property_id: number | '';
-  unit_id: number | '';
+  property_id: string | '';
+  unit_id: string | '';
   arrival_date: string;
   departure_date: string;
   adult_count: number;
@@ -122,10 +122,10 @@ export function validateBookingForm(
     }
   }
 
-  if (values.property_id === '' || !Number.isFinite(Number(values.property_id))) {
+  if (!values.property_id) {
     errors.property_id = 'Select a property';
   }
-  if (values.unit_id === '' || !Number.isFinite(Number(values.unit_id))) {
+  if (!values.unit_id) {
     errors.unit_id = 'Select a unit';
   }
 

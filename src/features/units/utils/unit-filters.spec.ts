@@ -32,9 +32,9 @@ describe('unit-filters', () => {
 
     const byProperty = filterUnits(enriched, {
       ...DEFAULT_UNIT_FILTERS,
-      propertyId: 1,
+      propertyId: '1',
     });
-    expect(byProperty.every((item) => item.property_id === 1)).toBe(true);
+    expect(byProperty.every((item) => item.property_id === '1')).toBe(true);
   });
 
   it('maps status display tones', () => {

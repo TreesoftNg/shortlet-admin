@@ -9,9 +9,14 @@ import {
   Text,
   Wrap,
   WrapItem,
+  useToast,
 } from '@chakra-ui/react';
 import { LuPencil } from 'react-icons/lu';
 import type { PropertyListItem } from '@/features/properties/components/property-table-config';
+import {
+  useArchiveProperty,
+  useRestoreProperty,
+} from '@/features/properties/hooks/use-property-mutations';
 import {
   formatCapacity,
   formatPropertyType,
@@ -22,16 +27,61 @@ type PropertyDetailDrawerProps = {
   property: PropertyListItem | null;
   onEdit?: () => void;
   onManageUnits?: () => void;
+  onArchivedOrRestored?: () => void;
 };
 
 export function PropertyDetailDrawer({
   property,
   onEdit,
   onManageUnits,
+  onArchivedOrRestored,
 }: PropertyDetailDrawerProps) {
+  const toast = useToast();
+  const archive = useArchiveProperty();
+  const restore = useRestoreProperty();
+
   if (!property) {
     return null;
   }
+
+  const handleArchive = async () => {
+    if (
+      !window.confirm(
+        `Archive ${property.name}? Active units must be archived first.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await archive.mutateAsync(property.id);
+      toast({ title: 'Property archived', status: 'success', duration: 2500 });
+      onArchivedOrRestored?.();
+    } catch (error) {
+      toast({
+        title: 'Could not archive property',
+        description: error instanceof Error ? error.message : undefined,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleRestore = async () => {
+    try {
+      await restore.mutateAsync(property.id);
+      toast({ title: 'Property restored', status: 'success', duration: 2500 });
+      onArchivedOrRestored?.();
+    } catch (error) {
+      toast({
+        title: 'Could not restore property',
+        description: error instanceof Error ? error.message : undefined,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
     <Box overflow="hidden">
@@ -61,8 +111,15 @@ export function PropertyDetailDrawer({
               {property.address.display}
             </Text>
           </Box>
-          <StatusBadge tone={property.listed ? 'ok' : 'mute'} flexShrink={0}>
-            {property.listed ? 'Listed' : 'Unlisted'}
+          <StatusBadge
+            tone={property.archived ? 'mute' : property.listed ? 'ok' : 'mute'}
+            flexShrink={0}
+          >
+            {property.archived
+              ? 'Archived'
+              : property.listed
+                ? 'Listed'
+                : 'Unlisted'}
           </StatusBadge>
         </Flex>
 
@@ -114,17 +171,21 @@ export function PropertyDetailDrawer({
             fontWeight={700}
             mb="10px"
           >
-            Amenities
+            Facilities
           </Text>
-          <Wrap spacing="8px">
-            {property.amenities.map((amenity) => (
-              <WrapItem key={amenity}>
-                <StatusBadge tone="mute">
-                  {amenity.replace(/_/g, ' ')}
-                </StatusBadge>
-              </WrapItem>
-            ))}
-          </Wrap>
+          {property.amenities.length > 0 ? (
+            <Wrap spacing="8px">
+              {property.amenities.map((amenity) => (
+                <WrapItem key={amenity}>
+                  <StatusBadge tone="mute">{amenity}</StatusBadge>
+                </WrapItem>
+              ))}
+            </Wrap>
+          ) : (
+            <Text fontSize="14px" color="ink.300">
+              No facilities assigned
+            </Text>
+          )}
         </Box>
 
         <Box py="16px" borderTop="1px solid" borderColor="line.500">
@@ -161,25 +222,46 @@ export function PropertyDetailDrawer({
         </Box>
 
         <Flex gap="8px" mt="4px" wrap="wrap">
-          <Button
-            size="sm"
-            variant="dark"
-            flex="1"
-            minW="120px"
-            leftIcon={<LuPencil size={14} />}
-            onClick={onEdit}
-            isDisabled={!onEdit}
-          >
-            Edit property
-          </Button>
+          {!property.archived ? (
+            <Button
+              size="sm"
+              variant="dark"
+              flex="1"
+              minW="120px"
+              leftIcon={<LuPencil size={14} />}
+              onClick={onEdit}
+              isDisabled={!onEdit}
+            >
+              Edit property
+            </Button>
+          ) : null}
           <Button
             size="sm"
             variant="soft"
             onClick={onManageUnits}
-            isDisabled={!onManageUnits}
+            isDisabled={!onManageUnits || property.archived}
           >
             Manage units
           </Button>
+          {property.archived ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void handleRestore()}
+              isLoading={restore.isPending}
+            >
+              Restore
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void handleArchive()}
+              isLoading={archive.isPending}
+            >
+              Archive
+            </Button>
+          )}
         </Flex>
       </Box>
     </Box>

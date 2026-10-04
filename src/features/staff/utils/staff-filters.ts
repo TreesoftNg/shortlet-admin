@@ -1,7 +1,12 @@
 import type { StatusTone } from '@/shared/components/ui';
-import type { StaffMember, StaffRole, StaffStatus } from '@/shared/types/hospitable';
+import type {
+  StaffMember,
+  StaffRole,
+  StaffStatus,
+} from '@/shared/types/hospitable';
+import type { AdminProfile } from '@/features/auth/types';
 
-export type StaffStatusTab = 'all' | 'active' | 'invited' | 'suspended';
+export type StaffStatusTab = 'all' | 'active' | 'invited';
 
 export type StaffFilters = {
   tab: StaffStatusTab;
@@ -20,16 +25,15 @@ export const DEFAULT_STAFF_FILTERS: StaffFilters = {
 export const STAFF_ROLE_OPTIONS: Array<{ value: StaffRole; label: string }> = [
   { value: 'owner', label: 'Owner' },
   { value: 'admin', label: 'Admin' },
-  { value: 'operations', label: 'Operations' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'support', label: 'Support' },
-  { value: 'viewer', label: 'Viewer' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'staff', label: 'Staff' },
 ];
+
+export const INVITE_ROLE_OPTIONS = STAFF_ROLE_OPTIONS;
 
 function matchesTab(member: StaffMember, tab: StaffStatusTab): boolean {
   if (tab === 'active') return member.status === 'active';
   if (tab === 'invited') return member.status === 'invited';
-  if (tab === 'suspended') return member.status === 'suspended';
   return true;
 }
 
@@ -61,7 +65,6 @@ export function countStaffTabs(members: StaffMember[]): StaffTabCount {
     all: members.length,
     active: members.filter((item) => item.status === 'active').length,
     invited: members.filter((item) => item.status === 'invited').length,
-    suspended: members.filter((item) => item.status === 'suspended').length,
   };
 }
 
@@ -76,7 +79,10 @@ export function filterStaff(
         matchesSearch(member, filters.search) &&
         matchesRole(member, filters.role),
     )
-    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+    .sort((a, b) => {
+      if (a.is_you !== b.is_you) return a.is_you ? -1 : 1;
+      return a.full_name.localeCompare(b.full_name);
+    });
 }
 
 export function getStaffRoleLabel(role: StaffRole): string {
@@ -119,46 +125,46 @@ export function formatStaffDateTime(iso: string | null): string {
   });
 }
 
+export function formatPermissionCode(code: string): string {
+  return code
+    .split(/[._]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
 export function getRolePermissions(role: StaffRole): string[] {
   switch (role) {
     case 'owner':
       return [
         'Full account access',
-        'Manage billing',
-        'Invite & remove staff',
-        'All property & finance actions',
+        'Invite staff (owner only)',
+        'All property, unit, and finance actions',
       ];
     case 'admin':
       return [
-        'Manage properties & bookings',
-        'Invite staff (non-owners)',
-        'View reports & payments',
-        'Moderate reviews & messages',
+        'Manage properties, units, and bookings',
+        'View reports and payments',
+        'Moderate reviews and messages',
       ];
-    case 'operations':
+    case 'manager':
       return [
-        'Manage availability & units',
-        'Handle check-ins / check-outs',
+        'Manage availability and units',
+        'Handle bookings and guest messages',
+        'View reports',
+      ];
+    case 'staff':
+      return [
+        'Day-to-day operations',
+        'View bookings and customers',
         'Respond to guest messages',
-        'View bookings',
       ];
-    case 'finance':
-      return [
-        'View payments & refunds',
-        'Approve refunds',
-        'Export finance reports',
-        'View booking financials',
-      ];
-    case 'support':
-      return [
-        'Respond to guest messages',
-        'View bookings & customers',
-        'Moderate reviews',
-        'Create support notes',
-      ];
-    case 'viewer':
-      return ['Read-only dashboard', 'View reports', 'View bookings'];
     default:
       return [];
   }
+}
+
+/** Docs: only an owner can call POST /cc/staff-invites. */
+export function canInviteStaff(profile: AdminProfile | undefined): boolean {
+  return profile?.role.code === 'owner';
 }

@@ -1,11 +1,11 @@
 import type { Unit } from '@/shared/types/hospitable';
 
 /**
- * Unit form — inventory + unit-specific amenities.
+ * Unit form — inventory + facilities from the tenant catalog.
  * Address, long description, and currency inherit from Property.
  */
 export type UnitFormValues = {
-  property_id: number | '';
+  property_id: string | '';
   code: string;
   name: string;
   status: Unit['status'];
@@ -16,7 +16,10 @@ export type UnitFormValues = {
   beds: number;
   bathrooms: number;
   base_rate: number | '';
-  amenities: string[];
+  cleaning_fee: number | '';
+  weekly_discount_percent: number | '';
+  monthly_discount_percent: number | '';
+  facility_ids: string[];
   summary: string;
   notes: string;
   picture: string | null;
@@ -34,7 +37,7 @@ export const UNIT_STATUS_OPTIONS: Array<{
 ];
 
 export function createEmptyUnitForm(
-  defaultPropertyId?: number,
+  defaultPropertyId?: string,
 ): UnitFormValues {
   return {
     property_id: defaultPropertyId ?? '',
@@ -48,7 +51,10 @@ export function createEmptyUnitForm(
     beds: 1,
     bathrooms: 1,
     base_rate: '',
-    amenities: ['wifi'],
+    cleaning_fee: '',
+    weekly_discount_percent: '',
+    monthly_discount_percent: '',
+    facility_ids: [],
     summary: '',
     notes: '',
     picture: null,
@@ -57,7 +63,7 @@ export function createEmptyUnitForm(
 
 export function unitToFormValues(unit: Unit): UnitFormValues {
   return {
-    property_id: unit.property_id,
+    property_id: unit.property_id ?? '',
     code: unit.code,
     name: unit.name,
     status: unit.status,
@@ -68,7 +74,10 @@ export function unitToFormValues(unit: Unit): UnitFormValues {
     beds: unit.beds,
     bathrooms: unit.bathrooms,
     base_rate: unit.base_rate ?? '',
-    amenities: [...unit.amenities],
+    cleaning_fee: unit.cleaning_fee ?? '',
+    weekly_discount_percent: unit.weekly_discount_percent ?? '',
+    monthly_discount_percent: unit.monthly_discount_percent ?? '',
+    facility_ids: [...unit.facility_ids],
     summary: unit.summary ?? '',
     notes: unit.notes ?? '',
     picture: unit.picture,
@@ -78,7 +87,7 @@ export function unitToFormValues(unit: Unit): UnitFormValues {
 export function validateUnitForm(values: UnitFormValues): UnitFormErrors {
   const errors: UnitFormErrors = {};
 
-  if (values.property_id === '' || !Number.isFinite(Number(values.property_id))) {
+  if (!values.property_id.trim()) {
     errors.property_id = 'Select a property';
   }
   if (!values.code.trim()) errors.code = 'Unit code is required';
@@ -101,6 +110,30 @@ export function validateUnitForm(values: UnitFormValues): UnitFormErrors {
   ) {
     errors.base_rate = 'Base rate must be a valid amount';
   }
+  if (
+    values.cleaning_fee !== '' &&
+    (!Number.isFinite(Number(values.cleaning_fee)) ||
+      Number(values.cleaning_fee) < 0)
+  ) {
+    errors.cleaning_fee = 'Cleaning fee must be a valid amount';
+  }
+  if (
+    values.weekly_discount_percent !== '' &&
+    (!Number.isFinite(Number(values.weekly_discount_percent)) ||
+      Number(values.weekly_discount_percent) < 0 ||
+      Number(values.weekly_discount_percent) > 100)
+  ) {
+    errors.weekly_discount_percent = 'Weekly discount must be between 0 and 100';
+  }
+  if (
+    values.monthly_discount_percent !== '' &&
+    (!Number.isFinite(Number(values.monthly_discount_percent)) ||
+      Number(values.monthly_discount_percent) < 0 ||
+      Number(values.monthly_discount_percent) > 100)
+  ) {
+    errors.monthly_discount_percent =
+      'Monthly discount must be between 0 and 100';
+  }
 
   return errors;
 }
@@ -117,13 +150,15 @@ export function formatUnitSubtitle(unit: Pick<Unit, 'bedrooms' | 'floor'>): stri
 export function buildUnitFromForm(
   values: UnitFormValues,
   existing?: Unit | null,
-  nextId?: number,
+  nextId?: string,
+  facilityNames: string[] = [],
 ): Unit {
   const now = new Date().toISOString();
 
   return {
-    id: existing?.id ?? nextId ?? 0,
-    property_id: Number(values.property_id),
+    id: existing?.id ?? nextId ?? '0',
+    property_id: values.property_id || null,
+    linked_property_name: existing?.linked_property_name ?? null,
     code: values.code.trim().toUpperCase(),
     name: values.name.trim(),
     status: values.status,
@@ -134,10 +169,25 @@ export function buildUnitFromForm(
     beds: values.beds,
     bathrooms: values.bathrooms,
     base_rate: values.base_rate === '' ? null : Number(values.base_rate),
-    amenities: [...values.amenities],
+    cleaning_fee:
+      values.cleaning_fee === '' ? null : Number(values.cleaning_fee),
+    weekly_discount_percent:
+      values.weekly_discount_percent === ''
+        ? null
+        : Number(values.weekly_discount_percent),
+    monthly_discount_percent:
+      values.monthly_discount_percent === ''
+        ? null
+        : Number(values.monthly_discount_percent),
+    facility_ids: [...values.facility_ids],
+    amenities: facilityNames.length
+      ? facilityNames
+      : existing?.amenities ?? [],
     summary: values.summary.trim() || null,
     notes: values.notes.trim() || null,
     picture: values.picture,
+    city: existing?.city ?? null,
+    currency: existing?.currency ?? null,
     created_at: existing?.created_at ?? now,
     updated_at: now,
   };

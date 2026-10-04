@@ -59,11 +59,14 @@ export function getPropertyColumns(): DataTableColumn<PropertyListItem>[] {
     {
       id: 'status',
       header: 'Status',
-      cell: (row) => (
-        <StatusBadge tone={row.listed ? 'ok' : 'mute'}>
-          {row.listed ? 'Listed' : 'Unlisted'}
-        </StatusBadge>
-      ),
+      cell: (row) =>
+        row.archived ? (
+          <StatusBadge tone="mute">Archived</StatusBadge>
+        ) : (
+          <StatusBadge tone={row.listed ? 'ok' : 'mute'}>
+            {row.listed ? 'Listed' : 'Unlisted'}
+          </StatusBadge>
+        ),
     },
   ];
 }

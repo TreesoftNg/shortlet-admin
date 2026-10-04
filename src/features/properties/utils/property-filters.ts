@@ -1,6 +1,6 @@
 import type { Property } from '@/shared/types/hospitable';
 
-export type PropertyStatusTab = 'all' | 'listed' | 'unlisted';
+export type PropertyStatusTab = 'all' | 'listed' | 'unlisted' | 'archived';
 
 export type PropertyFilters = {
   tab: PropertyStatusTab;
@@ -17,6 +17,8 @@ export const DEFAULT_PROPERTY_FILTERS: PropertyFilters = {
 };
 
 function matchesTab(property: Property, tab: PropertyStatusTab): boolean {
+  if (tab === 'archived') return property.archived;
+  if (property.archived) return false;
   if (tab === 'listed') return property.listed;
   if (tab === 'unlisted') return !property.listed;
   return true;
@@ -49,10 +51,12 @@ function matchesCity(property: Property, city: string | 'all'): boolean {
 export function countPropertyTabs<T extends Property>(
   properties: T[],
 ): PropertyTabCount {
+  const active = properties.filter((item) => !item.archived);
   return {
-    all: properties.length,
-    listed: properties.filter((item) => item.listed).length,
-    unlisted: properties.filter((item) => !item.listed).length,
+    all: active.length,
+    listed: active.filter((item) => item.listed).length,
+    unlisted: active.filter((item) => !item.listed).length,
+    archived: properties.filter((item) => item.archived).length,
   };
 }
 
@@ -70,7 +74,12 @@ export function filterProperties<T extends Property>(
 
 export function getPropertyCities<T extends Property>(properties: T[]): string[] {
   return Array.from(
-    new Set(properties.map((property) => property.address.city).filter(Boolean)),
+    new Set(
+      properties
+        .filter((property) => !property.archived)
+        .map((property) => property.address.city)
+        .filter(Boolean),
+    ),
   ).sort();
 }
 

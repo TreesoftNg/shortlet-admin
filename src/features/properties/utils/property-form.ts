@@ -12,7 +12,6 @@ export type PropertyFormValues = {
   public_name: string;
   property_type: string;
   listed: boolean;
-  unit_count: number;
   line1: string;
   line2: string;
   city: string;
@@ -29,7 +28,8 @@ export type PropertyFormValues = {
   currency: string;
   summary: string;
   description: string;
-  amenities: string[];
+  facility_ids: string[];
+  picture_url: string;
   images: PropertyImageDraft[];
 };
 
@@ -41,11 +41,9 @@ export const PROPERTY_TYPE_OPTIONS = [
   { value: 'apartment', label: 'Apartment' },
   { value: 'studio', label: 'Studio' },
   { value: 'penthouse', label: 'Penthouse' },
-  { value: 'house', label: 'House' },
-  { value: 'villa', label: 'Villa' },
-  { value: 'duplex', label: 'Duplex' },
 ] as const;
 
+/** Kept for older UI labels; unit/property forms now use the facilities catalog. */
 export const AMENITY_OPTIONS = [
   { value: 'wifi', label: 'Wi‑Fi' },
   { value: 'parking', label: 'Parking' },
@@ -73,7 +71,6 @@ export function createEmptyPropertyForm(): PropertyFormValues {
     public_name: '',
     property_type: 'apartment',
     listed: true,
-    unit_count: 1,
     line1: '',
     line2: '',
     city: '',
@@ -90,21 +87,18 @@ export function createEmptyPropertyForm(): PropertyFormValues {
     currency: 'NGN',
     summary: '',
     description: '',
-    amenities: ['wifi'],
+    facility_ids: [],
+    picture_url: '',
     images: [],
   };
 }
 
-export function propertyToFormValues(
-  property: Property,
-  unitCount: number,
-): PropertyFormValues {
+export function propertyToFormValues(property: Property): PropertyFormValues {
   return {
     name: property.name,
     public_name: property.public_name ?? '',
     property_type: property.property_type,
     listed: property.listed,
-    unit_count: Math.max(unitCount, 1),
     line1: property.address.line1 ?? property.address.street ?? '',
     line2: property.address.line2 ?? '',
     city: property.address.city,
@@ -121,7 +115,8 @@ export function propertyToFormValues(
     currency: property.currency || 'NGN',
     summary: property.summary ?? '',
     description: property.description ?? '',
-    amenities: [...property.amenities],
+    facility_ids: [...property.facility_ids],
+    picture_url: property.picture ?? '',
     images: (property.images ?? []).map((image) => ({
       id: image.id,
       url: image.url,
@@ -140,9 +135,6 @@ export function validatePropertyForm(
   if (!values.line1.trim()) errors.line1 = 'Street address is required';
   if (!values.city.trim()) errors.city = 'City is required';
   if (!values.country.trim()) errors.country = 'Country is required';
-  if (!Number.isFinite(values.unit_count) || values.unit_count < 1) {
-    errors.unit_count = 'At least 1 unit is required';
-  }
   if (!Number.isFinite(values.max_guests) || values.max_guests < 1) {
     errors.max_guests = 'Guest capacity must be at least 1';
   }
@@ -177,15 +169,18 @@ export function formValuesToPropertyImages(
 export function buildPropertyFromForm(
   values: PropertyFormValues,
   existing?: Property | null,
-  nextId?: number,
+  nextId?: string,
+  facilityNames: string[] = [],
 ): Property {
   const now = new Date().toISOString();
   const images = formValuesToPropertyImages(values.images);
-  const picture = images[0]?.url ?? existing?.picture ?? null;
+  const picture =
+    images[0]?.url ??
+    (values.picture_url.trim() || existing?.picture || null);
   const display = buildAddressDisplay(values);
 
   return {
-    id: existing?.id ?? nextId ?? 0,
+    id: existing?.id ?? nextId ?? '0',
     name: values.name.trim(),
     public_name: values.public_name.trim() || null,
     picture,
@@ -194,6 +189,7 @@ export function buildPropertyFromForm(
     room_type: 'entire_home',
     timezone: values.timezone,
     listed: values.listed,
+    archived: existing?.archived ?? false,
     calendar_restricted: existing?.calendar_restricted ?? false,
     address: {
       line1: values.line1.trim(),
@@ -205,7 +201,11 @@ export function buildPropertyFromForm(
       display,
       coordinates: existing?.address?.coordinates ?? null,
     },
-    amenities: [...values.amenities],
+    amenities: facilityNames.length
+      ? facilityNames
+      : existing?.amenities ?? [],
+    facility_ids: [...values.facility_ids],
+    unit_count: existing?.unit_count ?? 0,
     capacity: {
       max: values.max_guests,
       bedrooms: values.bedrooms,
@@ -236,8 +236,9 @@ export function syncUnitsForProperty(
   unitCount: number,
 ): Unit[] {
   const now = new Date().toISOString();
-  const existing = units.filter((unit) => unit.property_id === property.id);
-  const others = units.filter((unit) => unit.property_id !== property.id);
+  const propertyId = String(property.id);
+  const existing = units.filter((unit) => unit.property_id === propertyId);
+  const others = units.filter((unit) => unit.property_id !== propertyId);
   const nextCount = Math.max(1, Math.floor(unitCount));
   const kept = existing.slice(0, nextCount).map((unit, index) => ({
     ...unit,
@@ -256,11 +257,10 @@ export function syncUnitsForProperty(
   while (kept.length < nextCount) {
     const index = kept.length;
     const code = unitCodeForIndex(index);
-    const nextId =
-      [...others, ...kept].reduce((max, unit) => Math.max(max, unit.id), 0) + 1;
     kept.push({
-      id: nextId,
-      property_id: property.id,
+      id: `mock-unit-${propertyId}-${index + 1}`,
+      property_id: propertyId,
+      linked_property_name: property.name,
       code,
       name: `Unit ${code}`,
       status: 'active',
@@ -271,10 +271,16 @@ export function syncUnitsForProperty(
       beds: property.capacity.beds,
       bathrooms: property.capacity.bathrooms,
       base_rate: null,
+      cleaning_fee: null,
+      weekly_discount_percent: null,
+      monthly_discount_percent: null,
+      facility_ids: [],
       amenities: [...property.amenities],
       summary: null,
       notes: null,
       picture: property.picture,
+      city: property.address.city,
+      currency: property.currency,
       created_at: now,
       updated_at: now,
     });
@@ -301,7 +307,8 @@ export function readFilesAsImageDrafts(
               sort_order: index,
             });
           };
-          reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'));
+          reader.onerror = () =>
+            reject(reader.error ?? new Error('Failed to read file'));
           reader.readAsDataURL(file);
         }),
     ),

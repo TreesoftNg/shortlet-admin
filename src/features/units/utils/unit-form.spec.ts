@@ -14,11 +14,11 @@ describe('unit-form utils', () => {
     expect(errors.name).toBeTruthy();
   });
 
-  it('builds unit payload with its own amenities', () => {
+  it('builds unit payload with facility ids', () => {
     const unit = buildUnitFromForm(
       {
-        ...createEmptyUnitForm(1),
-        property_id: 1,
+        ...createEmptyUnitForm('1'),
+        property_id: '1',
         code: 'd',
         name: 'Unit D',
         floor: '4th floor',
@@ -27,33 +27,39 @@ describe('unit-form utils', () => {
         beds: 1,
         bathrooms: 1,
         base_rate: 90000,
+        cleaning_fee: 12000,
+        weekly_discount_percent: 5,
+        monthly_discount_percent: 15,
         bookable: true,
-        amenities: ['wifi', 'workspace'],
+        facility_ids: ['fac-wifi', 'fac-desk'],
         summary: 'Quiet corner unit',
         notes: 'Prefer midweek only',
       },
       null,
-      12,
+      '12',
+      ['Wi-Fi', 'Workspace'],
     );
-    expect(unit.id).toBe(12);
+    expect(unit.id).toBe('12');
     expect(unit.code).toBe('D');
     expect(unit.floor).toBe('4th floor');
     expect(unit.base_rate).toBe(90000);
-    expect(unit.amenities).toEqual(['wifi', 'workspace']);
+    expect(unit.cleaning_fee).toBe(12000);
+    expect(unit.facility_ids).toEqual(['fac-wifi', 'fac-desk']);
+    expect(unit.amenities).toEqual(['Wi-Fi', 'Workspace']);
     expect(formatUnitSubtitle(unit)).toBe('1 bed · 4th floor');
-    expect(unit).not.toHaveProperty('description');
-    expect(unit).not.toHaveProperty('currency');
   });
 
   it('preserves id when updating', () => {
     const existing = {
-      id: 5,
+      id: '5',
       created_at: '2025-01-01T00:00:00Z',
-    } as Unit;
+      facility_ids: [],
+      amenities: [],
+    } as unknown as Unit;
     const unit = buildUnitFromForm(
       {
-        ...createEmptyUnitForm(2),
-        property_id: 2,
+        ...createEmptyUnitForm('2'),
+        property_id: '2',
         code: 'S3',
         name: 'Studio 3',
         capacity: 2,
@@ -62,7 +68,7 @@ describe('unit-form utils', () => {
       },
       existing,
     );
-    expect(unit.id).toBe(5);
+    expect(unit.id).toBe('5');
     expect(unit.created_at).toBe('2025-01-01T00:00:00Z');
     expect(unit.bookable).toBe(false);
   });

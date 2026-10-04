@@ -94,7 +94,7 @@ export type Listing = {
 };
 
 export type Property = {
-  id: number;
+  id: string;
   name: string;
   public_name: string | null;
   picture: string | null;
@@ -103,9 +103,15 @@ export type Property = {
   room_type: string;
   timezone: string;
   listed: boolean;
+  /** Soft-deleted via DELETE /properties/:id. */
+  archived: boolean;
   calendar_restricted: boolean;
   address: Address;
+  /** Display labels for selected facilities. */
   amenities: string[];
+  facility_ids: string[];
+  /** From API unitCount when present. */
+  unit_count: number;
   capacity: Capacity;
   description: string | null;
   summary: string | null;
@@ -119,14 +125,8 @@ export type Property = {
   images?: PropertyImage[];
 };
 
-/** Tenant staff member (admin users; not Hospitable-native). */
-export type StaffRole =
-  | 'owner'
-  | 'admin'
-  | 'operations'
-  | 'finance'
-  | 'support'
-  | 'viewer';
+/** Tenant staff roles from POST /staff-invites and GET /auth/me. */
+export type StaffRole = 'owner' | 'admin' | 'manager' | 'staff';
 
 export type StaffStatus = 'active' | 'invited' | 'suspended';
 
@@ -142,6 +142,10 @@ export type StaffMember = {
   avatar_url: string | null;
   last_active_at: string | null;
   invited_at: string | null;
+  /** Present for pending invites (from POST /staff-invites). */
+  invite_expires_at: string | null;
+  permissions: string[];
+  is_you: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -194,10 +198,13 @@ export type TenantSettings = {
 /** Bookable inventory under a property (multi-unit extension).
  * Shared listing content (address, house rules, photos gallery) lives on
  * Property. Amenities are set per unit (can differ within the same property).
+ * Ids match the Shortlet API (UUID strings).
  */
 export type Unit = {
-  id: number;
-  property_id: number;
+  id: string;
+  property_id: string | null;
+  /** Name when the API embeds the linked property. */
+  linked_property_name: string | null;
   /** Short internal code (e.g. A, S1, PH-1). */
   code: string;
   name: string;
@@ -212,13 +219,21 @@ export type Unit = {
   bathrooms: number;
   /** Nightly rate override; null inherits property/channel pricing. */
   base_rate: number | null;
-  /** Unit-specific amenities (independent of property amenities). */
+  cleaning_fee: number | null;
+  weekly_discount_percent: number | null;
+  monthly_discount_percent: number | null;
+  /** Facility catalog ids selected on this unit. */
+  facility_ids: string[];
+  /** Display labels for the selected facilities. */
   amenities: string[];
   /** Short label for calendars/lists (e.g. "Lagoon view corner"). */
   summary: string | null;
   /** Internal ops notes — never guest-facing. */
   notes: string | null;
   picture: string | null;
+  /** City hint when the unit is not linked to a property yet. */
+  city: string | null;
+  currency: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -288,7 +303,7 @@ export type Reservation = {
   created_at: string;
   updated_at: string;
   /** Local bookable unit (extension for multi-unit properties). */
-  unit_id?: number;
+  unit_id?: string | number;
   property?: Property;
   guest?: Guest;
   listing?: Listing;
@@ -330,7 +345,7 @@ export type CalendarRange = 'week' | '2weeks' | 'month';
 
 export type CalendarBar = {
   id: string;
-  unit_id: number;
+  unit_id: number | string;
   /** Inclusive start date YYYY-MM-DD within the visible window. */
   start_date: string;
   /** Inclusive end date YYYY-MM-DD within the visible window. */

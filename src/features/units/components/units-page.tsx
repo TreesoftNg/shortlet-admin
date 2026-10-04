@@ -37,7 +37,7 @@ export function UnitsPage() {
   const { data, isLoading, isError, error, refetch } = useUnits();
   const { data: properties = [] } = useProperties();
   const [filters, setFilters] = useState<UnitFilters>(DEFAULT_UNIT_FILTERS);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export function UnitsPage() {
   const filteredProperty =
     filters.propertyId === 'all'
       ? null
-      : properties.find((item) => item.id === filters.propertyId) ?? null;
+      : properties.find((item) => String(item.id) === filters.propertyId) ?? null;
 
   const updateFilters = (next: Partial<UnitFilters>) => {
     setFilters((current) => {
@@ -164,8 +164,8 @@ export function UnitsPage() {
           <DataTable
             columns={getUnitColumns()}
             data={filtered}
-            getRowId={(row) => String(row.id)}
-            selectedId={selectedId === null ? null : String(selectedId)}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
             onRowClick={(row) => setSelectedId(row.id)}
             minWidth="720px"
             emptyTitle="No matches"

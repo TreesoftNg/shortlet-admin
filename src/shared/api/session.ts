@@ -1,5 +1,6 @@
 import { type SessionTokens, useSessionStore } from '@/shared/store/session-store';
 import { sendRequest } from './http';
+import { adminPath } from './paths';
 import { ApiClientError } from './types';
 
 /** Refresh a little early so a token never expires mid-request. */
@@ -52,7 +53,7 @@ async function runRefresh(): Promise<string | null> {
   }
 
   try {
-    const { data } = await sendRequest<SessionTokens>('/auth/refresh', {
+    const { data } = await sendRequest<SessionTokens>(adminPath('/auth/refresh'), {
       method: 'POST',
       body: { refreshToken },
     });

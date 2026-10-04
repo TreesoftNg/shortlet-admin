@@ -53,6 +53,7 @@ export async function sendRequest<T>(path: string, request: HttpRequest = {}): P
       headers: {
         Accept: 'application/json',
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(env.tenantSlug ? { 'x-tenant-slug': env.tenantSlug } : {}),
         ...headers,
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,

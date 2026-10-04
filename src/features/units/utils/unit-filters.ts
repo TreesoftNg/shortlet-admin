@@ -30,12 +30,17 @@ export function enrichUnitsWithProperty(
   properties: Property[],
 ): UnitListItem[] {
   return units.map((unit) => {
-    const property = properties.find((item) => item.id === unit.property_id);
+    const property = unit.property_id
+      ? properties.find((item) => String(item.id) === unit.property_id)
+      : undefined;
     return {
       ...unit,
-      property_name: property?.name ?? 'Unknown property',
-      property_city: property?.address.city ?? '—',
-      property_currency: property?.currency ?? 'NGN',
+      property_name:
+        property?.name ??
+        unit.linked_property_name ??
+        (unit.property_id ? 'Unknown property' : 'Unassigned'),
+      property_city: property?.address.city ?? unit.city ?? '—',
+      property_currency: property?.currency ?? unit.currency ?? 'NGN',
       property_amenities: property?.amenities ?? [],
     };
   });

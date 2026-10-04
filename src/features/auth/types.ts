@@ -1,4 +1,4 @@
-/** Shapes returned by the Shortlet API `/auth/*` endpoints. */
+/** Shapes returned by the Shortlet API `/cc/auth/*` endpoints. */
 
 export type PermissionCode = string;
 

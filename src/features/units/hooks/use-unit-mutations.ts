@@ -15,6 +15,7 @@ export function useCreateUnit() {
         queryClient.invalidateQueries({ queryKey: queryKeys.units.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.properties.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.availability.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.calendarSync.all }),
       ]);
     },
   });
@@ -24,13 +25,17 @@ export function useUpdateUnit() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, values }: { id: number; values: UnitFormValues }) =>
+    mutationFn: ({ id, values }: { id: string; values: UnitFormValues }) =>
       updateUnit(id, values),
-    onSuccess: async () => {
+    onSuccess: async (_unit, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.units.all }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.units.detail(variables.id),
+        }),
         queryClient.invalidateQueries({ queryKey: queryKeys.properties.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.availability.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.calendarSync.all }),
       ]);
     },
   });

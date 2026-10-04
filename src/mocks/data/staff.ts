@@ -1,7 +1,19 @@
 import type { StaffMember } from '@/shared/types/hospitable';
 
+function member(
+  partial: Omit<StaffMember, 'permissions' | 'is_you' | 'invite_expires_at'> &
+    Partial<Pick<StaffMember, 'permissions' | 'is_you' | 'invite_expires_at'>>,
+): StaffMember {
+  return {
+    permissions: [],
+    is_you: false,
+    invite_expires_at: null,
+    ...partial,
+  };
+}
+
 export const mockStaff: StaffMember[] = [
-  {
+  member({
     id: 'usr-admin-001',
     first_name: 'Kemi',
     last_name: 'Adeyemi',
@@ -15,53 +27,55 @@ export const mockStaff: StaffMember[] = [
     invited_at: null,
     created_at: '2025-01-05T09:00:00Z',
     updated_at: '2026-09-28T15:40:00Z',
-  },
-  {
+    is_you: true,
+    permissions: ['staff.manage', 'property.read'],
+  }),
+  member({
     id: 'usr-ops-002',
     first_name: 'Tunde',
     last_name: 'Bakare',
     full_name: 'Tunde Bakare',
     email: 'tunde@haven.ng',
     phone: '+2348010000002',
-    role: 'operations',
+    role: 'manager',
     status: 'active',
     avatar_url: 'https://i.pravatar.cc/100?img=12',
     last_active_at: '2026-09-28T12:10:00Z',
     invited_at: null,
     created_at: '2025-03-12T10:00:00Z',
     updated_at: '2026-09-28T12:10:00Z',
-  },
-  {
+  }),
+  member({
     id: 'usr-fin-003',
     first_name: 'Ada',
     last_name: 'Okoro',
     full_name: 'Ada Okoro',
     email: 'ada@haven.ng',
     phone: '+2348010000003',
-    role: 'finance',
+    role: 'admin',
     status: 'active',
     avatar_url: 'https://i.pravatar.cc/100?img=32',
     last_active_at: '2026-09-27T18:20:00Z',
     invited_at: null,
     created_at: '2025-06-01T11:00:00Z',
     updated_at: '2026-09-27T18:20:00Z',
-  },
-  {
+  }),
+  member({
     id: 'usr-sup-004',
     first_name: 'Chidi',
     last_name: 'Nwosu',
     full_name: 'Chidi Nwosu',
     email: 'chidi@haven.ng',
     phone: '+2348010000004',
-    role: 'support',
+    role: 'staff',
     status: 'active',
     avatar_url: 'https://i.pravatar.cc/100?img=33',
     last_active_at: '2026-09-28T09:05:00Z',
     invited_at: null,
     created_at: '2025-08-20T08:00:00Z',
     updated_at: '2026-09-28T09:05:00Z',
-  },
-  {
+  }),
+  member({
     id: 'usr-adm-005',
     first_name: 'Funmi',
     last_name: 'Ade',
@@ -73,22 +87,24 @@ export const mockStaff: StaffMember[] = [
     avatar_url: null,
     last_active_at: null,
     invited_at: '2026-09-25T10:00:00Z',
+    invite_expires_at: '2026-10-02T10:00:00Z',
     created_at: '2026-09-25T10:00:00Z',
     updated_at: '2026-09-25T10:00:00Z',
-  },
-  {
+  }),
+  member({
     id: 'usr-view-006',
     first_name: 'Ibrahim',
     last_name: 'Musa',
     full_name: 'Ibrahim Musa',
     email: 'ibrahim@haven.ng',
     phone: '+2348010000006',
-    role: 'viewer',
-    status: 'suspended',
+    role: 'staff',
+    status: 'invited',
     avatar_url: 'https://i.pravatar.cc/100?img=15',
-    last_active_at: '2026-08-12T14:00:00Z',
-    invited_at: null,
+    last_active_at: null,
+    invited_at: '2026-08-12T14:00:00Z',
+    invite_expires_at: '2026-08-19T14:00:00Z',
     created_at: '2025-11-02T09:30:00Z',
     updated_at: '2026-09-01T11:00:00Z',
-  },
+  }),
 ];

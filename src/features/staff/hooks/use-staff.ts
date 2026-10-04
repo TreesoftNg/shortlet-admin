@@ -1,13 +1,22 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/shared/api/query-keys';
-import { fetchStaff } from '../api/staff-service';
+import { useMemo } from 'react';
+import { useMe } from '@/features/auth/hooks/use-auth';
+import { mergeStaffDirectory, mapProfileToStaffMember } from '../utils/staff-mappers';
+import { usePendingInvites } from './use-pending-invites';
 
 export function useStaff() {
-  return useQuery({
-    queryKey: queryKeys.staff.list(),
-    queryFn: fetchStaff,
-    select: (response) => response.data,
-  });
+  const me = useMe();
+  const { pending, recordInvite } = usePendingInvites(me.data?.tenant.id);
+
+  const members = useMemo(() => {
+    if (!me.data) return [];
+    return mergeStaffDirectory(mapProfileToStaffMember(me.data), pending);
+  }, [me.data, pending]);
+
+  return {
+    ...me,
+    data: members,
+    recordInvite,
+  };
 }

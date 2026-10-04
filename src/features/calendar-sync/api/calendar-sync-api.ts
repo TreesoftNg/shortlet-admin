@@ -1,4 +1,5 @@
 import { apiClient } from '@/shared/api/client';
+import { adminPath } from '@/shared/api/paths';
 import { ApiClientError } from '@/shared/api/types';
 import type {
   AvailabilityBlock,
@@ -13,7 +14,8 @@ import type {
   UnitCalendarSummary,
 } from '../types';
 
-const unitPath = (unitId: string) => `/admin/units/${encodeURIComponent(unitId)}`;
+const unitPath = (unitId: string) =>
+  adminPath(`/units/${encodeURIComponent(unitId)}`);
 
 /** Resolves to null instead of throwing when the resource does not exist yet. */
 async function orNullWhenMissing<T>(request: Promise<{ data: T }>): Promise<T | null> {
@@ -26,7 +28,7 @@ async function orNullWhenMissing<T>(request: Promise<{ data: T }>): Promise<T | 
 }
 
 export async function fetchCalendarUnits(): Promise<UnitCalendarSummary[]> {
-  return (await apiClient<UnitCalendarSummary[]>('/admin/calendar/units')).data;
+  return (await apiClient<UnitCalendarSummary[]>(adminPath('/calendar/units'))).data;
 }
 
 // ─── Import from Hospitable ──────────────────────────────────────

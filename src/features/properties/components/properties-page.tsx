@@ -38,15 +38,20 @@ export function PropertiesPage() {
   const { data, isLoading, isError, error, refetch } = useProperties();
   const { data: units = [] } = useUnits();
   const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_PROPERTY_FILTERS);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
   const properties = useMemo<PropertyListItem[]>(() => {
     const list = data ?? [];
-    return list.map((property) => ({
-      ...property,
-      unit_count: units.filter((unit) => unit.property_id === property.id).length,
-    }));
+    return list.map((property) => {
+      const counted = units.filter(
+        (unit) => unit.property_id === property.id,
+      ).length;
+      return {
+        ...property,
+        unit_count: property.unit_count > 0 ? property.unit_count : counted,
+      };
+    });
   }, [data, units]);
 
   const tabCounts = useMemo(() => countPropertyTabs(properties), [properties]);
@@ -114,6 +119,7 @@ export function PropertiesPage() {
             { id: 'all', label: 'All', count: tabCounts.all },
             { id: 'listed', label: 'Listed', count: tabCounts.listed },
             { id: 'unlisted', label: 'Unlisted', count: tabCounts.unlisted },
+            { id: 'archived', label: 'Archived', count: tabCounts.archived },
           ]}
         />
 
@@ -132,8 +138,8 @@ export function PropertiesPage() {
           <DataTable
             columns={getPropertyColumns()}
             data={filtered}
-            getRowId={(row) => String(row.id)}
-            selectedId={selectedId === null ? null : String(selectedId)}
+            getRowId={(row) => row.id}
+            selectedId={selectedId}
             onRowClick={(row) => setSelectedId(row.id)}
             minWidth="820px"
             emptyTitle="No matches"
@@ -160,6 +166,7 @@ export function PropertiesPage() {
             setSelectedId(null);
             router.push(`/units?propertyId=${selected.id}`);
           }}
+          onArchivedOrRestored={() => setSelectedId(null)}
         />
       </AppModal>
     </Box>

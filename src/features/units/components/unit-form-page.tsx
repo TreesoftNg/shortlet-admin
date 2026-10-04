@@ -21,13 +21,13 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { LuArrowLeft, LuMenu, LuTrash2, LuUpload } from 'react-icons/lu';
-import { AMENITY_OPTIONS } from '@/features/properties/utils/property-form';
 import { useProperties } from '@/features/properties/hooks/use-properties';
+import { useFacilities } from '@/features/units/hooks/use-facilities';
 import {
   useCreateUnit,
   useUpdateUnit,
 } from '@/features/units/hooks/use-unit-mutations';
-import { useUnits } from '@/features/units/hooks/use-units';
+import { useUnit } from '@/features/units/hooks/use-units';
 import {
   UNIT_STATUS_OPTIONS,
   createEmptyUnitForm,
@@ -48,7 +48,7 @@ import { parsePropertyIdFilter } from '@/shared/utils/property-id';
 
 type UnitFormPageProps = {
   mode: 'create' | 'edit';
-  id?: number;
+  id?: string;
 };
 
 export function UnitFormPage({ mode, id }: UnitFormPageProps) {
@@ -68,12 +68,12 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
   }, [isEdit, searchParams]);
 
   const {
-    data: units,
-    isLoading: unitsLoading,
-    isError: unitsError,
-    error: unitsErrorValue,
-    refetch: refetchUnits,
-  } = useUnits();
+    data: unit,
+    isLoading: unitLoading,
+    isError: unitError,
+    error: unitErrorValue,
+    refetch: refetchUnit,
+  } = useUnit(isEdit ? id : undefined);
   const {
     data: properties = [],
     isLoading: propertiesLoading,
@@ -81,11 +81,13 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     error: propertiesErrorValue,
     refetch: refetchProperties,
   } = useProperties();
-
-  const unit = useMemo(() => {
-    if (!isEdit || id === undefined) return null;
-    return units?.find((item) => item.id === id) ?? null;
-  }, [isEdit, id, units]);
+  const {
+    data: facilities = [],
+    isLoading: facilitiesLoading,
+    isError: facilitiesError,
+    error: facilitiesErrorValue,
+    refetch: refetchFacilities,
+  } = useFacilities();
 
   const [values, setValues] = useState<UnitFormValues>(createEmptyUnitForm);
   const [errors, setErrors] = useState<UnitFormErrors>({});
@@ -93,7 +95,9 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
 
   const property = useMemo(() => {
     if (values.property_id === '') return null;
-    return properties.find((item) => item.id === values.property_id) ?? null;
+    return (
+      properties.find((item) => String(item.id) === values.property_id) ?? null
+    );
   }, [properties, values.property_id]);
 
   useEffect(() => {
@@ -110,25 +114,25 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     if (hydratedKey === 'create') return;
     const defaultProperty =
       (preferredPropertyId
-        ? properties.find((item) => item.id === preferredPropertyId)
+        ? properties.find((item) => String(item.id) === preferredPropertyId)
         : null) ?? properties[0];
     setErrors({});
     setValues(
       defaultProperty
         ? {
-            ...createEmptyUnitForm(defaultProperty.id),
+            ...createEmptyUnitForm(String(defaultProperty.id)),
             capacity: defaultProperty.capacity.max,
             bedrooms: defaultProperty.capacity.bedrooms,
             beds: defaultProperty.capacity.beds,
             bathrooms: defaultProperty.capacity.bathrooms,
-            amenities: [...defaultProperty.amenities],
           }
         : createEmptyUnitForm(),
     );
     setHydratedKey('create');
   }, [hydratedKey, isEdit, preferredPropertyId, properties, unit]);
 
-  const isLoading = propertiesLoading || (isEdit && unitsLoading);
+  const isLoading =
+    propertiesLoading || facilitiesLoading || (isEdit && unitLoading);
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const goBack = () => {
@@ -148,14 +152,14 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     });
   };
 
-  const toggleAmenity = (amenity: string) => {
+  const toggleFacility = (facilityId: string) => {
     setValues((current) => {
-      const exists = current.amenities.includes(amenity);
+      const exists = current.facility_ids.includes(facilityId);
       return {
         ...current,
-        amenities: exists
-          ? current.amenities.filter((item) => item !== amenity)
-          : [...current.amenities, amenity],
+        facility_ids: exists
+          ? current.facility_ids.filter((item) => item !== facilityId)
+          : [...current.facility_ids, facilityId],
       };
     });
   };
@@ -224,21 +228,25 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     return <PageSkeleton variant="form" />;
   }
 
-  if (unitsError || propertiesError) {
+  if (unitError || propertiesError || facilitiesError) {
     return (
       <ErrorState
         message={
-          (unitsErrorValue instanceof Error
-            ? unitsErrorValue.message
+          (unitErrorValue instanceof Error
+            ? unitErrorValue.message
             : null) ??
           (propertiesErrorValue instanceof Error
             ? propertiesErrorValue.message
             : null) ??
+          (facilitiesErrorValue instanceof Error
+            ? facilitiesErrorValue.message
+            : null) ??
           'Failed to load unit form'
         }
         onRetry={() => {
-          void refetchUnits();
-          void refetchProperties();
+          if (unitError) void refetchUnit();
+          if (propertiesError) void refetchProperties();
+          if (facilitiesError) void refetchFacilities();
         }}
       />
     );
@@ -331,13 +339,10 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                     values.property_id === '' ? '' : String(values.property_id)
                   }
                   onChange={(event) => {
-                    const nextId = event.target.value
-                      ? Number(event.target.value)
-                      : '';
-                    const nextProperty =
-                      typeof nextId === 'number'
-                        ? properties.find((item) => item.id === nextId)
-                        : null;
+                    const nextId = event.target.value;
+                    const nextProperty = nextId
+                      ? properties.find((item) => String(item.id) === nextId)
+                      : null;
                     setValues((current) => ({
                       ...current,
                       property_id: nextId,
@@ -347,7 +352,6 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                             bedrooms: nextProperty.capacity.bedrooms,
                             beds: nextProperty.capacity.beds,
                             bathrooms: nextProperty.capacity.bathrooms,
-                            amenities: [...nextProperty.amenities],
                           }
                         : {}),
                     }));
@@ -505,55 +509,132 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
             </Grid>
           </Section>
 
-          <Section title="Amenities">
+          <Section title="Facilities">
             <Text fontSize="13px" color="ink.300" mb="12px">
-              Unit amenities shown to guests for this inventory. Property-level
-              amenities stay separate.
+              Pick from your facility catalog. Sending a save replaces the full
+              list on this unit.
             </Text>
-            <Grid
-              templateColumns={{ base: '1fr 1fr', md: 'repeat(3, 1fr)' }}
-              gap="10px"
-            >
-              {AMENITY_OPTIONS.map((option) => (
-                <Checkbox
-                  key={option.value}
-                  isChecked={values.amenities.includes(option.value)}
-                  onChange={() => toggleAmenity(option.value)}
-                  borderColor="line.500"
-                >
-                  {option.label}
-                </Checkbox>
-              ))}
-            </Grid>
+            {facilities.length === 0 ? (
+              <Text fontSize="14px" color="ink.300">
+                No facilities in the catalog yet.
+              </Text>
+            ) : (
+              <Grid
+                templateColumns={{ base: '1fr 1fr', md: 'repeat(3, 1fr)' }}
+                gap="10px"
+              >
+                {facilities.map((facility) => (
+                  <Checkbox
+                    key={facility.id}
+                    isChecked={values.facility_ids.includes(facility.id)}
+                    onChange={() => toggleFacility(facility.id)}
+                    borderColor="line.500"
+                  >
+                    {facility.name}
+                    {facility.category ? (
+                      <Text as="span" color="ink.300" fontSize="12px">
+                        {` · ${facility.category}`}
+                      </Text>
+                    ) : null}
+                  </Checkbox>
+                ))}
+              </Grid>
+            )}
           </Section>
 
-          <Section title="Rate override">
-            <Field
-              label="Base nightly rate"
-              error={errors.base_rate}
-              helper={
-                property
-                  ? `Leave empty to inherit ${property.name} pricing (${property.currency}).`
-                  : 'Leave empty to inherit property pricing.'
-              }
-            >
-              <Input
-                type="number"
-                min={0}
-                value={values.base_rate}
-                onChange={(event) =>
-                  updateField(
-                    'base_rate',
-                    event.target.value === ''
-                      ? ''
-                      : Number(event.target.value),
-                  )
+          <Section title="Rates & discounts">
+            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
+              <Field
+                label="Base nightly rate"
+                error={errors.base_rate}
+                helper={
+                  property
+                    ? `Leave empty to inherit ${property.name} pricing (${property.currency}).`
+                    : 'Leave empty to inherit property pricing.'
                 }
-                placeholder="Optional override"
-                maxW={{ md: '280px' }}
-                {...inputProps}
-              />
-            </Field>
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  value={values.base_rate}
+                  onChange={(event) =>
+                    updateField(
+                      'base_rate',
+                      event.target.value === ''
+                        ? ''
+                        : Number(event.target.value),
+                    )
+                  }
+                  placeholder="Optional"
+                  {...inputProps}
+                />
+              </Field>
+              <Field
+                label="Cleaning fee"
+                error={errors.cleaning_fee}
+                helper="Charged once per stay."
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  value={values.cleaning_fee}
+                  onChange={(event) =>
+                    updateField(
+                      'cleaning_fee',
+                      event.target.value === ''
+                        ? ''
+                        : Number(event.target.value),
+                    )
+                  }
+                  placeholder="Optional"
+                  {...inputProps}
+                />
+              </Field>
+              <Field
+                label="Weekly discount %"
+                error={errors.weekly_discount_percent}
+                helper="Off nights for stays of 7+ nights."
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={values.weekly_discount_percent}
+                  onChange={(event) =>
+                    updateField(
+                      'weekly_discount_percent',
+                      event.target.value === ''
+                        ? ''
+                        : Number(event.target.value),
+                    )
+                  }
+                  placeholder="Optional"
+                  {...inputProps}
+                />
+              </Field>
+              <Field
+                label="Monthly discount %"
+                error={errors.monthly_discount_percent}
+                helper="Off nights for stays of 28+ nights."
+              >
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={values.monthly_discount_percent}
+                  onChange={(event) =>
+                    updateField(
+                      'monthly_discount_percent',
+                      event.target.value === ''
+                        ? ''
+                        : Number(event.target.value),
+                    )
+                  }
+                  placeholder="Optional"
+                  {...inputProps}
+                />
+              </Field>
+            </Grid>
           </Section>
 
           <Section title="Ops notes">

@@ -19,15 +19,14 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { LuArrowLeft, LuMenu, LuTrash2, LuUpload } from 'react-icons/lu';
 import {
   useCreateProperty,
   useUpdateProperty,
 } from '@/features/properties/hooks/use-property-mutations';
-import { useProperties } from '@/features/properties/hooks/use-properties';
+import { useProperty } from '@/features/properties/hooks/use-properties';
 import {
-  AMENITY_OPTIONS,
   CURRENCY_OPTIONS,
   PROPERTY_TYPE_OPTIONS,
   TIMEZONE_OPTIONS,
@@ -38,7 +37,7 @@ import {
   type PropertyFormErrors,
   type PropertyFormValues,
 } from '@/features/properties/utils/property-form';
-import { useUnits } from '@/features/units/hooks/use-units';
+import { useFacilities } from '@/features/units/hooks/use-facilities';
 import {
   ErrorState,
   PageHeader,
@@ -49,7 +48,7 @@ import { useUiStore } from '@/shared/store/ui-store';
 
 type PropertyFormPageProps = {
   mode: 'create' | 'edit';
-  id?: number;
+  id?: string;
 };
 
 export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
@@ -61,23 +60,19 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
   const createMutation = useCreateProperty();
   const updateMutation = useUpdateProperty();
   const {
-    data: properties,
-    isLoading: propertiesLoading,
-    isError: propertiesError,
-    error: propertiesErrorValue,
+    data: property,
+    isLoading: propertyLoading,
+    isError: propertyError,
+    error: propertyErrorValue,
     refetch,
-  } = useProperties();
-  const { data: units = [], isLoading: unitsLoading } = useUnits();
-
-  const property = useMemo(() => {
-    if (!isEdit || id === undefined) return null;
-    return properties?.find((item) => item.id === id) ?? null;
-  }, [isEdit, properties, id]);
-
-  const unitCount = useMemo(() => {
-    if (!property) return 1;
-    return units.filter((unit) => unit.property_id === property.id).length;
-  }, [property, units]);
+  } = useProperty(isEdit ? id : undefined);
+  const {
+    data: facilities = [],
+    isLoading: facilitiesLoading,
+    isError: facilitiesError,
+    error: facilitiesErrorValue,
+    refetch: refetchFacilities,
+  } = useFacilities();
 
   const [values, setValues] = useState<PropertyFormValues>(createEmptyPropertyForm);
   const [errors, setErrors] = useState<PropertyFormErrors>({});
@@ -86,10 +81,10 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
   useEffect(() => {
     if (isEdit) {
       if (!property) return;
-      const key = `${property.id}:${unitCount}:${property.updated_at}`;
+      const key = `${property.id}:${property.updated_at}`;
       if (hydratedKey === key) return;
       setErrors({});
-      setValues(propertyToFormValues(property, Math.max(unitCount, 1)));
+      setValues(propertyToFormValues(property));
       setHydratedKey(key);
       return;
     }
@@ -98,9 +93,9 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
     setErrors({});
     setValues(createEmptyPropertyForm());
     setHydratedKey('create');
-  }, [hydratedKey, isEdit, property, unitCount]);
+  }, [hydratedKey, isEdit, property]);
 
-  const isLoading = isEdit && (propertiesLoading || unitsLoading);
+  const isLoading = facilitiesLoading || (isEdit && propertyLoading);
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const goBack = () => {
@@ -120,14 +115,14 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
     });
   };
 
-  const toggleAmenity = (amenity: string) => {
+  const toggleFacility = (facilityId: string) => {
     setValues((current) => {
-      const exists = current.amenities.includes(amenity);
+      const exists = current.facility_ids.includes(facilityId);
       return {
         ...current,
-        amenities: exists
-          ? current.amenities.filter((item) => item !== amenity)
-          : [...current.amenities, amenity],
+        facility_ids: exists
+          ? current.facility_ids.filter((item) => item !== facilityId)
+          : [...current.facility_ids, facilityId],
       };
     });
   };
@@ -212,15 +207,22 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
     return <PageSkeleton variant="form" />;
   }
 
-  if (propertiesError) {
+  if (propertyError || facilitiesError) {
     return (
       <ErrorState
         message={
-          propertiesErrorValue instanceof Error
-            ? propertiesErrorValue.message
-            : 'Failed to load properties'
+          (propertyErrorValue instanceof Error
+            ? propertyErrorValue.message
+            : null) ??
+          (facilitiesErrorValue instanceof Error
+            ? facilitiesErrorValue.message
+            : null) ??
+          'Failed to load property form'
         }
-        onRetry={() => void refetch()}
+        onRetry={() => {
+          if (propertyError) void refetch();
+          if (facilitiesError) void refetchFacilities();
+        }}
       />
     );
   }
@@ -317,22 +319,18 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
                   ))}
                 </Select>
               </Field>
-              <Field
-                label="Number of units"
-                isRequired
-                error={errors.unit_count}
-                helper="Creates or trims unit inventory for this property."
-              >
-                <Input
-                  type="number"
-                  min={1}
-                  value={values.unit_count}
-                  onChange={(event) =>
-                    updateField('unit_count', Number(event.target.value))
-                  }
-                  {...inputProps}
-                />
-              </Field>
+              {isEdit ? (
+                <Field
+                  label="Units"
+                  helper="Manage inventory from the Units page."
+                >
+                  <Input
+                    value={String(property?.unit_count ?? 0)}
+                    isReadOnly
+                    {...inputProps}
+                  />
+                </Field>
+              ) : null}
             </Grid>
 
             <Flex
@@ -551,22 +549,36 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
             </Grid>
           </Section>
 
-          <Section title="Amenities">
-            <Grid
-              templateColumns={{ base: '1fr 1fr', md: 'repeat(3, 1fr)' }}
-              gap="10px"
-            >
-              {AMENITY_OPTIONS.map((option) => (
-                <Checkbox
-                  key={option.value}
-                  isChecked={values.amenities.includes(option.value)}
-                  onChange={() => toggleAmenity(option.value)}
-                  borderColor="line.500"
-                >
-                  {option.label}
-                </Checkbox>
-              ))}
-            </Grid>
+          <Section title="Facilities">
+            <Text fontSize="13px" color="ink.300" mb="12px">
+              Pick from your facility catalog. Saving replaces the full list.
+            </Text>
+            {facilities.length === 0 ? (
+              <Text fontSize="14px" color="ink.300">
+                No facilities in the catalog yet.
+              </Text>
+            ) : (
+              <Grid
+                templateColumns={{ base: '1fr 1fr', md: 'repeat(3, 1fr)' }}
+                gap="10px"
+              >
+                {facilities.map((facility) => (
+                  <Checkbox
+                    key={facility.id}
+                    isChecked={values.facility_ids.includes(facility.id)}
+                    onChange={() => toggleFacility(facility.id)}
+                    borderColor="line.500"
+                  >
+                    {facility.name}
+                    {facility.category ? (
+                      <Text as="span" color="ink.300" fontSize="12px">
+                        {` · ${facility.category}`}
+                      </Text>
+                    ) : null}
+                  </Checkbox>
+                ))}
+              </Grid>
+            )}
           </Section>
 
           <Section title="Images">

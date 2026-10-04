@@ -14,7 +14,6 @@ describe('staff-filters', () => {
     expect(counts.all).toBe(mockStaff.length);
     expect(counts.active).toBeGreaterThan(0);
     expect(counts.invited).toBeGreaterThan(0);
-    expect(counts.suspended).toBeGreaterThan(0);
   });
 
   it('filters invited tab', () => {
@@ -34,17 +33,22 @@ describe('staff-filters', () => {
 
     const byRole = filterStaff(mockStaff, {
       ...DEFAULT_STAFF_FILTERS,
-      role: 'finance',
+      role: 'admin',
     });
-    expect(byRole.every((item) => item.role === 'finance')).toBe(true);
+    expect(byRole.every((item) => item.role === 'admin')).toBe(true);
+  });
+
+  it('keeps the current user first', () => {
+    const result = filterStaff(mockStaff, DEFAULT_STAFF_FILTERS);
+    expect(result[0]?.is_you).toBe(true);
   });
 
   it('maps role and status labels', () => {
-    expect(getStaffRoleLabel('operations')).toBe('Operations');
+    expect(getStaffRoleLabel('manager')).toBe('Manager');
     expect(getStaffStatusDisplay('active')).toEqual({
       label: 'Active',
       tone: 'ok',
     });
-    expect(getRolePermissions('viewer').length).toBeGreaterThan(0);
+    expect(getRolePermissions('staff').length).toBeGreaterThan(0);
   });
 });

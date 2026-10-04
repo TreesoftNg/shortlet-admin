@@ -66,7 +66,7 @@ function matchesProperty(
   propertyId: PropertyIdFilter,
 ): boolean {
   if (propertyId === 'all') return true;
-  return reservation.property?.id === propertyId;
+  return String(reservation.property?.id) === propertyId;
 }
 
 function matchesMonth(reservation: Reservation, month: string | 'all'): boolean {

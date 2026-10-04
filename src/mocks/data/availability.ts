@@ -208,7 +208,7 @@ function buildNightlyRates(startDate: string, days: number): Record<string, numb
 export function buildMockAvailabilityCalendar(
   anchorDate = '2026-09-26',
   range: CalendarRange = '2weeks',
-  propertyId: number | 'all' = 'all',
+  propertyId: string | number | 'all' = 'all',
 ): AvailabilityCalendar {
   const dayCount = range === 'week' ? 7 : range === 'month' ? 30 : 14;
   const start = new Date(`${anchorDate}T00:00:00`);
@@ -221,9 +221,11 @@ export function buildMockAvailabilityCalendar(
   const units =
     propertyId === 'all'
       ? mockCalendarUnits
-      : mockCalendarUnits.filter((unit) => unit.property_id === propertyId);
+      : mockCalendarUnits.filter(
+          (unit) => String(unit.property_id) === String(propertyId),
+        );
 
-  const unitIds = new Set(units.map((unit) => unit.id));
+  const unitIds = new Set(units.map((unit) => String(unit.id)));
 
   return {
     anchor_date: anchorDate,
@@ -234,7 +236,7 @@ export function buildMockAvailabilityCalendar(
     currency: 'NGN',
     nightly_rates: buildNightlyRates(startDate, dayCount),
     units,
-    bars: barsForWindow.filter((bar) => unitIds.has(bar.unit_id)),
+    bars: barsForWindow.filter((bar) => unitIds.has(String(bar.unit_id))),
   };
 }
 

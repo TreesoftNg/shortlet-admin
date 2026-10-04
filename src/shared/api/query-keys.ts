@@ -28,10 +28,16 @@ export const queryKeys = {
   properties: {
     all: ['properties'] as const,
     list: () => ['properties', 'list'] as const,
+    detail: (id: string) => ['properties', 'detail', id] as const,
   },
   units: {
     all: ['units'] as const,
     list: () => ['units', 'list'] as const,
+    detail: (id: string) => ['units', 'detail', id] as const,
+  },
+  facilities: {
+    all: ['facilities'] as const,
+    list: () => ['facilities', 'list'] as const,
   },
   customers: {
     all: ['customers'] as const,

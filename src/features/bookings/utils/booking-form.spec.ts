@@ -7,7 +7,7 @@ import {
 import type { Property, Unit } from '@/shared/types/hospitable';
 
 const property = {
-  id: 1,
+  id: '1',
   currency: 'NGN',
   capacity: { bedrooms: 2 },
   check_in: '14:00',
@@ -15,8 +15,8 @@ const property = {
 } as Property;
 
 const unit = {
-  id: 1,
-  property_id: 1,
+  id: '1',
+  property_id: '1',
   capacity: 4,
   base_rate: 100000,
 } as Unit;
@@ -44,8 +44,8 @@ describe('booking-form utils', () => {
         first_name: 'Ada',
         last_name: 'Okafor',
         email: 'not-an-email',
-        property_id: 1,
-        unit_id: 1,
+        property_id: '1',
+        unit_id: '1',
         arrival_date: '2026-11-01',
         departure_date: '2026-11-04',
         adult_count: 3,

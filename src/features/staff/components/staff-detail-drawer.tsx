@@ -9,10 +9,13 @@ import {
   List,
   ListItem,
   Text,
+  useToast,
 } from '@chakra-ui/react';
 import type { StaffMember } from '@/shared/types/hospitable';
 import { KeyValueList, StatusBadge } from '@/shared/components/ui';
+import { useInviteStaff } from '../hooks/use-staff-mutations';
 import {
+  formatPermissionCode,
   formatStaffDate,
   formatStaffDateTime,
   getRolePermissions,
@@ -22,15 +25,54 @@ import {
 
 type StaffDetailDrawerProps = {
   member: StaffMember | null;
+  canInvite: boolean;
+  onInviteRecorded?: (member: StaffMember) => void;
 };
 
-export function StaffDetailDrawer({ member }: StaffDetailDrawerProps) {
+export function StaffDetailDrawer({
+  member,
+  canInvite,
+  onInviteRecorded,
+}: StaffDetailDrawerProps) {
+  const toast = useToast();
+  const invite = useInviteStaff();
+
   if (!member) {
     return null;
   }
 
   const status = getStaffStatusDisplay(member.status);
-  const permissions = getRolePermissions(member.role);
+  const permissionLabels =
+    member.permissions.length > 0
+      ? member.permissions.map(formatPermissionCode)
+      : getRolePermissions(member.role);
+
+  const handleResend = async () => {
+    try {
+      const sent = await invite.mutateAsync({
+        first_name: member.first_name,
+        last_name: member.last_name,
+        email: member.email,
+        role: member.role,
+      });
+      onInviteRecorded?.(sent);
+      toast({
+        title: 'Invite resent',
+        description: `A new password link was emailed to ${sent.email}.`,
+        status: 'success',
+        duration: 3500,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not resend invite',
+        description: error instanceof Error ? error.message : undefined,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
     <Box>
@@ -46,6 +88,7 @@ export function StaffDetailDrawer({ member }: StaffDetailDrawerProps) {
           </Heading>
           <Text color="ink.400" fontSize="13px" noOfLines={1}>
             {getStaffRoleLabel(member.role)}
+            {member.is_you ? ' · You' : ''}
           </Text>
         </Box>
         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
@@ -59,12 +102,8 @@ export function StaffDetailDrawer({ member }: StaffDetailDrawerProps) {
             value: <Text as="b">{member.email}</Text>,
           },
           {
-            label: 'Phone',
-            value: <Text as="b">{member.phone ?? '—'}</Text>,
-          },
-          {
-            label: 'Joined',
-            value: <Text as="b">{formatStaffDate(member.created_at)}</Text>,
+            label: 'Role',
+            value: <Text as="b">{getStaffRoleLabel(member.role)}</Text>,
           },
           {
             label: 'Last active',
@@ -75,6 +114,16 @@ export function StaffDetailDrawer({ member }: StaffDetailDrawerProps) {
           {
             label: 'Invited',
             value: <Text as="b">{formatStaffDate(member.invited_at)}</Text>,
+          },
+          {
+            label: 'Invite expires',
+            value: (
+              <Text as="b">
+                {member.invite_expires_at
+                  ? formatStaffDateTime(member.invite_expires_at)
+                  : '—'}
+              </Text>
+            ),
           },
         ]}
       />
@@ -90,35 +139,41 @@ export function StaffDetailDrawer({ member }: StaffDetailDrawerProps) {
         >
           Permissions
         </Text>
-        <List spacing="8px">
-          {permissions.map((permission) => (
-            <ListItem key={permission} fontSize="14px" color="ink.500">
-              · {permission}
-            </ListItem>
-          ))}
-        </List>
+        {permissionLabels.length > 0 ? (
+          <List spacing="8px">
+            {permissionLabels.map((permission) => (
+              <ListItem key={permission} fontSize="14px" color="ink.500">
+                · {permission}
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Text fontSize="14px" color="ink.300">
+            No permissions listed
+          </Text>
+        )}
       </Box>
 
-      <Flex gap="8px" mt="4px" wrap="wrap">
-        {member.status === 'invited' ? (
-          <Button size="sm" variant="dark" flex="1" minW="110px">
+      {member.status === 'invited' && canInvite ? (
+        <Flex gap="8px" mt="4px" wrap="wrap">
+          <Button
+            size="sm"
+            variant="dark"
+            flex="1"
+            minW="110px"
+            onClick={() => void handleResend()}
+            isLoading={invite.isPending}
+          >
             Resend invite
           </Button>
-        ) : null}
-        {member.status === 'active' && member.role !== 'owner' ? (
-          <Button size="sm" variant="soft">
-            Suspend
-          </Button>
-        ) : null}
-        {member.status === 'suspended' ? (
-          <Button size="sm" variant="dark" flex="1" minW="110px">
-            Reactivate
-          </Button>
-        ) : null}
-        <Button size="sm" variant="soft">
-          Edit role
-        </Button>
-      </Flex>
+        </Flex>
+      ) : null}
+
+      {member.status === 'invited' && !canInvite ? (
+        <Text fontSize="13px" color="ink.300" mt="8px">
+          Only an owner can resend a password link.
+        </Text>
+      ) : null}
     </Box>
   );
 }

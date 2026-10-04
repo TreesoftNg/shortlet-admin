@@ -60,7 +60,7 @@ export function UnitDetailDrawer({
         <Flex justify="space-between" align="flex-start" gap="12px">
           <Box minW={0}>
             <Text fontSize="12px" color="ink.300" fontFamily="mono">
-              {unit.code}
+              {unit.code || '—'}
             </Text>
             <Heading as="h3" fontSize="18px" fontWeight={700} mt="2px">
               {unit.name}
@@ -106,10 +106,44 @@ export function UnitDetailDrawer({
             {
               label: 'Floor',
               value: <Text as="b">{unit.floor ?? '—'}</Text>,
-            },
+            }, 
             {
               label: 'Base rate',
               value: <Text as="b">{rateLabel}</Text>,
+            },
+            {
+              label: 'Cleaning fee',
+              value: (
+                <Text as="b">
+                  {unit.cleaning_fee === null
+                    ? '—'
+                    : new Intl.NumberFormat('en-NG', {
+                        style: 'currency',
+                        currency: unit.property_currency,
+                        maximumFractionDigits: 0,
+                      }).format(unit.cleaning_fee)}
+                </Text>
+              ),
+            },
+            {
+              label: 'Weekly discount',
+              value: (
+                <Text as="b">
+                  {unit.weekly_discount_percent === null
+                    ? '—'
+                    : `${unit.weekly_discount_percent}%`}
+                </Text>
+              ),
+            },
+            {
+              label: 'Monthly discount',
+              value: (
+                <Text as="b">
+                  {unit.monthly_discount_percent === null
+                    ? '—'
+                    : `${unit.monthly_discount_percent}%`}
+                </Text>
+              ),
             },
             {
               label: 'Updated',
@@ -136,14 +170,12 @@ export function UnitDetailDrawer({
               fontWeight={700}
               mb="10px"
             >
-              Unit amenities
+              Facilities
             </Text>
             <Wrap spacing="8px">
               {unit.amenities.map((amenity) => (
                 <WrapItem key={amenity}>
-                  <StatusBadge tone="mute">
-                    {amenity.replace(/_/g, ' ')}
-                  </StatusBadge>
+                  <StatusBadge tone="mute">{amenity}</StatusBadge>
                 </WrapItem>
               ))}
             </Wrap>

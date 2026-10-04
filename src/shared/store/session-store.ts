@@ -26,7 +26,7 @@ type SessionState = {
 const isBrowser = typeof window !== 'undefined';
 
 /**
- * Auth tokens only. Who the user is lives in React Query (`/auth/me`).
+ * Auth tokens only. Who the user is lives in React Query (`/cc/auth/me`).
  */
 export const useSessionStore = create<SessionState>()(
   persist(

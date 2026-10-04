@@ -55,15 +55,15 @@ describe('apiClient', () => {
     signIn();
     reply(ok({ id: 'u1' }));
 
-    await expect(apiClient('/auth/me')).resolves.toEqual({ success: true, data: { id: 'u1' } });
-    expect(calls()[0].url).toBe(`${API}/auth/me`);
+    await expect(apiClient('/cc/auth/me')).resolves.toEqual({ success: true, data: { id: 'u1' } });
+    expect(calls()[0].url).toBe(`${API}/cc/auth/me`);
     expect(authHeader(0)).toBe('Bearer access-1');
   });
 
   it('skips the token for public endpoints', async () => {
     reply(ok({}));
 
-    await apiClient('/auth/login', { method: 'POST', body: { email: 'a' }, auth: false });
+    await apiClient('/cc/auth/login', { method: 'POST', body: { email: 'a' }, auth: false });
 
     expect(calls()[0].init.headers).not.toHaveProperty('Authorization');
     expect(calls()[0].init.body).toBe(JSON.stringify({ email: 'a' }));
@@ -73,9 +73,9 @@ describe('apiClient', () => {
     signIn(10_000);
     reply(ok(freshTokens), ok('data'));
 
-    await apiClient('/admin/calendar/units');
+    await apiClient('/cc/calendar/units');
 
-    expect(calls()[0].url).toBe(`${API}/auth/refresh`);
+    expect(calls()[0].url).toBe(`${API}/cc/auth/refresh`);
     expect(JSON.parse(calls()[0].init.body as string)).toEqual({ refreshToken: 'refresh-1' });
     expect(authHeader(1)).toBe('Bearer access-2');
     expect(useSessionStore.getState().refreshToken).toBe('refresh-2');
@@ -85,8 +85,8 @@ describe('apiClient', () => {
     signIn();
     reply(fail(401, 'INVALID_TOKEN'), ok(freshTokens), ok('data'));
 
-    await expect(apiClient('/auth/me')).resolves.toMatchObject({ data: 'data' });
-    expect(calls().map((call) => call.url)).toEqual([`${API}/auth/me`, `${API}/auth/refresh`, `${API}/auth/me`]);
+    await expect(apiClient('/cc/auth/me')).resolves.toMatchObject({ data: 'data' });
+    expect(calls().map((call) => call.url)).toEqual([`${API}/cc/auth/me`, `${API}/cc/auth/refresh`, `${API}/cc/auth/me`]);
     expect(authHeader(2)).toBe('Bearer access-2');
   });
 
@@ -96,7 +96,7 @@ describe('apiClient', () => {
 
     await Promise.all([apiClient('/a'), apiClient('/b')]);
 
-    expect(calls().filter((call) => call.url.endsWith('/auth/refresh'))).toHaveLength(1);
+    expect(calls().filter((call) => call.url.endsWith('/cc/auth/refresh'))).toHaveLength(1);
   });
 
   it('signs out when the refresh token is rejected', async () => {
@@ -105,7 +105,7 @@ describe('apiClient', () => {
     const unsubscribe = onSessionExpired(expired);
     reply(fail(401, 'INVALID_TOKEN'));
 
-    await expect(apiClient('/auth/me')).rejects.toMatchObject({ code: 'AUTHENTICATION_REQUIRED' });
+    await expect(apiClient('/cc/auth/me')).rejects.toMatchObject({ code: 'AUTHENTICATION_REQUIRED' });
     expect(useSessionStore.getState()).toMatchObject({ accessToken: null, refreshToken: null });
     expect(expired).toHaveBeenCalledTimes(1);
     unsubscribe();
@@ -115,12 +115,12 @@ describe('apiClient', () => {
     signIn(0);
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
-    await expect(apiClient('/auth/me')).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
+    await expect(apiClient('/cc/auth/me')).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
     expect(useSessionStore.getState().refreshToken).toBe('refresh-1');
   });
 
   it('does not call the API when signed out', async () => {
-    await expect(apiClient('/auth/me')).rejects.toBeInstanceOf(ApiClientError);
+    await expect(apiClient('/cc/auth/me')).rejects.toBeInstanceOf(ApiClientError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

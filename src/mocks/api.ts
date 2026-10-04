@@ -60,8 +60,12 @@ function replaceUnits(next: Unit[]) {
   mockUnits.splice(0, mockUnits.length, ...next);
 }
 
-function nextUnitId(): number {
-  return mockUnits.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+function nextUnitId(): string {
+  const max = mockUnits.reduce((highest, item) => {
+    const numeric = Number(item.id);
+    return Number.isFinite(numeric) ? Math.max(highest, numeric) : highest;
+  }, 0);
+  return String(max + 1);
 }
 
 export const mockApi = {
@@ -86,17 +90,17 @@ export const mockApi = {
     await delay();
 
     const property = mockProperties.find(
-      (item) => item.id === Number(values.property_id),
+      (item) => item.id === String(values.property_id),
     );
     if (!property) {
       throw new Error('Property not found');
     }
 
-    const unit = mockUnits.find((item) => item.id === Number(values.unit_id));
+    const unit = mockUnits.find((item) => item.id === String(values.unit_id));
     if (!unit) {
       throw new Error('Unit not found');
     }
-    if (unit.property_id !== property.id) {
+    if (unit.property_id !== String(property.id)) {
       throw new Error('Unit does not belong to the selected property');
     }
     if (!unit.bookable || unit.status === 'inactive') {
@@ -243,16 +247,19 @@ export const mockApi = {
     values: PropertyFormValues,
   ): Promise<ApiSuccessResponse<Property>> {
     await delay();
-    const nextId =
-      mockProperties.reduce((max, item) => Math.max(max, item.id), 0) + 1;
+    const nextId = String(
+      mockProperties.reduce((max, item) => {
+        const numeric = Number(item.id);
+        return Number.isFinite(numeric) ? Math.max(max, numeric) : max;
+      }, 0) + 1,
+    );
     const property = buildPropertyFromForm(values, null, nextId);
     mockProperties.unshift(property);
-    replaceUnits(syncUnitsForProperty(mockUnits, property, values.unit_count));
     return ok(property, 'Property created');
   },
 
   async updateProperty(
-    id: number,
+    id: string,
     values: PropertyFormValues,
   ): Promise<ApiSuccessResponse<Property>> {
     await delay();
@@ -262,7 +269,6 @@ export const mockApi = {
     }
     const property = buildPropertyFromForm(values, mockProperties[index]);
     mockProperties[index] = property;
-    replaceUnits(syncUnitsForProperty(mockUnits, property, values.unit_count));
     return ok(property, 'Property updated');
   },
 
@@ -286,7 +292,7 @@ export const mockApi = {
   },
 
   async updateUnit(
-    id: number,
+    id: string,
     values: UnitFormValues,
   ): Promise<ApiSuccessResponse<Unit>> {
     await delay();
@@ -385,7 +391,7 @@ export const mockApi = {
   async getAvailabilityCalendar(params: {
     anchorDate: string;
     range: CalendarRange;
-    propertyId?: number | 'all';
+    propertyId?: string | number | 'all';
   }): Promise<ApiSuccessResponse<AvailabilityCalendar>> {
     await delay();
     return ok(

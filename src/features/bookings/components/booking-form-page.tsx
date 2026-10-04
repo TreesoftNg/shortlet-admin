@@ -80,9 +80,10 @@ export function BookingFormPage() {
 
   const availableUnits = useMemo(() => {
     if (values.property_id === '') return [];
+    const propertyId = String(values.property_id);
     return units.filter(
       (item) =>
-        item.property_id === values.property_id &&
+        item.property_id === propertyId &&
         item.bookable &&
         item.status !== 'inactive',
     );
@@ -402,9 +403,7 @@ export function BookingFormPage() {
                         : String(values.property_id)
                     }
                     onChange={(event) => {
-                      const nextId = event.target.value
-                        ? Number(event.target.value)
-                        : '';
+                      const nextId = event.target.value;
                       setValues((current) => ({
                         ...current,
                         property_id: nextId,
@@ -446,10 +445,7 @@ export function BookingFormPage() {
                   <Select
                     value={values.unit_id === '' ? '' : String(values.unit_id)}
                     onChange={(event) =>
-                      updateField(
-                        'unit_id',
-                        event.target.value ? Number(event.target.value) : '',
-                      )
+                      updateField('unit_id', event.target.value || '')
                     }
                     isDisabled={values.property_id === ''}
                     {...inputProps}

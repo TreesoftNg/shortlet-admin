@@ -42,9 +42,10 @@ export function AvailabilityCalendarGrid({
   const highlightRef = useRef<HTMLDivElement>(null);
   const hasHighlight = Boolean(highlightedUnitId || highlightedUnitName);
 
-  const barsByUnit = data.bars.reduce<Record<number, CalendarBar[]>>((acc, bar) => {
-    if (!acc[bar.unit_id]) acc[bar.unit_id] = [];
-    acc[bar.unit_id].push(bar);
+  const barsByUnit = data.bars.reduce<Record<string, CalendarBar[]>>((acc, bar) => {
+    const key = String(bar.unit_id);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(bar);
     return acc;
   }, {});
 
@@ -139,7 +140,7 @@ export function AvailabilityCalendarGrid({
               </Flex>
 
               {group.units.map((unit) => {
-                const unitBars = barsByUnit[unit.id] ?? [];
+                const unitBars = barsByUnit[String(unit.id)] ?? [];
                 const isHighlighted = unitMatchesAvailabilityHighlight(
                   unit,
                   highlightedUnitId,

@@ -5,8 +5,7 @@ describe('getStaffColumns', () => {
     expect(getStaffColumns().map((column) => column.id)).toEqual([
       'member',
       'role',
-      'phone',
-      'last_active',
+      'activity',
       'status',
     ]);
   });

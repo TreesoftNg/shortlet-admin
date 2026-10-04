@@ -24,9 +24,14 @@ export function getStaffColumns(): DataTableColumn<StaffMember>[] {
             src={row.avatar_url ?? undefined}
           />
           <Flex direction="column" minW={0}>
-            <Text fontWeight={700} noOfLines={1}>
-              {row.full_name}
-            </Text>
+            <Flex align="center" gap="8px" minW={0}>
+              <Text fontWeight={700} noOfLines={1}>
+                {row.full_name}
+              </Text>
+              {row.is_you ? (
+                <StatusBadge tone="mute">You</StatusBadge>
+              ) : null}
+            </Flex>
             <Text color="ink.300" fontSize="12px" noOfLines={1}>
               {row.email}
             </Text>
@@ -40,14 +45,12 @@ export function getStaffColumns(): DataTableColumn<StaffMember>[] {
       cell: (row) => getStaffRoleLabel(row.role),
     },
     {
-      id: 'phone',
-      header: 'Phone',
-      cell: (row) => row.phone ?? '—',
-    },
-    {
-      id: 'last_active',
-      header: 'Last active',
-      cell: (row) => formatStaffDateTime(row.last_active_at),
+      id: 'activity',
+      header: 'Activity',
+      cell: (row) =>
+        row.status === 'invited'
+          ? `Invite expires ${formatStaffDateTime(row.invite_expires_at)}`
+          : formatStaffDateTime(row.last_active_at),
     },
     {
       id: 'status',
@@ -75,6 +78,7 @@ export function renderStaffMobileCard(member: StaffMember): ReactNode {
           <Flex direction="column" minW={0}>
             <Text fontWeight={700} noOfLines={1}>
               {member.full_name}
+              {member.is_you ? ' · You' : ''}
             </Text>
             <Text color="ink.300" fontSize="12px" noOfLines={1}>
               {getStaffRoleLabel(member.role)} · {member.email}
@@ -84,7 +88,9 @@ export function renderStaffMobileCard(member: StaffMember): ReactNode {
         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
       </Flex>
       <Text fontSize="12px" color="ink.300">
-        Last active {formatStaffDateTime(member.last_active_at)}
+        {member.status === 'invited'
+          ? `Invite expires ${formatStaffDateTime(member.invite_expires_at)}`
+          : `Last active ${formatStaffDateTime(member.last_active_at)}`}
       </Text>
     </>
   );

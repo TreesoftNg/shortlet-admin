@@ -9,13 +9,18 @@ import {
   InputGroup,
   InputLeftElement,
   Select,
+  Text,
+  useToast,
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuPlus, LuSearch } from 'react-icons/lu';
+import { useMe } from '@/features/auth/hooks/use-auth';
 import { StaffDetailDrawer } from '@/features/staff/components/staff-detail-drawer';
+import { StaffInviteModal } from '@/features/staff/components/staff-invite-modal';
 import { getStaffColumns } from '@/features/staff/components/staff-table-config';
 import { useStaff } from '@/features/staff/hooks/use-staff';
 import {
+  canInviteStaff,
   countStaffTabs,
   DEFAULT_STAFF_FILTERS,
   filterStaff,
@@ -23,7 +28,7 @@ import {
   type StaffFilters,
   type StaffStatusTab,
 } from '@/features/staff/utils/staff-filters';
-import type { StaffRole } from '@/shared/types/hospitable';
+import type { StaffMember, StaffRole } from '@/shared/types/hospitable';
 import {
   AppModal,
   DataTable,
@@ -37,10 +42,14 @@ import {
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function StaffPage() {
-  const { data, isLoading, isError, error, refetch } = useStaff();
+  const toast = useToast();
+  const { data: profile } = useMe();
+  const { data, isLoading, isError, error, refetch, recordInvite } = useStaff();
   const [filters, setFilters] = useState<StaffFilters>(DEFAULT_STAFF_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
+  const canInvite = canInviteStaff(profile);
 
   const members = data ?? [];
   const tabCounts = useMemo(() => countStaffTabs(members), [members]);
@@ -53,6 +62,17 @@ export function StaffPage() {
 
   const updateFilters = (next: Partial<StaffFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
+  };
+
+  const handleInvited = (member: StaffMember) => {
+    recordInvite(member);
+    toast({
+      title: 'Invite sent',
+      description: `A password link was emailed to ${member.email}.`,
+      status: 'success',
+      duration: 3500,
+      isClosable: true,
+    });
   };
 
   if (isLoading) {
@@ -72,7 +92,7 @@ export function StaffPage() {
     <Box>
       <PageHeader
         title="Staff"
-        description="Manage team access, roles, and invitations."
+        description="Invite teammates. They receive an email with a password link."
         actions={
           <Flex gap="8px" align="center">
             <Button
@@ -80,9 +100,21 @@ export function StaffPage() {
               display={{ base: 'none', md: 'inline-flex' }}
               borderRadius="12px"
               h="40px"
+              onClick={() => setInviteOpen(true)}
+              isDisabled={!canInvite}
             >
               Invite member
             </Button>
+            <IconButton
+              aria-label="Invite member"
+              icon={<LuPlus size={18} />}
+              display={{ base: 'inline-flex', md: 'none' }}
+              borderRadius="12px"
+              h="44px"
+              w="44px"
+              onClick={() => setInviteOpen(true)}
+              isDisabled={!canInvite}
+            />
             <IconButton
               aria-label="Open navigation"
               icon={<LuMenu size={20} />}
@@ -98,6 +130,18 @@ export function StaffPage() {
       />
 
       <Panel pt="18px" minW={0}>
+        {!canInvite ? (
+          <Text fontSize="13px" color="ink.300" mb="12px">
+            Only an owner can invite staff. Sign in as an owner to send a
+            password link.
+          </Text>
+        ) : (
+          <Text fontSize="13px" color="ink.300" mb="12px">
+            Staging has no staff directory yet, so this list is you plus invites
+            sent in this browser session.
+          </Text>
+        )}
+
         <FilterTabs<StaffStatusTab>
           value={filters.tab}
           onChange={(tab) => updateFilters({ tab })}
@@ -105,11 +149,6 @@ export function StaffPage() {
             { id: 'all', label: 'All', count: tabCounts.all },
             { id: 'active', label: 'Active', count: tabCounts.active },
             { id: 'invited', label: 'Invited', count: tabCounts.invited },
-            {
-              id: 'suspended',
-              label: 'Suspended',
-              count: tabCounts.suspended,
-            },
           ]}
         />
 
@@ -137,7 +176,7 @@ export function StaffPage() {
             h="40px"
             maxW="170px"
             borderColor="line.500"
-            borderRadius="10px"
+            borderRadius="12px"
             bg="white"
             fontSize="13px"
             fontWeight={600}
@@ -164,7 +203,11 @@ export function StaffPage() {
         {members.length === 0 ? (
           <EmptyState
             title="No staff yet"
-            description="When staff members are available, they will show up here."
+            description={
+              canInvite
+                ? 'Invite a teammate. They will get an email to set a password.'
+                : 'Your profile will show here once it loads.'
+            }
           />
         ) : (
           <DataTable
@@ -173,7 +216,7 @@ export function StaffPage() {
             getRowId={(row) => row.id}
             selectedId={selectedId}
             onRowClick={(row) => setSelectedId(row.id)}
-            minWidth="860px"
+            minWidth="760px"
             emptyTitle="No matches"
             emptyMessage="No staff members match your filters"
           />
@@ -186,8 +229,18 @@ export function StaffPage() {
         title="Staff details"
         size="lg"
       >
-        <StaffDetailDrawer member={selected} />
+        <StaffDetailDrawer
+          member={selected}
+          canInvite={canInvite}
+          onInviteRecorded={recordInvite}
+        />
       </AppModal>
+
+      <StaffInviteModal
+        isOpen={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        onInvited={handleInvited}
+      />
     </Box>
   );
 }

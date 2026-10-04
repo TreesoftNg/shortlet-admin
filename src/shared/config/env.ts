@@ -19,4 +19,12 @@ export const env = {
   get apiUrl(): string {
     return requireUrl('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL);
   },
+  /**
+   * Tenant slug for local/preview hosts that are not on a registered domain.
+   * Sent as `x-tenant-slug` when set (e.g. `sunmade`).
+   */
+  get tenantSlug(): string | null {
+    const value = process.env.NEXT_PUBLIC_TENANT_SLUG?.trim();
+    return value || null;
+  },
 };
