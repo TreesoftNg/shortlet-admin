@@ -10,11 +10,13 @@ import {
   Wrap,
   WrapItem,
 } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
 import { LuPencil } from 'react-icons/lu';
+import { useUnitMedia } from '@/features/unit-media/hooks/use-unit-media';
 import type { UnitListItem } from '@/features/units/utils/unit-filters';
 import { getUnitStatusDisplay } from '@/features/units/utils/unit-filters';
 import { formatUnitSubtitle } from '@/features/units/utils/unit-form';
-import { KeyValueList, StatusBadge } from '@/shared/components/ui';
+import { StatusBadge } from '@/shared/components/ui';
 
 type UnitDetailDrawerProps = {
   unit: UnitListItem | null;
@@ -27,241 +29,264 @@ export function UnitDetailDrawer({
   onEdit,
   onAvailability,
 }: UnitDetailDrawerProps) {
+  const router = useRouter();
+  const { data: media = [], isLoading: mediaLoading } = useUnitMedia(unit?.id);
+  const thumbs = media.slice(0, 5);
+
   if (!unit) {
     return null;
   }
 
   const status = getUnitStatusDisplay(unit.status);
-  const rateLabel =
-    unit.base_rate === null
-      ? 'Inherits property'
+  const money = (amount: number | null) =>
+    amount === null
+      ? '—'
       : new Intl.NumberFormat('en-NG', {
           style: 'currency',
           currency: unit.property_currency,
           maximumFractionDigits: 0,
-        }).format(unit.base_rate);
+        }).format(amount);
 
   return (
-    <Box overflow="hidden">
-      {unit.picture ? (
-        <Box
-          as="img"
-          src={unit.picture}
-          alt=""
-          w="100%"
-          h="150px"
-          objectFit="cover"
-          borderRadius="12px"
-          mb="16px"
+    <Box>
+      <Flex
+        direction={{ base: 'column', lg: 'row' }}
+        align="stretch"
+        gap={{ base: '20px', lg: '28px' }}
+      >
+        {unit.picture ? (
+          <Box
+            as="img"
+            src={unit.picture}
+            alt=""
+            w={{ base: '100%', lg: '42%' }}
+            minH={{ base: '220px', lg: '320px' }}
+            h={{ base: '220px', lg: 'auto' }}
+            maxH={{ lg: '420px' }}
+            objectFit="cover"
+            borderRadius="16px"
+            flexShrink={0}
+          />
+        ) : null}
+
+        <Box flex="1" minW={0}>
+          <Flex justify="space-between" align="flex-start" gap="12px">
+            <Box minW={0}>
+              <Text fontSize="13px" color="ink.300" fontFamily="mono">
+                {unit.code || '—'}
+              </Text>
+              <Heading
+                as="h3"
+                fontSize={{ base: '22px', md: '26px' }}
+                fontWeight={800}
+                letterSpacing="-0.02em"
+                mt="4px"
+              >
+                {unit.name}
+              </Heading>
+              <Text color="ink.400" fontSize="15px" mt="6px">
+                {unit.property_name} · {formatUnitSubtitle(unit)}
+              </Text>
+            </Box>
+            <Flex direction="column" gap="6px" align="flex-end">
+              <StatusBadge tone={status.tone} flexShrink={0}>
+                {status.label}
+              </StatusBadge>
+              <StatusBadge tone={unit.bookable ? 'ok' : 'mute'} flexShrink={0}>
+                {unit.bookable ? 'Bookable' : 'Closed'}
+              </StatusBadge>
+            </Flex>
+          </Flex>
+
+          {unit.summary ? (
+            <Text mt="16px" fontSize="15px" color="ink.400" lineHeight="1.6">
+              {unit.summary}
+            </Text>
+          ) : null}
+
+          <SimpleGrid columns={{ base: 2, md: 4 }} gap="12px" mt="20px">
+            <StatChip label="Guests" value={String(unit.capacity)} />
+            <StatChip label="Bedrooms" value={String(unit.bedrooms)} />
+            <StatChip label="Beds" value={String(unit.beds)} />
+            <StatChip label="Baths" value={String(unit.bathrooms)} />
+          </SimpleGrid>
+        </Box>
+      </Flex>
+
+      <Box mt="24px">
+        <Flex justify="space-between" align="center" mb="10px">
+          <SectionLabel>Gallery</SectionLabel>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push(`/units/${unit.id}/edit?tab=gallery`)}
+          >
+            Manage gallery
+          </Button>
+        </Flex>
+        {mediaLoading ? (
+          <Text fontSize="14px" color="ink.300">
+            Loading gallery…
+          </Text>
+        ) : thumbs.length > 0 ? (
+          <Flex gap="8px" overflowX="auto">
+            {thumbs.map((item) => {
+              const src = item.thumbnailUrl ?? item.sizes?.thumb ?? item.url;
+              return src ? (
+                <Box
+                  key={item.id}
+                  as="img"
+                  src={src}
+                  alt={item.altText ?? ''}
+                  w="72px"
+                  h="72px"
+                  objectFit="cover"
+                  borderRadius="10px"
+                  flexShrink={0}
+                />
+              ) : (
+                <Box
+                  key={item.id}
+                  w="72px"
+                  h="72px"
+                  bg="bg.400"
+                  borderRadius="10px"
+                  flexShrink={0}
+                />
+              );
+            })}
+          </Flex>
+        ) : (
+          <Text fontSize="14px" color="ink.300">
+            No gallery photos yet.
+          </Text>
+        )}
+      </Box>
+
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap="14px" mt="24px">
+        <DetailCard label="Property" value={unit.property_name} />
+        <DetailCard label="City" value={unit.property_city} />
+        <DetailCard label="Floor" value={unit.floor ?? '—'} />
+        <DetailCard
+          label="Base rate"
+          value={unit.base_rate === null ? 'Inherits property' : money(unit.base_rate)}
         />
+        <DetailCard label="Cleaning fee" value={money(unit.cleaning_fee)} />
+        <DetailCard
+          label="Weekly discount"
+          value={
+            unit.weekly_discount_percent === null
+              ? '—'
+              : `${unit.weekly_discount_percent}%`
+          }
+        />
+        <DetailCard
+          label="Monthly discount"
+          value={
+            unit.monthly_discount_percent === null
+              ? '—'
+              : `${unit.monthly_discount_percent}%`
+          }
+        />
+        <DetailCard
+          label="Updated"
+          value={new Date(unit.updated_at).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })}
+        />
+      </SimpleGrid>
+
+      {unit.amenities.length > 0 ? (
+        <Box mt="24px">
+          <SectionLabel>Facilities</SectionLabel>
+          <Wrap spacing="8px">
+            {unit.amenities.map((amenity) => (
+              <WrapItem key={amenity}>
+                <StatusBadge tone="mute">{amenity}</StatusBadge>
+              </WrapItem>
+            ))}
+          </Wrap>
+        </Box>
       ) : null}
 
-      <Box>
-        <Flex justify="space-between" align="flex-start" gap="12px">
-          <Box minW={0}>
-            <Text fontSize="12px" color="ink.300" fontFamily="mono">
-              {unit.code || '—'}
-            </Text>
-            <Heading as="h3" fontSize="18px" fontWeight={700} mt="2px">
-              {unit.name}
-            </Heading>
-            <Text color="ink.400" fontSize="13px" mt="4px">
-              {unit.property_name} · {formatUnitSubtitle(unit)}
-            </Text>
-          </Box>
-          <Flex direction="column" gap="6px" align="flex-end">
-            <StatusBadge tone={status.tone} flexShrink={0}>
-              {status.label}
-            </StatusBadge>
-            <StatusBadge tone={unit.bookable ? 'ok' : 'mute'} flexShrink={0}>
-              {unit.bookable ? 'Bookable' : 'Closed'}
-            </StatusBadge>
-          </Flex>
-        </Flex>
+      {unit.property_amenities.length > 0 ? (
+        <Box mt="20px">
+          <SectionLabel>Property amenities</SectionLabel>
+          <Wrap spacing="8px">
+            {unit.property_amenities.map((amenity) => (
+              <WrapItem key={amenity}>
+                <StatusBadge tone="mute">{amenity.replace(/_/g, ' ')}</StatusBadge>
+              </WrapItem>
+            ))}
+          </Wrap>
+        </Box>
+      ) : null}
 
-        {unit.summary ? (
-          <Text mt="14px" fontSize="14px" color="ink.400">
-            {unit.summary}
+      {unit.notes ? (
+        <Box mt="20px">
+          <SectionLabel>Internal notes</SectionLabel>
+          <Text fontSize="15px" color="ink.400" lineHeight="1.6">
+            {unit.notes}
           </Text>
-        ) : null}
+        </Box>
+      ) : null}
 
-        <SimpleGrid columns={2} gap="10px" mt="16px">
-          <StatChip label="Guests" value={String(unit.capacity)} />
-          <StatChip label="Bedrooms" value={String(unit.bedrooms)} />
-          <StatChip label="Beds" value={String(unit.beds)} />
-          <StatChip label="Baths" value={String(unit.bathrooms)} />
-        </SimpleGrid>
+      <Flex gap="10px" mt="28px" wrap="wrap">
+        <Button
+          variant="dark"
+          flex="1"
+          minW="160px"
+          leftIcon={<LuPencil size={16} />}
+          onClick={onEdit}
+          isDisabled={!onEdit}
+        >
+          Edit unit
+        </Button>
+        <Button variant="soft" minW="140px" onClick={onAvailability} isDisabled={!onAvailability}>
+          Availability
+        </Button>
+      </Flex>
+    </Box>
+  );
+}
 
-        <KeyValueList
-          title="Details"
-          items={[
-            {
-              label: 'Property',
-              value: <Text as="b">{unit.property_name}</Text>,
-            },
-            {
-              label: 'City',
-              value: <Text as="b">{unit.property_city}</Text>,
-            },
-            {
-              label: 'Floor',
-              value: <Text as="b">{unit.floor ?? '—'}</Text>,
-            }, 
-            {
-              label: 'Base rate',
-              value: <Text as="b">{rateLabel}</Text>,
-            },
-            {
-              label: 'Cleaning fee',
-              value: (
-                <Text as="b">
-                  {unit.cleaning_fee === null
-                    ? '—'
-                    : new Intl.NumberFormat('en-NG', {
-                        style: 'currency',
-                        currency: unit.property_currency,
-                        maximumFractionDigits: 0,
-                      }).format(unit.cleaning_fee)}
-                </Text>
-              ),
-            },
-            {
-              label: 'Weekly discount',
-              value: (
-                <Text as="b">
-                  {unit.weekly_discount_percent === null
-                    ? '—'
-                    : `${unit.weekly_discount_percent}%`}
-                </Text>
-              ),
-            },
-            {
-              label: 'Monthly discount',
-              value: (
-                <Text as="b">
-                  {unit.monthly_discount_percent === null
-                    ? '—'
-                    : `${unit.monthly_discount_percent}%`}
-                </Text>
-              ),
-            },
-            {
-              label: 'Updated',
-              value: (
-                <Text as="b">
-                  {new Date(unit.updated_at).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </Text>
-              ),
-            },
-          ]}
-        />
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text
+      fontSize="12px"
+      textTransform="uppercase"
+      letterSpacing="0.05em"
+      color="ink.300"
+      fontWeight={700}
+      mb="10px"
+    >
+      {children}
+    </Text>
+  );
+}
 
-        {unit.amenities.length > 0 ? (
-          <Box py="16px" borderTop="1px solid" borderColor="line.500">
-            <Text
-              fontSize="12px"
-              textTransform="uppercase"
-              letterSpacing="0.05em"
-              color="ink.300"
-              fontWeight={700}
-              mb="10px"
-            >
-              Facilities
-            </Text>
-            <Wrap spacing="8px">
-              {unit.amenities.map((amenity) => (
-                <WrapItem key={amenity}>
-                  <StatusBadge tone="mute">{amenity}</StatusBadge>
-                </WrapItem>
-              ))}
-            </Wrap>
-          </Box>
-        ) : null}
-
-        {unit.property_amenities.length > 0 ? (
-          <Box py="16px" borderTop="1px solid" borderColor="line.500">
-            <Text
-              fontSize="12px"
-              textTransform="uppercase"
-              letterSpacing="0.05em"
-              color="ink.300"
-              fontWeight={700}
-              mb="10px"
-            >
-              Property amenities
-            </Text>
-            <Wrap spacing="8px">
-              {unit.property_amenities.map((amenity) => (
-                <WrapItem key={amenity}>
-                  <StatusBadge tone="mute">
-                    {amenity.replace(/_/g, ' ')}
-                  </StatusBadge>
-                </WrapItem>
-              ))}
-            </Wrap>
-          </Box>
-        ) : null}
-
-        {unit.notes ? (
-          <Box py="16px" borderTop="1px solid" borderColor="line.500">
-            <Text
-              fontSize="12px"
-              textTransform="uppercase"
-              letterSpacing="0.05em"
-              color="ink.300"
-              fontWeight={700}
-              mb="8px"
-            >
-              Internal notes
-            </Text>
-            <Text fontSize="14px" color="ink.400">
-              {unit.notes}
-            </Text>
-          </Box>
-        ) : null}
-
-        <Flex gap="8px" mt="4px" wrap="wrap">
-          <Button
-            size="sm"
-            variant="dark"
-            flex="1"
-            minW="120px"
-            leftIcon={<LuPencil size={14} />}
-            onClick={onEdit}
-            isDisabled={!onEdit}
-          >
-            Edit unit
-          </Button>
-          <Button
-            size="sm"
-            variant="soft"
-            onClick={onAvailability}
-            isDisabled={!onAvailability}
-          >
-            Availability
-          </Button>
-        </Flex>
-      </Box>
+function DetailCard({ label, value }: { label: string; value: string }) {
+  return (
+    <Box bg="bg.400" borderRadius="14px" px="16px" py="14px">
+      <Text fontSize="11px" color="ink.300" fontWeight={700} textTransform="uppercase">
+        {label}
+      </Text>
+      <Text fontSize="16px" fontWeight={700} mt="4px">
+        {value}
+      </Text>
     </Box>
   );
 }
 
 function StatChip({ label, value }: { label: string; value: string }) {
   return (
-    <Box bg="bg.400" borderRadius="12px" px="12px" py="10px">
-      <Text
-        fontSize="11px"
-        color="ink.300"
-        fontWeight={700}
-        textTransform="uppercase"
-      >
+    <Box bg="bg.400" borderRadius="14px" px="16px" py="14px">
+      <Text fontSize="11px" color="ink.300" fontWeight={700} textTransform="uppercase">
         {label}
       </Text>
-      <Text fontSize="18px" fontWeight={800} mt="2px">
+      <Text fontSize="22px" fontWeight={800} mt="4px">
         {value}
       </Text>
     </Box>

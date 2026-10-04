@@ -1,5 +1,5 @@
-import type { Review } from '@/shared/types/hospitable';
 import type { StatusTone } from '@/shared/components/ui';
+import type { Review, ReviewStatus } from '../types';
 
 export type ReviewStatusTab = 'all' | 'pending' | 'published' | 'hidden' | 'needs_response';
 
@@ -17,11 +17,15 @@ export const DEFAULT_REVIEW_FILTERS: ReviewFilters = {
   minRating: 'all',
 };
 
+export function needsResponse(review: Review): boolean {
+  return review.canRespond && !review.adminResponse;
+}
+
 function matchesTab(review: Review, tab: ReviewStatusTab): boolean {
-  if (tab === 'pending') return review.moderation_status === 'pending';
-  if (tab === 'published') return review.moderation_status === 'published';
-  if (tab === 'hidden') return review.moderation_status === 'hidden';
-  if (tab === 'needs_response') return review.can_respond && !review.public.response;
+  if (tab === 'pending') return review.status === 'pending';
+  if (tab === 'published') return review.status === 'published';
+  if (tab === 'hidden') return review.status === 'hidden';
+  if (tab === 'needs_response') return needsResponse(review);
   return true;
 }
 
@@ -29,13 +33,7 @@ function matchesSearch(review: Review, search: string): boolean {
   const query = search.trim().toLowerCase();
   if (!query) return true;
 
-  const haystack = [
-    review.guest?.full_name,
-    review.reservation?.property?.name,
-    review.reservation?.platform_id,
-    review.public.review,
-    review.platform,
-  ]
+  const haystack = [review.guestFullName, review.guestEmail, review.unitName, review.comment]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
@@ -45,18 +43,16 @@ function matchesSearch(review: Review, search: string): boolean {
 
 function matchesRating(review: Review, minRating: number | 'all'): boolean {
   if (minRating === 'all') return true;
-  return review.public.rating >= minRating;
+  return review.rating >= minRating;
 }
 
 export function countReviewTabs(reviews: Review[]): ReviewTabCount {
   return {
     all: reviews.length,
-    pending: reviews.filter((item) => item.moderation_status === 'pending').length,
-    published: reviews.filter((item) => item.moderation_status === 'published').length,
-    hidden: reviews.filter((item) => item.moderation_status === 'hidden').length,
-    needs_response: reviews.filter(
-      (item) => item.can_respond && !item.public.response,
-    ).length,
+    pending: reviews.filter((item) => item.status === 'pending').length,
+    published: reviews.filter((item) => item.status === 'published').length,
+    hidden: reviews.filter((item) => item.status === 'hidden').length,
+    needs_response: reviews.filter(needsResponse).length,
   };
 }
 
@@ -68,12 +64,10 @@ export function filterReviews(reviews: Review[], filters: ReviewFilters): Review
         matchesSearch(review, filters.search) &&
         matchesRating(review, filters.minRating),
     )
-    .sort((a, b) =>
-      (b.reviewed_at ?? '').localeCompare(a.reviewed_at ?? ''),
-    );
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function getModerationDisplay(status: Review['moderation_status']): {
+export function getModerationDisplay(status: ReviewStatus): {
   label: string;
   tone: StatusTone;
 } {

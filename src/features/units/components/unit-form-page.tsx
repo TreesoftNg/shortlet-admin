@@ -14,6 +14,11 @@ import {
   Input,
   Select,
   Switch,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Text,
   Textarea,
   useToast,
@@ -22,6 +27,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { LuArrowLeft, LuMenu, LuTrash2, LuUpload } from 'react-icons/lu';
 import { useProperties } from '@/features/properties/hooks/use-properties';
+import { UnitGalleryTab } from '@/features/unit-media/components/unit-gallery-tab';
+import { useLeaveUploadGuard } from '@/features/unit-media/hooks/use-leave-upload-guard';
+import { useUploadQueueStore } from '@/features/unit-media/store/upload-queue-store';
 import { useFacilities } from '@/features/units/hooks/use-facilities';
 import {
   useCreateUnit,
@@ -58,6 +66,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
   const toast = useToast();
   const fileInputId = useId();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
+  const { confirmLeave } = useLeaveUploadGuard();
   const createMutation = useCreateUnit();
   const updateMutation = useUpdateUnit();
 
@@ -135,7 +144,22 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     propertiesLoading || facilitiesLoading || (isEdit && unitLoading);
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  useEffect(() => () => useUploadQueueStore.getState().reset(), []);
+
+  const tabFromQuery = searchParams.get('tab');
+  const editTabs = [
+    { id: 'details', label: 'Details' },
+    { id: 'gallery', label: 'Gallery' },
+    { id: 'pricing', label: 'Pricing' },
+  ] as const;
+  const tabIndex = Math.max(
+    0,
+    editTabs.findIndex((tab) => tab.id === tabFromQuery),
+  );
+  const currentTab = isEdit ? editTabs[tabIndex].id : 'details';
+
   const goBack = () => {
+    if (!confirmLeave()) return;
     router.push('/units');
   };
 
@@ -203,16 +227,17 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
           duration: 2500,
           isClosable: true,
         });
+        router.push('/units');
       } else {
-        await createMutation.mutateAsync(values);
+        const created = await createMutation.mutateAsync(values);
         toast({
           title: 'Unit created',
           status: 'success',
           duration: 2500,
           isClosable: true,
         });
+        router.push(`/units/${created.id}/edit?tab=gallery`);
       }
-      router.push('/units');
     } catch (error) {
       toast({
         title: isEdit ? 'Failed to update unit' : 'Failed to create unit',
@@ -275,10 +300,14 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
   }
 
   return (
-    <Box maxW="820px">
+    <Box maxW="1200px">
       <PageHeader
         title={isEdit ? 'Edit unit' : 'Add unit'}
-        description="Configure inventory and unit amenities. Address and gallery stay on the property."
+        description={
+          isEdit
+            ? 'Inventory, gallery, and pricing for this unit.'
+            : 'Configure inventory and unit amenities. Add a gallery after creating the unit.'
+        }
         actions={
           <>
             <IconButton
@@ -301,21 +330,80 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
             >
               Back
             </Button>
-            <Button
-              h="44px"
-              borderRadius="12px"
-              onClick={() => void handleSubmit()}
-              isLoading={isSaving}
-              loadingText={isEdit ? 'Saving' : 'Creating'}
-            >
-              {isEdit ? 'Save changes' : 'Create unit'}
-            </Button>
+            {!(isEdit && currentTab === 'gallery') ? (
+              <Button
+                h="44px"
+                borderRadius="12px"
+                onClick={() => void handleSubmit()}
+                isLoading={isSaving}
+                loadingText={isEdit ? 'Saving' : 'Creating'}
+              >
+                {isEdit ? 'Save changes' : 'Create unit'}
+              </Button>
+            ) : null}
           </>
         }
       />
 
-      <Panel>
-        <Flex direction="column" gap="22px">
+      <Panel p={{ base: '18px', md: '28px' }}>
+        <Flex direction="column" gap="28px">
+          {isEdit ? (
+            <Tabs
+              index={tabIndex}
+              onChange={(index) => {
+                const tab = editTabs[index]?.id ?? 'details';
+                const query = tab === 'details' ? '' : `?tab=${tab}`;
+                router.replace(`/units/${id}/edit${query}`, { scroll: false });
+              }}
+              variant="unstyled"
+            >
+              <TabList
+                overflowX="auto"
+                borderBottom="1px solid"
+                borderColor="line.500"
+                gap={{ base: '14px', md: '22px' }}
+                css={{
+                  '&::-webkit-scrollbar': { display: 'none' },
+                  scrollbarWidth: 'none',
+                }}
+              >
+                {editTabs.map((tab) => (
+                  <Tab
+                    key={tab.id}
+                    fontWeight={700}
+                    fontSize="14px"
+                    whiteSpace="nowrap"
+                    h="auto"
+                    minW="auto"
+                    px="2px"
+                    pb="12px"
+                    borderRadius="0"
+                    color="ink.300"
+                    borderBottom="3px solid transparent"
+                    mb="-1px"
+                    _selected={{
+                      color: 'ink.500',
+                      borderBottomColor: 'brand.500',
+                    }}
+                  >
+                    {tab.label}
+                  </Tab>
+                ))}
+              </TabList>
+              <TabPanels display="none">
+                <TabPanel />
+                <TabPanel />
+                <TabPanel />
+              </TabPanels>
+            </Tabs>
+          ) : null}
+
+          {isEdit && currentTab === 'gallery' && id ? (
+            <UnitGalleryTab unitId={id} />
+          ) : null}
+
+          {(!isEdit || currentTab === 'details') && (
+            <>
           <Box
             bg="bg.400"
             borderRadius="14px"
@@ -332,7 +420,10 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
           </Box>
 
           <Section title="Basics">
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
+            <Grid
+              templateColumns={{ base: '1fr', md: '1fr 1fr', xl: 'repeat(3, 1fr)' }}
+              gap="16px"
+            >
               <Field label="Property" isRequired error={errors.property_id}>
                 <Select
                   value={
@@ -416,17 +507,21 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                   {...inputProps}
                 />
               </Field>
+            </Grid>
+            <Box mt="16px">
               <Field label="Short summary">
-                <Input
+                <Textarea
                   value={values.summary}
                   onChange={(event) =>
                     updateField('summary', event.target.value)
                   }
                   placeholder="Optional calendar/list label"
-                  {...inputProps}
+                  minH="100px"
+                  borderColor="line.500"
+                  borderRadius="12px"
                 />
               </Field>
-            </Grid>
+            </Box>
 
             <Flex
               mt="14px"
@@ -459,7 +554,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
           <Section title="Layout">
             <Grid
               templateColumns={{ base: '1fr 1fr', md: 'repeat(4, 1fr)' }}
-              gap="14px"
+              gap="16px"
             >
               <Field label="Max guests" isRequired error={errors.capacity}>
                 <Input
@@ -520,8 +615,13 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
               </Text>
             ) : (
               <Grid
-                templateColumns={{ base: '1fr 1fr', md: 'repeat(3, 1fr)' }}
-                gap="10px"
+                templateColumns={{
+                  base: '1fr',
+                  sm: '1fr 1fr',
+                  lg: 'repeat(3, 1fr)',
+                  xl: 'repeat(4, 1fr)',
+                }}
+                gap="12px"
               >
                 {facilities.map((facility) => (
                   <Checkbox
@@ -542,8 +642,25 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
             )}
           </Section>
 
+          <Section title="Ops notes">
+            <Field label="Internal notes">
+              <Textarea
+                value={values.notes}
+                onChange={(event) => updateField('notes', event.target.value)}
+                placeholder="Maintenance, owner holds, access quirks…"
+                minH="120px"
+                borderColor="line.500"
+                borderRadius="12px"
+              />
+            </Field>
+          </Section>
+
+            </>
+          )}
+
+          {(!isEdit || currentTab === 'pricing') && (
           <Section title="Rates & discounts">
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
+            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="16px">
               <Field
                 label="Base nightly rate"
                 error={errors.base_rate}
@@ -636,20 +753,9 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
               </Field>
             </Grid>
           </Section>
+          )}
 
-          <Section title="Ops notes">
-            <Field label="Internal notes">
-              <Textarea
-                value={values.notes}
-                onChange={(event) => updateField('notes', event.target.value)}
-                placeholder="Maintenance, owner holds, access quirks…"
-                minH="80px"
-                borderColor="line.500"
-                borderRadius="12px"
-              />
-            </Field>
-          </Section>
-
+          {!isEdit && (
           <Section title="Cover photo">
             <FormControl>
               <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
@@ -701,20 +807,22 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                 borderColor="line.500"
                 borderRadius="14px"
                 overflow="hidden"
-                maxW="360px"
+                maxW="520px"
               >
                 <Box
                   as="img"
                   src={values.picture}
                   alt="Unit preview"
                   w="100%"
-                  h="180px"
+                  h="240px"
                   objectFit="cover"
                 />
               </Box>
             ) : null}
           </Section>
+          )}
 
+          {!(isEdit && currentTab === 'gallery') && (
           <Flex
             gap="10px"
             justify="flex-end"
@@ -740,6 +848,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
               {isEdit ? 'Save changes' : 'Create unit'}
             </Button>
           </Flex>
+          )}
         </Flex>
       </Panel>
     </Box>
@@ -749,7 +858,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
 const inputProps = {
   borderColor: 'line.500',
   borderRadius: '12px',
-  h: '40px',
+  h: '44px',
   bg: 'white',
 } as const;
 

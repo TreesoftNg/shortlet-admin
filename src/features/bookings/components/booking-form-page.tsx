@@ -104,7 +104,7 @@ export function BookingFormPage() {
     if (!query) return customers;
     return customers.filter((customer) => {
       const haystack = [
-        customer.full_name,
+        customer.fullName,
         customer.email,
         customer.phone,
       ]
@@ -122,7 +122,7 @@ export function BookingFormPage() {
 
   const guestLabel =
     values.guest_mode === 'existing'
-      ? selectedCustomer?.full_name ?? 'Select a customer'
+      ? selectedCustomer?.fullName ?? 'Select a customer'
       : [values.first_name, values.last_name].filter(Boolean).join(' ') ||
         'New guest details';
 
@@ -332,7 +332,7 @@ export function BookingFormPage() {
                       </option>
                       {filteredCustomers.map((customer) => (
                         <option key={customer.id} value={customer.id}>
-                          {customer.full_name}
+                          {customer.fullName}
                           {customer.email ? ` · ${customer.email}` : ''}
                         </option>
                       ))}

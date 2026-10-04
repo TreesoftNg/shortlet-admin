@@ -152,7 +152,8 @@ export function PropertiesPage() {
         isOpen={Boolean(selected)}
         onClose={() => setSelectedId(null)}
         title="Property details"
-        size="xl"
+        size="5xl"
+        maxWidth="1080px"
       >
         <PropertyDetailDrawer
           property={selected}

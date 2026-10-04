@@ -4,7 +4,7 @@ describe('getReviewColumns', () => {
   it('returns the expected review list columns', () => {
     expect(getReviewColumns().map((column) => column.id)).toEqual([
       'guest',
-      'property',
+      'unit',
       'rating',
       'review',
       'date',

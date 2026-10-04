@@ -1,25 +1,32 @@
 import {
-  buildCustomerList,
   countCustomerTabs,
   DEFAULT_CUSTOMER_FILTERS,
   filterCustomers,
   getCustomerLocations,
 } from './customer-filters';
-import { mockGuests, mockReservations } from '@/mocks/data';
+import { customer } from '../test-fixtures';
+
+const customers = [
+  customer(),
+  customer({
+    id: 'cust-2',
+    firstName: 'Temitope',
+    lastName: 'Aladesiun',
+    fullName: 'Temitope Aladesiun',
+    email: 'temitope@example.com',
+    location: 'Ikeja',
+    staysCount: 2,
+    totalSpent: 180000,
+    status: 'guest',
+  }),
+];
 
 describe('customer-filters', () => {
-  const customers = buildCustomerList(mockGuests, mockReservations);
-
-  it('builds customers with stay aggregates', () => {
-    const temitope = customers.find((item) => item.id === 'gst-001');
-    expect(temitope?.stays_count).toBeGreaterThan(0);
-    expect(temitope?.total_spent).toBeGreaterThan(0);
-  });
-
-  it('counts tabs', () => {
+  it('counts tabs from API status and stays', () => {
     const counts = countCustomerTabs(customers);
-    expect(counts.all).toBe(customers.length);
-    expect(counts.with_stays + counts.new).toBe(counts.all);
+    expect(counts.all).toBe(2);
+    expect(counts.with_stays).toBe(1);
+    expect(counts.new).toBe(1);
   });
 
   it('filters by search', () => {
@@ -28,12 +35,10 @@ describe('customer-filters', () => {
       search: 'sarah',
     });
     expect(result).toHaveLength(1);
-    expect(result[0].full_name).toBe('Sarah Johnson');
+    expect(result[0].fullName).toBe('Sarah Johnson');
   });
 
   it('returns sorted locations', () => {
-    const locations = getCustomerLocations(customers);
-    expect(locations.length).toBeGreaterThan(0);
-    expect(locations).toEqual([...locations].sort());
+    expect(getCustomerLocations(customers)).toEqual(['Ikeja', 'Lekki']);
   });
 });

@@ -20,6 +20,8 @@ export type AppModalProps = {
   children: ReactNode;
   footer?: ReactNode;
   size?: ModalProps['size'];
+  /** Overrides Chakra’s named size when a wider inventory dialog is needed. */
+  maxWidth?: string;
 };
 
 /** Shared admin modal — full-screen on mobile, sized dialog on desktop. */
@@ -30,6 +32,7 @@ export function AppModal({
   children,
   footer,
   size = 'lg',
+  maxWidth,
 }: AppModalProps) {
   const resolvedSize =
     useBreakpointValue({
@@ -51,22 +54,26 @@ export function AppModal({
       <ModalContent
         borderRadius={{ base: 0, md: '22px' }}
         containerProps={{
-          p: { base: 0, md: 4 },
+          p: { base: 0, md: 6 },
         }}
         m={0}
-        mx={{ base: 0, md: '16px' }}
+        mx={{ base: 0, md: '24px' }}
+        w="100%"
+        {...(maxWidth ? { maxW: { base: '100%', md: maxWidth } } : {})}
         h={{ base: '100dvh', md: 'auto' }}
-        maxH={{ base: '100dvh', md: '90vh' }}
+        maxH={{ base: '100dvh', md: '92vh' }}
         overflow="hidden"
         display="flex"
         flexDirection="column"
       >
         {title ? (
           <ModalHeader
-            fontSize={{ base: '17px', md: '18px' }}
+            fontSize={{ base: '18px', md: '20px' }}
             fontWeight={800}
             letterSpacing="-0.02em"
-            pr="48px"
+            px={{ base: '16px', md: '28px' }}
+            py={{ base: '16px', md: '18px' }}
+            pr="56px"
             borderBottom="1px solid"
             borderColor="line.500"
             flexShrink={0}
@@ -74,10 +81,10 @@ export function AppModal({
             {title}
           </ModalHeader>
         ) : null}
-        <ModalCloseButton top="14px" right="14px" borderRadius="10px" />
+        <ModalCloseButton top="16px" right="16px" borderRadius="10px" />
         <ModalBody
-          px={{ base: '16px', md: '22px' }}
-          py={{ base: '16px', md: '20px' }}
+          px={{ base: '16px', md: '28px' }}
+          py={{ base: '16px', md: '24px' }}
           flex="1"
           overflowY="auto"
         >
@@ -87,9 +94,11 @@ export function AppModal({
           <ModalFooter
             borderTop="1px solid"
             borderColor="line.500"
-            gap="8px"
+            gap="10px"
             justifyContent="flex-start"
             flexShrink={0}
+            px={{ base: '16px', md: '28px' }}
+            py={{ base: '14px', md: '16px' }}
           >
             {footer}
           </ModalFooter>

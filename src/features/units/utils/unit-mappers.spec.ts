@@ -4,6 +4,7 @@ import {
   mapStatusToApi,
   mapUnitFromApi,
   toCreateUnitPayload,
+  toUpdateUnitPayload,
 } from './unit-mappers';
 import { createEmptyUnitForm } from './unit-form';
 
@@ -107,5 +108,17 @@ describe('unit mappers', () => {
       internalNotes: 'Ops note',
       pictureUrl: 'https://images.com/a.jpg',
     });
+  });
+
+  it('omits pictureUrl on update so the gallery owns the cover', () => {
+    const payload = toUpdateUnitPayload({
+      ...createEmptyUnitForm('prop-1'),
+      property_id: 'prop-1',
+      code: 'A',
+      name: 'Unit A',
+      picture: 'https://images.com/stale.jpg',
+    });
+    expect(payload.pictureUrl).toBeUndefined();
+    expect(payload.code).toBe('A');
   });
 });

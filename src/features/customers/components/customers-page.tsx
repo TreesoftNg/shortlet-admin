@@ -1,8 +1,10 @@
 'use client';
 
-import { Box, Button, IconButton } from '@chakra-ui/react';
+import { Box, IconButton } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
-import { LuMenu, LuPlus } from 'react-icons/lu';
+import { LuMenu } from 'react-icons/lu';
+import { useMe } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/utils/auth-helpers';
 import { CustomerDetailDrawer } from '@/features/customers/components/customer-detail-drawer';
 import { getCustomerColumns } from '@/features/customers/components/customer-table-config';
 import { CustomersToolbar } from '@/features/customers/components/customers-toolbar';
@@ -28,7 +30,9 @@ import {
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function CustomersPage() {
-  const { data, isLoading, isError, error, refetch } = useCustomers();
+  const { data: profile } = useMe();
+  const canRead = hasPermission(profile, 'customer.read');
+  const { data, isLoading, isError, error, refetch } = useCustomers({ enabled: canRead });
   const [filters, setFilters] = useState<CustomerFilters>(DEFAULT_CUSTOMER_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -47,6 +51,39 @@ export function CustomersPage() {
     setFilters((current) => ({ ...current, ...next }));
   };
 
+  const header = (
+    <PageHeader
+      title="Customers"
+      description="Guests who book and stay across your properties."
+      actions={
+        <IconButton
+          aria-label="Open navigation"
+          icon={<LuMenu size={20} />}
+          display={{ base: 'inline-flex', lg: 'none' }}
+          variant="secondary"
+          borderRadius="12px"
+          h="44px"
+          w="44px"
+          onClick={openMobileNav}
+        />
+      }
+    />
+  );
+
+  if (!canRead) {
+    return (
+      <Box>
+        {header}
+        <Panel>
+          <EmptyState
+            title="No access"
+            description="Your role does not include customers. Ask the business owner for access."
+          />
+        </Panel>
+      </Box>
+    );
+  }
+
   if (isLoading) {
     return <PageSkeleton variant="table" />;
   }
@@ -54,9 +91,7 @@ export function CustomersPage() {
   if (isError) {
     return (
       <ErrorState
-        message={
-          error instanceof Error ? error.message : 'Failed to load customers'
-        }
+        message={error instanceof Error ? error.message : 'Failed to load customers'}
         onRetry={() => void refetch()}
       />
     );
@@ -64,27 +99,7 @@ export function CustomersPage() {
 
   return (
     <Box>
-      <PageHeader
-        title="Customers"
-        description="Guests who book and stay across your properties."
-        actions={
-          <>
-            <IconButton
-              aria-label="Open navigation"
-              icon={<LuMenu size={20} />}
-              display={{ base: 'inline-flex', lg: 'none' }}
-              variant="secondary"
-              borderRadius="12px"
-              h="44px"
-              w="44px"
-              onClick={openMobileNav}
-            />
-            <Button h="44px" leftIcon={<LuPlus size={16} />}>
-              Add customer
-            </Button>
-          </>
-        }
-      />
+      {header}
 
       <Panel pt="18px" minW={0}>
         <FilterTabs<CustomerStatusTab>
@@ -106,7 +121,7 @@ export function CustomersPage() {
         {customers.length === 0 ? (
           <EmptyState
             title="No customers yet"
-            description="When customers are available, they will show up here."
+            description="When guests create an account, they will show up here."
           />
         ) : (
           <DataTable
@@ -126,7 +141,8 @@ export function CustomersPage() {
         isOpen={Boolean(selected)}
         onClose={() => setSelectedId(null)}
         title="Customer details"
-        size="xl"
+        size="5xl"
+        maxWidth="960px"
       >
         <CustomerDetailDrawer customer={selected} />
       </AppModal>

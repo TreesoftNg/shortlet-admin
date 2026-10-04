@@ -1,43 +1,49 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Flex,
-  Heading,
-  SimpleGrid,
-  Text,
-  Textarea,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, Text, useToast } from '@chakra-ui/react';
 import { LuStar } from 'react-icons/lu';
-import type { Review } from '@/shared/types/hospitable';
 import { KeyValueList, StatusBadge } from '@/shared/components/ui';
-import {
-  formatReviewDate,
-  getModerationDisplay,
-} from '../utils/review-filters';
+import { ApiClientError } from '@/shared/api/types';
+import { useHideReview, usePublishReview } from '../hooks/use-review-mutations';
+import type { Review } from '../types';
+import { formatReviewDate, getModerationDisplay } from '../utils/review-filters';
 
 type ReviewDetailDrawerProps = {
   review: Review | null;
+  canManage: boolean;
 };
 
-export function ReviewDetailDrawer({ review }: ReviewDetailDrawerProps) {
+export function ReviewDetailDrawer({ review, canManage }: ReviewDetailDrawerProps) {
+  const toast = useToast();
+  const hide = useHideReview();
+  const publish = usePublishReview();
+
   if (!review) {
     return null;
   }
 
-  const status = getModerationDisplay(review.moderation_status);
+  const status = getModerationDisplay(review.status);
+  const isSaving = hide.isPending || publish.isPending;
+
+  const showError = (title: string, err: unknown) => {
+    toast({
+      title,
+      description: err instanceof ApiClientError || err instanceof Error ? err.message : undefined,
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+  };
 
   return (
     <Box>
       <Flex justify="space-between" align="flex-start" gap="12px" mb="12px">
         <Box minW={0}>
           <Heading as="h3" fontSize="18px" fontWeight={700} noOfLines={1}>
-            {review.guest?.full_name ?? 'Guest'}
+            {review.guestFullName || 'Guest'}
           </Heading>
           <Text color="ink.400" fontSize="13px" mt="2px" noOfLines={1}>
-            {review.reservation?.property?.name ?? 'Property'} ·{' '}
-            {review.reservation?.platform_id ?? review.platform}
+            {review.unitName || 'Unit'}
           </Text>
         </Box>
         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
@@ -45,19 +51,19 @@ export function ReviewDetailDrawer({ review }: ReviewDetailDrawerProps) {
 
       <Flex align="center" gap="6px" fontSize="22px" fontWeight={800} mb="12px">
         <LuStar size={20} fill="currentColor" />
-        {review.public.rating}.0
+        {review.rating}.0
       </Flex>
 
       <Text fontSize="14px" color="ink.500" mb="12px">
-        {review.public.review ?? 'No public review text.'}
+        {review.comment ?? 'No public review text.'}
       </Text>
 
-      {review.public.response ? (
+      {review.adminResponse ? (
         <Box bg="bg.400" borderRadius="12px" p="12px" mb="8px">
           <Text fontSize="12px" fontWeight={700} color="ink.300" mb="4px">
             Host response
           </Text>
-          <Text fontSize="14px">{review.public.response}</Text>
+          <Text fontSize="14px">{review.adminResponse}</Text>
         </Box>
       ) : null}
 
@@ -65,88 +71,52 @@ export function ReviewDetailDrawer({ review }: ReviewDetailDrawerProps) {
         title="Meta"
         items={[
           {
-            label: 'Channel',
-            value: (
-              <Text as="b" textTransform="capitalize">
-                {review.platform}
-              </Text>
-            ),
+            label: 'Guest email',
+            value: <Text as="b">{review.guestEmail || '—'}</Text>,
           },
           {
             label: 'Reviewed',
-            value: <Text as="b">{formatReviewDate(review.reviewed_at)}</Text>,
+            value: <Text as="b">{formatReviewDate(review.createdAt)}</Text>,
           },
           {
             label: 'Responded',
-            value: <Text as="b">{formatReviewDate(review.responded_at)}</Text>,
+            value: <Text as="b">{formatReviewDate(review.respondedAt)}</Text>,
           },
         ]}
       />
 
-      {review.private.detailed_ratings ? (
-        <Box py="16px" borderTop="1px solid" borderColor="line.500">
-          <Text
-            fontSize="12px"
-            textTransform="uppercase"
-            letterSpacing="0.05em"
-            color="ink.300"
-            fontWeight={700}
-            mb="10px"
-          >
-            Private ratings
-          </Text>
-          <SimpleGrid columns={2} gap="8px">
-            {review.private.detailed_ratings.map((item) => (
-              <Flex
-                key={item.type}
-                justify="space-between"
-                bg="bg.400"
-                borderRadius="10px"
-                px="10px"
-                py="8px"
-                fontSize="13px"
-              >
-                <Text textTransform="capitalize">{item.type}</Text>
-                <Text fontWeight={700}>{item.rating}</Text>
-              </Flex>
-            ))}
-          </SimpleGrid>
-        </Box>
+      {canManage ? (
+        <Flex gap="8px" mt="16px" wrap="wrap">
+          {review.status !== 'published' ? (
+            <Button
+              size="sm"
+              variant="dark"
+              flex="1"
+              minW="110px"
+              isLoading={publish.isPending}
+              isDisabled={isSaving}
+              onClick={() =>
+                void publish.mutateAsync(review.id).catch((err) => showError('Could not publish', err))
+              }
+            >
+              Publish
+            </Button>
+          ) : null}
+          {review.status !== 'hidden' ? (
+            <Button
+              size="sm"
+              variant="soft"
+              isLoading={hide.isPending}
+              isDisabled={isSaving}
+              onClick={() =>
+                void hide.mutateAsync(review.id).catch((err) => showError('Could not hide', err))
+              }
+            >
+              Hide
+            </Button>
+          ) : null}
+        </Flex>
       ) : null}
-
-      {review.can_respond && !review.public.response ? (
-        <Box py="16px" borderTop="1px solid" borderColor="line.500">
-          <Text
-            fontSize="12px"
-            textTransform="uppercase"
-            letterSpacing="0.05em"
-            color="ink.300"
-            fontWeight={700}
-            mb="10px"
-          >
-            Reply
-          </Text>
-          <Textarea
-            placeholder="Write a public response…"
-            borderColor="line.500"
-            borderRadius="12px"
-            minH="90px"
-            mb="10px"
-          />
-          <Button size="sm" w="100%">
-            Publish response
-          </Button>
-        </Box>
-      ) : null}
-
-      <Flex gap="8px" mt="12px" wrap="wrap">
-        <Button size="sm" variant="dark" flex="1" minW="110px">
-          Publish
-        </Button>
-        <Button size="sm" variant="soft">
-          Hide
-        </Button>
-      </Flex>
     </Box>
   );
 }

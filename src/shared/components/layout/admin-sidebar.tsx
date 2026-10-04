@@ -23,7 +23,6 @@ import {
   LuDoorOpen,
   LuLayoutDashboard,
   LuLogOut,
-  LuMessageSquare,
   LuRefreshCw,
   LuSettings,
   LuStar,
@@ -43,6 +42,8 @@ type NavItem = {
   href: string;
   icon: IconType;
   count?: number;
+  /** Still backed by local mock data, not the live API. */
+  demo?: boolean;
 };
 
 type NavSection = {
@@ -53,9 +54,9 @@ type NavSection = {
 const navSections: NavSection[] = [
   {
     items: [
-      { label: 'Dashboard', href: '/', icon: LuLayoutDashboard },
-      { label: 'Bookings', href: '/bookings', icon: LuCalendarCheck, count: 4 },
-      { label: 'Availability', href: '/availability', icon: LuCalendarDays },
+      { label: 'Dashboard', href: '/', icon: LuLayoutDashboard, demo: true },
+      { label: 'Bookings', href: '/bookings', icon: LuCalendarCheck, count: 4, demo: true },
+      { label: 'Availability', href: '/availability', icon: LuCalendarDays, demo: true },
       { label: 'Properties', href: '/properties', icon: LuBuilding2 },
       { label: 'Units', href: '/units', icon: LuDoorOpen },
       { label: 'Calendar sync', href: '/calendar-sync', icon: LuRefreshCw },
@@ -65,23 +66,22 @@ const navSections: NavSection[] = [
     title: 'Guests',
     items: [
       { label: 'Customers', href: '/customers', icon: LuUsers },
-      { label: 'Messages', href: '/messages', icon: LuMessageSquare, count: 7 },
       { label: 'Reviews', href: '/reviews', icon: LuStar },
     ],
   },
   {
     title: 'Finance',
     items: [
-      { label: 'Payments', href: '/payments', icon: LuWallet },
-      { label: 'Refunds', href: '/refunds', icon: LuUndo2 },
-      { label: 'Reports', href: '/reports', icon: LuChartBar },
+      { label: 'Payments', href: '/payments', icon: LuWallet, demo: true },
+      { label: 'Refunds', href: '/refunds', icon: LuUndo2, demo: true },
+      { label: 'Reports', href: '/reports', icon: LuChartBar, demo: true },
     ],
   },
   {
     title: 'Business',
     items: [
       { label: 'Staff', href: '/staff', icon: LuUserCog },
-      { label: 'Settings', href: '/settings', icon: LuSettings },
+      { label: 'Settings', href: '/settings', icon: LuSettings, demo: true },
     ],
   },
 ];
@@ -148,7 +148,20 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   onClick={onNavigate}
                 >
                   <Icon size={18} />
-                  {item.label}
+                  <Text as="span" noOfLines={1}>
+                    {item.label}
+                    {item.demo ? (
+                      <Text
+                        as="span"
+                        fontSize="11px"
+                        fontWeight={600}
+                        color="ink.300"
+                      >
+                        {' '}
+                        (Demo)
+                      </Text>
+                    ) : null}
+                  </Text>
                   {typeof item.count === 'number' ? (
                     <Box
                       as="span"

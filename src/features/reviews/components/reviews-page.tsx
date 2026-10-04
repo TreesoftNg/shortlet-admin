@@ -11,6 +11,8 @@ import {
 } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
+import { useMe } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/utils/auth-helpers';
 import { ReviewDetailDrawer } from '@/features/reviews/components/review-detail-drawer';
 import { getReviewColumns } from '@/features/reviews/components/review-table-config';
 import { useReviews } from '@/features/reviews/hooks/use-reviews';
@@ -34,7 +36,10 @@ import {
 import { useUiStore } from '@/shared/store/ui-store';
 
 export function ReviewsPage() {
-  const { data, isLoading, isError, error, refetch } = useReviews();
+  const { data: profile } = useMe();
+  const canRead = hasPermission(profile, 'review.read');
+  const canManage = hasPermission(profile, 'review.manage');
+  const { data, isLoading, isError, error, refetch } = useReviews({ enabled: canRead });
   const [filters, setFilters] = useState<ReviewFilters>(DEFAULT_REVIEW_FILTERS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
@@ -52,6 +57,39 @@ export function ReviewsPage() {
     setFilters((current) => ({ ...current, ...next }));
   };
 
+  const header = (
+    <PageHeader
+      title="Reviews"
+      description="Moderate guest feedback across your units."
+      actions={
+        <IconButton
+          aria-label="Open navigation"
+          icon={<LuMenu size={20} />}
+          display={{ base: 'inline-flex', lg: 'none' }}
+          variant="secondary"
+          borderRadius="12px"
+          h="44px"
+          w="44px"
+          onClick={openMobileNav}
+        />
+      }
+    />
+  );
+
+  if (!canRead) {
+    return (
+      <Box>
+        {header}
+        <Panel>
+          <EmptyState
+            title="No access"
+            description="Your role does not include reviews. Ask the business owner for access."
+          />
+        </Panel>
+      </Box>
+    );
+  }
+
   if (isLoading) {
     return <PageSkeleton variant="table" />;
   }
@@ -67,22 +105,7 @@ export function ReviewsPage() {
 
   return (
     <Box>
-      <PageHeader
-        title="Reviews"
-        description="Moderate guest feedback and respond to public reviews."
-        actions={
-          <IconButton
-            aria-label="Open navigation"
-            icon={<LuMenu size={20} />}
-            display={{ base: 'inline-flex', lg: 'none' }}
-            variant="secondary"
-            borderRadius="12px"
-            h="44px"
-            w="44px"
-            onClick={openMobileNav}
-          />
-        }
-      />
+      {header}
 
       <Panel pt="18px" minW={0}>
         <FilterTabs<ReviewStatusTab>
@@ -113,11 +136,9 @@ export function ReviewsPage() {
               borderColor="line.500"
               borderRadius="12px"
               fontSize="14px"
-              placeholder="Search guest, property, review…"
+              placeholder="Search guest, unit, review…"
               value={filters.search}
-              onChange={(event) =>
-                updateFilters({ search: event.target.value })
-              }
+              onChange={(event) => updateFilters({ search: event.target.value })}
             />
           </InputGroup>
 
@@ -133,10 +154,7 @@ export function ReviewsPage() {
             value={String(filters.minRating)}
             onChange={(event) =>
               updateFilters({
-                minRating:
-                  event.target.value === 'all'
-                    ? 'all'
-                    : Number(event.target.value),
+                minRating: event.target.value === 'all' ? 'all' : Number(event.target.value),
               })
             }
           >
@@ -151,7 +169,7 @@ export function ReviewsPage() {
         {reviews.length === 0 ? (
           <EmptyState
             title="No reviews yet"
-            description="When reviews are available, they will show up here."
+            description="When guests leave reviews, they will show up here."
           />
         ) : (
           <DataTable
@@ -173,7 +191,7 @@ export function ReviewsPage() {
         title="Review details"
         size="lg"
       >
-        <ReviewDetailDrawer review={selected} />
+        <ReviewDetailDrawer review={selected} canManage={canManage} />
       </AppModal>
     </Box>
   );

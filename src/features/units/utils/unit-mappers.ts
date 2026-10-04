@@ -111,7 +111,8 @@ export function toCreateUnitPayload(values: UnitFormValues): CreateUnitPayload {
   };
 }
 
-/** Build PATCH /units/:id body from the unit form. */
+/** Build PATCH /units/:id body from the unit form. Cover stays on the gallery. */
 export function toUpdateUnitPayload(values: UnitFormValues): UpdateUnitPayload {
-  return toCreateUnitPayload(values);
+  const { pictureUrl: _pictureUrl, ...payload } = toCreateUnitPayload(values);
+  return payload;
 }

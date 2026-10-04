@@ -23,8 +23,6 @@ import { mockReportsSummary } from '@/mocks/data/reports';
 import { mockReviews } from '@/mocks/data/reviews';
 import { mockStaff } from '@/mocks/data/staff';
 import { mockTenantSettings } from '@/mocks/data/settings';
-import { buildCustomerList } from '@/features/customers/utils/customer-filters';
-import type { CustomerListItem } from '@/features/customers/utils/customer-filters';
 import {
   buildGuestFromForm,
   buildReservationFromForm,
@@ -40,6 +38,7 @@ import {
   type UnitFormValues,
 } from '@/features/units/utils/unit-form';
 import { delay, ok } from '@/mocks/utils';
+import type { Customer } from '@/features/customers/types';
 import type { ApiSuccessResponse } from '@/shared/api/types';
 import type {
   AvailabilityCalendar,
@@ -305,9 +304,26 @@ export const mockApi = {
     return ok(unit, 'Unit updated');
   },
 
-  async getCustomers(): Promise<ApiSuccessResponse<CustomerListItem[]>> {
+  async getCustomers(): Promise<ApiSuccessResponse<Customer[]>> {
     await delay();
-    const customers = buildCustomerList(mockGuests, mockReservations);
+    const customers: Customer[] = mockGuests.map((guest) => ({
+      id: guest.id,
+      userId: guest.id,
+      firstName: guest.first_name,
+      lastName: guest.last_name,
+      fullName: guest.full_name ?? `${guest.first_name} ${guest.last_name}`.trim(),
+      email: guest.email ?? '',
+      phone: guest.phone,
+      location: guest.location,
+      locale: guest.locale,
+      pictureUrl: guest.picture_url,
+      staysCount: 0,
+      totalSpent: 0,
+      currency: 'NGN',
+      upcomingStays: 0,
+      status: 'new',
+      createdAt: '2026-10-01T00:00:00.000Z',
+    }));
     return ok(customers, 'Customers retrieved', {
       page: 1,
       limit: 50,

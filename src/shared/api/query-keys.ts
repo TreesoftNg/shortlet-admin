@@ -35,6 +35,10 @@ export const queryKeys = {
     list: () => ['units', 'list'] as const,
     detail: (id: string) => ['units', 'detail', id] as const,
   },
+  unitMedia: {
+    all: ['unit-media'] as const,
+    list: (unitId: string) => ['unit-media', 'list', unitId] as const,
+  },
   facilities: {
     all: ['facilities'] as const,
     list: () => ['facilities', 'list'] as const,

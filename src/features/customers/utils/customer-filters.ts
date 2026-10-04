@@ -1,4 +1,4 @@
-import type { Guest, Reservation } from '@/shared/types/hospitable';
+import type { Customer } from '../types';
 
 export type CustomerStatusTab = 'all' | 'with_stays' | 'new';
 
@@ -10,75 +10,27 @@ export type CustomerFilters = {
 
 export type CustomerTabCount = Record<CustomerStatusTab, number>;
 
-export type CustomerListItem = Guest & {
-  stays_count: number;
-  total_spent: number;
-  currency: string;
-  last_stay_date: string | null;
-  upcoming_stays: number;
-};
-
 export const DEFAULT_CUSTOMER_FILTERS: CustomerFilters = {
   tab: 'all',
   search: '',
   location: 'all',
 };
 
-export function buildCustomerList(
-  guests: Guest[],
-  reservations: Reservation[],
-): CustomerListItem[] {
-  return guests.map((guest) => {
-    const guestReservations = reservations.filter(
-      (reservation) => reservation.guest?.id === guest.id,
-    );
-
-    const completedOrConfirmed = guestReservations.filter(
-      (reservation) =>
-        reservation.reservation_status.current.category !== 'cancelled',
-    );
-
-    const totalSpent = completedOrConfirmed.reduce(
-      (sum, reservation) => sum + (reservation.financials?.total ?? 0),
-      0,
-    );
-
-    const dates = completedOrConfirmed
-      .map((reservation) => reservation.departure_date)
-      .sort();
-    const lastStayDate = dates.length > 0 ? dates[dates.length - 1] : null;
-
-    const upcomingStays = completedOrConfirmed.filter(
-      (reservation) => reservation.arrival_date >= '2026-09-28',
-    ).length;
-
-    return {
-      ...guest,
-      stays_count: completedOrConfirmed.length,
-      total_spent: totalSpent,
-      currency: completedOrConfirmed[0]?.financials?.currency ?? 'NGN',
-      last_stay_date: lastStayDate,
-      upcoming_stays: upcomingStays,
-    };
-  });
+export function isReturningGuest(customer: Customer): boolean {
+  return customer.status === 'guest' || customer.staysCount > 0;
 }
 
-function matchesTab(customer: CustomerListItem, tab: CustomerStatusTab): boolean {
-  if (tab === 'with_stays') return customer.stays_count > 0;
-  if (tab === 'new') return customer.stays_count === 0;
+function matchesTab(customer: Customer, tab: CustomerStatusTab): boolean {
+  if (tab === 'with_stays') return isReturningGuest(customer);
+  if (tab === 'new') return !isReturningGuest(customer);
   return true;
 }
 
-function matchesSearch(customer: CustomerListItem, search: string): boolean {
+function matchesSearch(customer: Customer, search: string): boolean {
   const query = search.trim().toLowerCase();
   if (!query) return true;
 
-  const haystack = [
-    customer.full_name,
-    customer.email,
-    customer.phone,
-    customer.location,
-  ]
+  const haystack = [customer.fullName, customer.email, customer.phone, customer.location]
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
@@ -86,26 +38,20 @@ function matchesSearch(customer: CustomerListItem, search: string): boolean {
   return haystack.includes(query);
 }
 
-function matchesLocation(
-  customer: CustomerListItem,
-  location: string | 'all',
-): boolean {
+function matchesLocation(customer: Customer, location: string | 'all'): boolean {
   if (location === 'all') return true;
   return customer.location === location;
 }
 
-export function countCustomerTabs(customers: CustomerListItem[]): CustomerTabCount {
+export function countCustomerTabs(customers: Customer[]): CustomerTabCount {
   return {
     all: customers.length,
-    with_stays: customers.filter((item) => item.stays_count > 0).length,
-    new: customers.filter((item) => item.stays_count === 0).length,
+    with_stays: customers.filter(isReturningGuest).length,
+    new: customers.filter((item) => !isReturningGuest(item)).length,
   };
 }
 
-export function filterCustomers(
-  customers: CustomerListItem[],
-  filters: CustomerFilters,
-): CustomerListItem[] {
+export function filterCustomers(customers: Customer[], filters: CustomerFilters): Customer[] {
   return customers.filter(
     (customer) =>
       matchesTab(customer, filters.tab) &&
@@ -114,7 +60,7 @@ export function filterCustomers(
   );
 }
 
-export function getCustomerLocations(customers: CustomerListItem[]): string[] {
+export function getCustomerLocations(customers: Customer[]): string[] {
   return Array.from(
     new Set(
       customers

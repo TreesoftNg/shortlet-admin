@@ -182,7 +182,8 @@ export function UnitsPage() {
         isOpen={Boolean(selected)}
         onClose={() => setSelectedId(null)}
         title="Unit details"
-        size="lg"
+        size="5xl"
+        maxWidth="1080px"
       >
         <UnitDetailDrawer
           unit={selected}

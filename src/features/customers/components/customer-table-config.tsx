@@ -5,26 +5,23 @@ import type { ReactNode } from 'react';
 import { formatMoney } from '@/features/bookings/utils/reservation-display';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
 import { StatusBadge } from '@/shared/components/ui';
-import type { CustomerListItem } from '../utils/customer-filters';
+import type { Customer } from '../types';
+import { isReturningGuest } from '../utils/customer-filters';
 
-export function getCustomerColumns(): DataTableColumn<CustomerListItem>[] {
+export function getCustomerColumns(): DataTableColumn<Customer>[] {
   return [
     {
       id: 'customer',
       header: 'Customer',
       cell: (row) => (
         <Flex align="center" gap="12px" minW={0}>
-          <Avatar
-            size="sm"
-            name={row.full_name ?? undefined}
-            src={row.picture_url ?? undefined}
-          />
+          <Avatar size="sm" name={row.fullName} src={row.pictureUrl ?? undefined} />
           <Flex direction="column" minW={0}>
             <Text fontWeight={700} noOfLines={1}>
-              {row.full_name ?? '—'}
+              {row.fullName || '—'}
             </Text>
             <Text color="ink.300" fontSize="12px" noOfLines={1}>
-              {row.email ?? 'No email'}
+              {row.email || 'No email'}
             </Text>
           </Flex>
         </Flex>
@@ -39,20 +36,20 @@ export function getCustomerColumns(): DataTableColumn<CustomerListItem>[] {
       id: 'stays',
       header: 'Stays',
       meta: { fontWeight: 700 },
-      cell: (row) => row.stays_count,
+      cell: (row) => row.staysCount,
     },
     {
       id: 'spent',
       header: 'Total spent',
       meta: { fontWeight: 700 },
       cell: (row) =>
-        row.total_spent > 0 ? formatMoney(row.total_spent, row.currency) : '—',
+        row.totalSpent > 0 ? formatMoney(row.totalSpent, row.currency) : '—',
     },
     {
       id: 'status',
       header: 'Status',
       cell: (row) =>
-        row.stays_count > 0 ? (
+        isReturningGuest(row) ? (
           <StatusBadge tone="brand">Guest</StatusBadge>
         ) : (
           <StatusBadge tone="mute">New</StatusBadge>
@@ -61,35 +58,35 @@ export function getCustomerColumns(): DataTableColumn<CustomerListItem>[] {
   ];
 }
 
-export function renderCustomerMobileCard(customer: CustomerListItem): ReactNode {
+export function renderCustomerMobileCard(customer: Customer): ReactNode {
   return (
     <>
       <Flex justify="space-between" gap="8px" mb="10px" align="flex-start">
         <Flex align="center" gap="12px" minW={0}>
           <Avatar
             size="sm"
-            name={customer.full_name ?? undefined}
-            src={customer.picture_url ?? undefined}
+            name={customer.fullName}
+            src={customer.pictureUrl ?? undefined}
           />
           <Flex direction="column" minW={0}>
             <Text fontWeight={700} noOfLines={1}>
-              {customer.full_name ?? '—'}
+              {customer.fullName || '—'}
             </Text>
             <Text color="ink.300" fontSize="12px" noOfLines={1}>
-              {customer.email ?? 'No email'}
+              {customer.email || 'No email'}
             </Text>
           </Flex>
         </Flex>
-        {customer.stays_count > 0 ? (
+        {isReturningGuest(customer) ? (
           <StatusBadge tone="brand">Guest</StatusBadge>
         ) : (
           <StatusBadge tone="mute">New</StatusBadge>
         )}
       </Flex>
       <Text fontSize="13px" color="ink.400">
-        {customer.location ?? '—'} · {customer.stays_count} stays ·{' '}
-        {customer.total_spent > 0
-          ? formatMoney(customer.total_spent, customer.currency)
+        {customer.location ?? '—'} · {customer.staysCount} stays ·{' '}
+        {customer.totalSpent > 0
+          ? formatMoney(customer.totalSpent, customer.currency)
           : 'No spend'}
       </Text>
     </>

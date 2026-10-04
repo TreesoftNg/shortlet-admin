@@ -239,7 +239,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
   }
 
   return (
-    <Box maxW="920px">
+    <Box maxW="1200px">
       <PageHeader
         title={isEdit ? 'Edit property' : 'Add property'}
         description={
@@ -282,10 +282,13 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
         }
       />
 
-      <Panel>
-        <Flex direction="column" gap="22px">
+      <Panel p={{ base: '18px', md: '28px' }}>
+        <Flex direction="column" gap="28px">
           <Section title="Basics">
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
+            <Grid
+              templateColumns={{ base: '1fr', md: '1fr 1fr', xl: 'repeat(3, 1fr)' }}
+              gap="16px"
+            >
               <Field label="Property name" isRequired error={errors.name}>
                 <Input
                   value={values.name}
@@ -362,7 +365,10 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
           </Section>
 
           <Section title="Location">
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
+            <Grid
+              templateColumns={{ base: '1fr', md: '1fr 1fr', xl: 'repeat(3, 1fr)' }}
+              gap="16px"
+            >
               <Field label="Street address" isRequired error={errors.line1}>
                 <Input
                   value={values.line1}
@@ -417,7 +423,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
           <Section title="Capacity">
             <Grid
               templateColumns={{ base: '1fr 1fr', md: 'repeat(4, 1fr)' }}
-              gap="14px"
+              gap="16px"
             >
               <Field label="Max guests" isRequired error={errors.max_guests}>
                 <Input
@@ -468,7 +474,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
           </Section>
 
           <Section title="Operations">
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
+            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="16px">
               <Field label="Check-in time">
                 <Input
                   type="time"
@@ -525,13 +531,15 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
           <Section title="Description">
             <Grid gap="14px">
               <Field label="Summary">
-                <Input
+                <Textarea
                   value={values.summary}
                   onChange={(event) =>
                     updateField('summary', event.target.value)
                   }
-                  placeholder="Short one-line summary"
-                  {...inputProps}
+                  placeholder="Short summary for lists and guest-facing cards"
+                  minH="100px"
+                  borderColor="line.500"
+                  borderRadius="12px"
                 />
               </Field>
               <Field label="Description">
@@ -541,7 +549,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
                     updateField('description', event.target.value)
                   }
                   placeholder="Tell guests what makes this stay special"
-                  minH="110px"
+                  minH="140px"
                   borderColor="line.500"
                   borderRadius="12px"
                 />
@@ -559,8 +567,13 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
               </Text>
             ) : (
               <Grid
-                templateColumns={{ base: '1fr 1fr', md: 'repeat(3, 1fr)' }}
-                gap="10px"
+                templateColumns={{
+                  base: '1fr',
+                  sm: '1fr 1fr',
+                  lg: 'repeat(3, 1fr)',
+                  xl: 'repeat(4, 1fr)',
+                }}
+                gap="12px"
               >
                 {facilities.map((facility) => (
                   <Checkbox
@@ -621,6 +634,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
                   base: '1fr',
                   sm: '1fr 1fr',
                   md: 'repeat(3, 1fr)',
+                  xl: 'repeat(4, 1fr)',
                 }}
                 gap="12px"
               >
@@ -638,7 +652,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
                       src={image.url}
                       alt={image.caption || `Property image ${index + 1}`}
                       w="100%"
-                      h="120px"
+                      h="160px"
                       objectFit="cover"
                     />
                     <Flex p="10px" gap="8px" align="center">
@@ -713,7 +727,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
 const inputProps = {
   borderColor: 'line.500',
   borderRadius: '12px',
-  h: '40px',
+  h: '44px',
   bg: 'white',
 } as const;
 
