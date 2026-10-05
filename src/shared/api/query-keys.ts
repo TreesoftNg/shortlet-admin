@@ -80,7 +80,8 @@ export const queryKeys = {
   },
   staff: {
     all: ['staff'] as const,
-    list: () => ['staff', 'list'] as const,
+    list: (filters?: Record<string, unknown>) =>
+      ['staff', 'list', filters ?? {}] as const,
   },
   settings: {
     all: ['settings'] as const,

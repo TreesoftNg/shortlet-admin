@@ -1,6 +1,9 @@
-import type { AdminProfile } from '@/features/auth/types';
 import type { StaffMember, StaffRole } from '@/shared/types/hospitable';
-import type { InviteStaffPayload, SentStaffInvite } from '../types';
+import type {
+  InviteStaffPayload,
+  SentStaffInvite,
+  StaffListItem,
+} from '../types';
 import type { StaffInviteFormValues } from './staff-invite-form';
 
 const STAFF_ROLES: StaffRole[] = ['owner', 'admin', 'manager', 'staff'];
@@ -12,25 +15,28 @@ export function mapStaffRole(value: string | null | undefined): StaffRole {
     : 'staff';
 }
 
-export function mapProfileToStaffMember(profile: AdminProfile): StaffMember {
-  const now = new Date().toISOString();
+/** Map GET /cc/staff row → table/drawer StaffMember. */
+export function mapStaffListItemToMember(
+  item: StaffListItem,
+  currentUserId?: string,
+): StaffMember {
   return {
-    id: profile.user.id,
-    first_name: profile.user.firstName,
-    last_name: profile.user.lastName,
-    full_name: `${profile.user.firstName} ${profile.user.lastName}`.trim(),
-    email: profile.user.email,
-    phone: null,
-    role: mapStaffRole(profile.role.code),
-    status: 'active',
-    avatar_url: null,
-    last_active_at: now,
-    invited_at: null,
+    id: item.id,
+    first_name: item.firstName,
+    last_name: item.lastName,
+    full_name: item.fullName,
+    email: item.email,
+    phone: item.phone,
+    role: mapStaffRole(item.role),
+    status: item.status,
+    avatar_url: item.avatarUrl,
+    last_active_at: item.lastActiveAt,
+    invited_at: item.invitedAt,
     invite_expires_at: null,
-    permissions: [...profile.permissions],
-    is_you: true,
-    created_at: now,
-    updated_at: now,
+    permissions: [],
+    is_you: Boolean(currentUserId && item.userId === currentUserId),
+    created_at: item.createdAt,
+    updated_at: item.updatedAt,
   };
 }
 
@@ -74,26 +80,4 @@ export function toInviteStaffPayload(
     lastName: values.last_name.trim(),
     role: values.role,
   };
-}
-
-export function mergeStaffDirectory(
-  current: StaffMember,
-  pending: StaffMember[],
-): StaffMember[] {
-  const youEmail = current.email.trim().toLowerCase();
-  const others = pending.filter(
-    (member) => member.email.trim().toLowerCase() !== youEmail,
-  );
-  return [current, ...others];
-}
-
-export function upsertPendingInvite(
-  pending: StaffMember[],
-  invite: StaffMember,
-): StaffMember[] {
-  const key = invite.email.trim().toLowerCase();
-  const without = pending.filter(
-    (member) => member.email.trim().toLowerCase() !== key,
-  );
-  return [invite, ...without];
 }

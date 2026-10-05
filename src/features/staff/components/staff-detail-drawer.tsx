@@ -26,13 +26,11 @@ import {
 type StaffDetailDrawerProps = {
   member: StaffMember | null;
   canInvite: boolean;
-  onInviteRecorded?: (member: StaffMember) => void;
 };
 
 export function StaffDetailDrawer({
   member,
   canInvite,
-  onInviteRecorded,
 }: StaffDetailDrawerProps) {
   const toast = useToast();
   const invite = useInviteStaff();
@@ -55,7 +53,6 @@ export function StaffDetailDrawer({
         email: member.email,
         role: member.role,
       });
-      onInviteRecorded?.(sent);
       toast({
         title: 'Invite resent',
         description: `A new password link was emailed to ${sent.email}.`,
