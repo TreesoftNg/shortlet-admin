@@ -22,3 +22,5 @@ export { PageSkeleton } from './page-skeleton';
 export type { PageSkeletonProps, PageSkeletonVariant } from './page-skeleton';
 export { ExportButton } from './export-button';
 export type { ExportButtonProps } from './export-button';
+export { PasswordInput } from './password-input';
+export type { PasswordInputProps } from './password-input';

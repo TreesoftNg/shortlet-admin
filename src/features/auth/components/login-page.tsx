@@ -18,6 +18,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { SunmadeLogo } from '@/shared/components/brand';
+import { PasswordInput } from '@/shared/components/ui';
 import { useHasSession, useLogin } from '../hooks/use-auth';
 import { loginErrorMessage, safeNextPath, tenantChoicesFrom } from '../utils/auth-helpers';
 
@@ -90,8 +91,7 @@ export function LoginPage() {
           </FormControl>
           <FormControl isRequired>
             <FormLabel fontSize="13px">Password</FormLabel>
-            <Input
-              type="password"
+            <PasswordInput
               autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}

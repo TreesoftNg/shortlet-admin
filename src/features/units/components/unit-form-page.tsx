@@ -426,21 +426,6 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
 
           {(!isEdit || currentTab === 'details') && (
             <>
-          <Box
-            bg="bg.400"
-            borderRadius="14px"
-            px="14px"
-            py="12px"
-            border="1px solid"
-            borderColor="line.500"
-          >
-            <Text fontSize="13px" color="ink.400">
-              Address, currency, and gallery stay on the property. Amenities are
-              set per unit — seed from the property when you pick one, then
-              customise.
-            </Text>
-          </Box>
-
           <Section title="Basics">
             <Grid
               templateColumns={{ base: '1fr', md: '1fr 1fr', xl: 'repeat(3, 1fr)' }}

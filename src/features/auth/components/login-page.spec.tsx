@@ -31,8 +31,11 @@ const result = {
 };
 
 async function fillAndSubmit() {
-  await userEvent.type(screen.getByLabelText(/email/i), 'ada@example.com');
-  await userEvent.type(screen.getByLabelText(/password/i), 'a-long-password');
+  await userEvent.type(screen.getByLabelText(/^email/i), 'ada@example.com');
+  await userEvent.type(
+    screen.getByLabelText(/^password/i, { selector: 'input' }),
+    'a-long-password',
+  );
   await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
 }
 

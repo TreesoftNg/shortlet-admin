@@ -10,7 +10,6 @@ import {
   FormControl,
   FormLabel,
   Heading,
-  Input,
   Stack,
   Text,
 } from '@chakra-ui/react';
@@ -19,6 +18,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { acceptStaffInvite, fetchStaffInvite, type StaffInvitePreview } from '../api/auth-api';
 import { SunmadeLogo } from '@/shared/components/brand';
+import { PasswordInput } from '@/shared/components/ui';
 import { ApiClientError } from '@/shared/api/types';
 
 const inputProps = {
@@ -111,8 +111,7 @@ export function AcceptInvitePage() {
             ) : null}
             <FormControl isRequired>
               <FormLabel fontSize="13px">Password</FormLabel>
-              <Input
-                type="password"
+              <PasswordInput
                 autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -124,8 +123,7 @@ export function AcceptInvitePage() {
             </FormControl>
             <FormControl isRequired>
               <FormLabel fontSize="13px">Confirm password</FormLabel>
-              <Input
-                type="password"
+              <PasswordInput
                 autoComplete="new-password"
                 value={confirm}
                 onChange={(event) => setConfirm(event.target.value)}
