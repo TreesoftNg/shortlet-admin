@@ -14,6 +14,13 @@ export const queryKeys = {
     all: ['dashboard'] as const,
     summary: (period?: string) => ['dashboard', 'summary', period ?? '30d'] as const,
   },
+  bookings: {
+    all: ['bookings'] as const,
+    list: (filters?: Record<string, unknown>) =>
+      ['bookings', 'list', filters ?? {}] as const,
+    detail: (id: string) => ['bookings', 'detail', id] as const,
+  },
+  /** @deprecated Use bookings.* — kept for dashboard mock until it is wired. */
   reservations: {
     all: ['reservations'] as const,
     list: (filters?: Record<string, unknown>) =>
@@ -59,7 +66,9 @@ export const queryKeys = {
   },
   payments: {
     all: ['payments'] as const,
-    list: () => ['payments', 'list'] as const,
+    list: (filters?: Record<string, unknown>) =>
+      ['payments', 'list', filters ?? {}] as const,
+    detail: (id: string) => ['payments', 'detail', id] as const,
   },
   refunds: {
     all: ['refunds'] as const,

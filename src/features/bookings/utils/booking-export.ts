@@ -1,34 +1,38 @@
-import type { Reservation } from '@/shared/types/hospitable';
 import type { CsvColumn } from '@/shared/utils/export-csv';
+import type { BookingListItem } from '../types';
 
-export const bookingExportColumns: CsvColumn<Reservation>[] = [
+export const bookingExportColumns: CsvColumn<BookingListItem>[] = [
   {
     header: 'Booking ID',
-    accessor: (row) => row.platform_id,
+    accessor: (row) => row.reference,
   },
   {
     header: 'Guest',
-    accessor: (row) => row.guest?.full_name ?? '',
+    accessor: (row) => row.guestName,
+  },
+  {
+    header: 'Email',
+    accessor: (row) => row.guestEmail,
   },
   {
     header: 'Property',
-    accessor: (row) => row.property?.name ?? '',
+    accessor: (row) => row.unit.propertyName ?? '',
   },
   {
-    header: 'Platform',
-    accessor: (row) => row.platform,
+    header: 'Unit',
+    accessor: (row) => row.unit.publicName ?? row.unit.name,
   },
   {
     header: 'Status',
-    accessor: (row) => row.reservation_status.current.category,
+    accessor: (row) => row.status,
   },
   {
-    header: 'Arrival',
-    accessor: (row) => row.arrival_date,
+    header: 'Check-in',
+    accessor: (row) => row.checkIn,
   },
   {
-    header: 'Departure',
-    accessor: (row) => row.departure_date,
+    header: 'Check-out',
+    accessor: (row) => row.checkOut,
   },
   {
     header: 'Nights',
@@ -36,18 +40,30 @@ export const bookingExportColumns: CsvColumn<Reservation>[] = [
   },
   {
     header: 'Guests',
-    accessor: (row) => row.guests.total,
+    accessor: (row) => row.guestCount,
   },
   {
     header: 'Total',
-    accessor: (row) => row.financials?.total ?? '',
+    accessor: (row) => row.totalAmount,
+  },
+  {
+    header: 'Paid',
+    accessor: (row) => row.amountPaid,
+  },
+  {
+    header: 'Refunded',
+    accessor: (row) => row.amountRefunded,
   },
   {
     header: 'Currency',
-    accessor: (row) => row.financials?.currency ?? '',
+    accessor: (row) => row.currency,
+  },
+  {
+    header: 'Deposit status',
+    accessor: (row) => row.depositStatus,
   },
   {
     header: 'Booked on',
-    accessor: (row) => row.booking_date,
+    accessor: (row) => row.createdAt,
   },
 ];

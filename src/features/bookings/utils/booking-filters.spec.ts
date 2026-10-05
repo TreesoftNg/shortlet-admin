@@ -1,47 +1,52 @@
 import {
-  countBookingTabs,
-  filterReservations,
-  paginateReservations,
   DEFAULT_BOOKING_FILTERS,
+  toListBookingsParams,
 } from './booking-filters';
-import { mockReservations } from '@/mocks/data';
 
-describe('booking-filters', () => {
-  it('counts tabs from reservation statuses', () => {
-    const counts = countBookingTabs(mockReservations, '2026-09-28');
-    expect(counts.all).toBe(mockReservations.length);
-    expect(counts.awaiting_payment).toBeGreaterThan(0);
-    expect(counts.cancelled).toBeGreaterThan(0);
-    expect(counts.upcoming).toBeGreaterThan(0);
-  });
-
-  it('filters by search query across reference and guest', () => {
-    const result = filterReservations(
-      mockReservations,
-      { ...DEFAULT_BOOKING_FILTERS, search: 'HVN-7Q4K' },
-      '2026-09-28',
-    );
-    expect(result).toHaveLength(1);
-    expect(result[0].platform_id).toBe('HVN-7Q4K-2291');
-  });
-
-  it('filters cancelled tab', () => {
-    const result = filterReservations(
-      mockReservations,
-      { ...DEFAULT_BOOKING_FILTERS, tab: 'cancelled' },
-      '2026-09-28',
-    );
+describe('toListBookingsParams', () => {
+  it('maps upcoming tab to confirmed + from today', () => {
     expect(
-      result.every(
-        (item) => item.reservation_status.current.category === 'cancelled',
+      toListBookingsParams(
+        { ...DEFAULT_BOOKING_FILTERS, tab: 'upcoming' },
+        '2026-10-05',
       ),
-    ).toBe(true);
+    ).toEqual({
+      page: 1,
+      limit: 20,
+      status: 'confirmed',
+      from: '2026-10-05',
+    });
   });
 
-  it('paginates results', () => {
-    const page = paginateReservations(mockReservations, 1, 3);
-    expect(page.items).toHaveLength(3);
-    expect(page.total).toBe(mockReservations.length);
-    expect(page.totalPages).toBe(Math.ceil(mockReservations.length / 3));
+  it('maps deposit tabs', () => {
+    expect(
+      toListBookingsParams({
+        ...DEFAULT_BOOKING_FILTERS,
+        tab: 'deposits_due',
+      }),
+    ).toMatchObject({ deposit: 'due' });
+    expect(
+      toListBookingsParams({
+        ...DEFAULT_BOOKING_FILTERS,
+        tab: 'deposits_overdue',
+      }),
+    ).toMatchObject({ deposit: 'overdue' });
+  });
+
+  it('includes search and property filters', () => {
+    expect(
+      toListBookingsParams({
+        ...DEFAULT_BOOKING_FILTERS,
+        search: '  SM-ABC  ',
+        propertyId: '33333333-3333-3333-3333-333333333333',
+        tab: 'cancelled',
+      }),
+    ).toEqual({
+      page: 1,
+      limit: 20,
+      search: 'SM-ABC',
+      propertyId: '33333333-3333-3333-3333-333333333333',
+      status: 'cancelled',
+    });
   });
 });

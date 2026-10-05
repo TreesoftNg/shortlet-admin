@@ -1,0 +1,164 @@
+import type { AdminBooking, BookingListItem, PaymentView, RefundView } from './types';
+
+export function bookingListItem(
+  overrides: Partial<BookingListItem> = {},
+): BookingListItem {
+  return {
+    id: '11111111-1111-1111-1111-111111111111',
+    reference: 'SM-ABC123',
+    status: 'confirmed',
+    unit: {
+      id: '22222222-2222-2222-2222-222222222222',
+      name: 'Suite 1',
+      publicName: 'Ocean Suite',
+      code: 'S1',
+      pictureUrl: null,
+      propertyId: '33333333-3333-3333-3333-333333333333',
+      propertyName: 'Lekki House',
+      address: '12 Admiralty Way',
+    },
+    guestName: 'Ada Okafor',
+    guestEmail: 'ada@example.com',
+    guestPhone: '+2348012345678',
+    checkIn: '2026-10-10',
+    checkOut: '2026-10-13',
+    nights: 3,
+    guestCount: 2,
+    currency: 'NGN',
+    totalAmount: '250000.00',
+    amountPaid: '250000.00',
+    amountRefunded: '0.00',
+    depositStatus: 'held',
+    depositDueAt: '2026-10-14T12:00:00.000Z',
+    createdAt: '2026-10-01T10:00:00.000Z',
+    ...overrides,
+  };
+}
+
+export function paymentView(overrides: Partial<PaymentView> = {}): PaymentView {
+  return {
+    id: '44444444-4444-4444-4444-444444444444',
+    bookingId: '11111111-1111-1111-1111-111111111111',
+    bookingReference: 'SM-ABC123',
+    provider: 'flutterwave',
+    reference: 'pay_SM_ABC123',
+    providerTransactionId: 'flw_123',
+    amount: '250000.00',
+    currency: 'NGN',
+    status: 'successful',
+    paymentMethod: 'card',
+    providerFee: '3750.00',
+    amountRefunded: '0.00',
+    paidAt: '2026-10-01T10:05:00.000Z',
+    failureReason: null,
+    createdAt: '2026-10-01T10:00:00.000Z',
+    ...overrides,
+  };
+}
+
+export function refundView(overrides: Partial<RefundView> = {}): RefundView {
+  return {
+    id: '55555555-5555-5555-5555-555555555555',
+    paymentId: '44444444-4444-4444-4444-444444444444',
+    bookingId: '11111111-1111-1111-1111-111111111111',
+    kind: 'stay',
+    amount: '50000.00',
+    reason: 'guest_cancellation',
+    note: null,
+    status: 'completed',
+    failureReason: null,
+    requestedBy: { id: 'u1', name: 'Ada Okafor' },
+    processedAt: '2026-10-02T09:00:00.000Z',
+    createdAt: '2026-10-02T08:55:00.000Z',
+    ...overrides,
+  };
+}
+
+export function adminBooking(overrides: Partial<AdminBooking> = {}): AdminBooking {
+  const list = bookingListItem();
+  return {
+    id: list.id,
+    reference: list.reference,
+    status: 'confirmed',
+    unit: list.unit,
+    checkIn: list.checkIn,
+    checkOut: list.checkOut,
+    checkInTime: '14:00',
+    checkOutTime: '11:00',
+    nights: list.nights,
+    guests: { adults: 2, children: 0, infants: 0 },
+    guest: {
+      firstName: 'Ada',
+      lastName: 'Okafor',
+      email: 'ada@example.com',
+      phone: '+2348012345678',
+    },
+    specialRequests: null,
+    currency: 'NGN',
+    price: {
+      currency: 'NGN',
+      checkIn: list.checkIn,
+      checkOut: list.checkOut,
+      nights: 3,
+      nightly: [
+        {
+          date: '2026-10-10',
+          rate: '70000.00',
+          ruleId: null,
+          ruleName: null,
+        },
+        {
+          date: '2026-10-11',
+          rate: '70000.00',
+          ruleId: null,
+          ruleName: null,
+        },
+        {
+          date: '2026-10-12',
+          rate: '70000.00',
+          ruleId: null,
+          ruleName: null,
+        },
+      ],
+      nightsSubtotal: '210000.00',
+      discount: null,
+      cleaningFee: '20000.00',
+      serviceFee: { percent: '5.00', amount: '10500.00' },
+      tax: { name: 'VAT', percent: '7.50', amount: '9500.00' },
+      total: '250000.00',
+    },
+    stayTotal: '250000.00',
+    deposit: {
+      amount: '70000.00',
+      nights: 1,
+      status: 'held',
+      refunded: '0.00',
+      dueAt: '2026-10-14T12:00:00.000Z',
+      deductionReason: null,
+      settledAt: null,
+    },
+    totalAmount: '320000.00',
+    amountPaid: '320000.00',
+    amountRefunded: '0.00',
+    houseRules: 'No parties',
+    holdExpiresAt: null,
+    confirmedAt: '2026-10-01T10:05:00.000Z',
+    cancelledAt: null,
+    cancellationReason: null,
+    createdAt: list.createdAt,
+    customerId: '66666666-6666-6666-6666-666666666666',
+    cancelledBy: null,
+    houseRulesAcceptedAt: '2026-10-01T09:59:00.000Z',
+    checkedInAt: null,
+    completedAt: null,
+    expiredAt: null,
+    stayRefunded: '0.00',
+    payments: [paymentView()],
+    refunds: [],
+    timeline: [
+      { event: 'reserved', at: '2026-10-01T10:00:00.000Z' },
+      { event: 'confirmed', at: '2026-10-01T10:05:00.000Z' },
+    ],
+    ...overrides,
+  };
+}

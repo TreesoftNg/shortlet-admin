@@ -107,7 +107,12 @@ export function toCreateUnitPayload(values: UnitFormValues): CreateUnitPayload {
     weeklyDiscountPercent: optionalAmount(values.weekly_discount_percent),
     monthlyDiscountPercent: optionalAmount(values.monthly_discount_percent),
     internalNotes: values.notes.trim() || null,
-    pictureUrl: values.picture,
+    // Cover files are uploaded via /media/photos after create. Only keep
+    // an existing http(s) URL if the form still has one (rare on create).
+    pictureUrl:
+      values.picture && /^https?:\/\//i.test(values.picture)
+        ? values.picture
+        : null,
   };
 }
 

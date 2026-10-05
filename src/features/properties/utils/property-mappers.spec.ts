@@ -2,6 +2,7 @@ import type { ApiProperty } from '../types';
 import {
   mapPropertyFromApi,
   toCreatePropertyPayload,
+  toUpdatePropertyPayload,
 } from './property-mappers';
 import { createEmptyPropertyForm } from './property-form';
 
@@ -112,5 +113,47 @@ describe('property mappers', () => {
       facilityIds: ['fac-wifi'],
       pictureUrl: 'https://images.com/cover.jpg',
     });
+  });
+
+  it('never puts data URLs in the create payload', () => {
+    const file = new File(['x'], 'cover.png', { type: 'image/png' });
+    const payload = toCreatePropertyPayload({
+      ...createEmptyPropertyForm(),
+      name: 'Azure Lekki',
+      line1: '12 Admiralty Way',
+      city: 'Lekki',
+      country: 'NG',
+      images: [
+        {
+          id: 'local-1',
+          url: 'data:image/png;base64,AAAA',
+          caption: 'cover',
+          sort_order: 0,
+          file,
+        },
+      ],
+    });
+    expect(payload.pictureUrl).toBeNull();
+  });
+
+  it('omits pictureUrl on update when a new cover file is pending', () => {
+    const file = new File(['x'], 'cover.png', { type: 'image/png' });
+    const payload = toUpdatePropertyPayload({
+      ...createEmptyPropertyForm(),
+      name: 'Azure Lekki',
+      line1: '12 Admiralty Way',
+      city: 'Lekki',
+      country: 'NG',
+      images: [
+        {
+          id: 'local-1',
+          url: 'data:image/png;base64,AAAA',
+          caption: 'cover',
+          sort_order: 0,
+          file,
+        },
+      ],
+    });
+    expect(payload).not.toHaveProperty('pictureUrl');
   });
 });

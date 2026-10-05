@@ -121,4 +121,15 @@ describe('unit mappers', () => {
     expect(payload.pictureUrl).toBeUndefined();
     expect(payload.code).toBe('A');
   });
+
+  it('does not send data URLs as pictureUrl on create', () => {
+    const payload = toCreateUnitPayload({
+      ...createEmptyUnitForm('prop-1'),
+      property_id: 'prop-1',
+      code: 'A',
+      name: 'Unit A',
+      picture: 'data:image/png;base64,AAAA',
+    });
+    expect(payload.pictureUrl).toBeNull();
+  });
 });

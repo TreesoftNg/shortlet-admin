@@ -6,19 +6,90 @@ import type { DataTableColumn } from '@/shared/components/ui/data-table';
 import { PropertyCell } from '@/shared/components/ui/property-cell';
 import { StatusBadge } from '@/shared/components/ui/status-badge';
 import type { Reservation } from '@/shared/types/hospitable';
-import { getUnitName } from '../utils/get-unit-name';
 import {
   formatMoney,
   formatStayDates,
+  getBookingStatusDisplay,
+  getDepositStatusDisplay,
+  unitLabel,
+} from '../utils/booking-display';
+import { getUnitName } from '../utils/get-unit-name';
+import {
+  formatMoney as formatReservationMoney,
+  formatStayDates as formatReservationStayDates,
   getPaymentDisplayStatus,
   getReservationDisplayStatus,
 } from '../utils/reservation-display';
+import type { BookingListItem } from '../types';
 
 export type BookingTableVariant = 'dashboard' | 'bookings';
 
+/** Columns for the live bookings list (API BookingListItem). */
+export function getBookingListColumns(): DataTableColumn<BookingListItem>[] {
+  return [
+    {
+      id: 'reference',
+      header: 'Reference',
+      meta: { fontFamily: 'mono', fontWeight: 600 },
+      cell: (row) => row.reference,
+    },
+    {
+      id: 'guest',
+      header: 'Guest',
+      cell: (row) => (
+        <Box>
+          <Text fontWeight={700}>{row.guestName || '—'}</Text>
+          <Text color="ink.300" fontSize="12px">
+            {row.guestEmail}
+          </Text>
+        </Box>
+      ),
+    },
+    {
+      id: 'property',
+      header: 'Property',
+      cell: (row) => <Text>{unitLabel(row)}</Text>,
+    },
+    {
+      id: 'dates',
+      header: 'Stay',
+      cell: (row) => (
+        <Box>
+          <Text>{formatStayDates(row.checkIn, row.checkOut)}</Text>
+          <Text color="ink.300" fontSize="12px">
+            {row.nights} nights · {row.guestCount} guests
+          </Text>
+        </Box>
+      ),
+    },
+    {
+      id: 'amount',
+      header: 'Total',
+      meta: { fontWeight: 700 },
+      cell: (row) => formatMoney(row.totalAmount, row.currency),
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: (row) => {
+        const display = getBookingStatusDisplay(row.status);
+        return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
+      },
+    },
+    {
+      id: 'deposit',
+      header: 'Deposit',
+      cell: (row) => {
+        const display = getDepositStatusDisplay(row.depositStatus);
+        return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
+      },
+    },
+  ];
+}
+
 /**
- * Shared reservation column definitions.
- * Dashboard and Bookings pages compose subsets of these columns.
+ * Shared reservation column definitions for the dashboard mock.
+ * Dashboard still uses Hospitable Reservation until that screen is wired.
  */
 export function getBookingColumns(
   variant: BookingTableVariant = 'dashboard',
@@ -79,7 +150,10 @@ export function getBookingColumns(
     id: 'dates',
     header: variant === 'dashboard' ? 'Dates' : 'Stay',
     cell: (row) => {
-      const label = formatStayDates(row.arrival_date, row.departure_date);
+      const label = formatReservationStayDates(
+        row.arrival_date,
+        row.departure_date,
+      );
       if (variant === 'dashboard') return label;
 
       return (
@@ -99,7 +173,10 @@ export function getBookingColumns(
     meta: { fontWeight: 700 },
     cell: (row) =>
       row.financials
-        ? formatMoney(row.financials.total, row.financials.currency)
+        ? formatReservationMoney(
+            row.financials.total,
+            row.financials.currency,
+          )
         : '—',
   };
 
@@ -108,7 +185,9 @@ export function getBookingColumns(
     header: 'Payment',
     cell: (row) => {
       const paymentStatus = getPaymentDisplayStatus(row);
-      return <StatusBadge tone={paymentStatus.tone}>{paymentStatus.label}</StatusBadge>;
+      return (
+        <StatusBadge tone={paymentStatus.tone}>{paymentStatus.label}</StatusBadge>
+      );
     },
   };
 
@@ -148,11 +227,17 @@ export function renderBookingMobileCard(reservation: Reservation): ReactNode {
       </Text>
       <Flex justify="space-between" align="center" gap="8px" wrap="wrap">
         <Text fontSize="13px" color="ink.400">
-          {formatStayDates(reservation.arrival_date, reservation.departure_date)}
+          {formatReservationStayDates(
+            reservation.arrival_date,
+            reservation.departure_date,
+          )}
         </Text>
         <Text fontWeight={700}>
           {reservation.financials
-            ? formatMoney(reservation.financials.total, reservation.financials.currency)
+            ? formatReservationMoney(
+                reservation.financials.total,
+                reservation.financials.currency,
+              )
             : '—'}
         </Text>
         <StatusBadge tone={payment.tone}>{payment.label}</StatusBadge>

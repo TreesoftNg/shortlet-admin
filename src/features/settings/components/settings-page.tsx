@@ -4,46 +4,45 @@ import {
   Box,
   Button,
   Flex,
-  FormControl,
-  FormLabel,
-  Grid,
   IconButton,
-  Input,
   Switch,
   Text,
+  useToast,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { LuMenu } from 'react-icons/lu';
+import { useMe } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/utils/auth-helpers';
 import { useSettings } from '@/features/settings/hooks/use-settings';
+import { useUpdateSettings } from '@/features/settings/hooks/use-settings-mutations';
 import {
-  NOTIFICATION_OPTIONS,
   formatSettingsUpdatedAt,
+  settingsValuesMap,
 } from '@/features/settings/utils/settings-helpers';
 import { ErrorState, PageHeader, PageSkeleton, Panel } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
-import type {
-  TenantNotificationSettings,
-  TenantOrganizationSettings,
-} from '@/shared/types/hospitable';
+import { ApiClientError } from '@/shared/api/types';
+import type { TenantSettingItem } from '../types';
 
 export function SettingsPage() {
+  const { data: profile } = useMe();
+  const canManage = hasPermission(profile, 'settings.manage');
   const { data, isLoading, isError, error, refetch } = useSettings();
+  const updateSettings = useUpdateSettings();
+  const toast = useToast();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const [org, setOrg] = useState<TenantOrganizationSettings | null>(null);
-  const [notifications, setNotifications] =
-    useState<TenantNotificationSettings | null>(null);
+  const [settings, setSettings] = useState<TenantSettingItem[] | null>(null);
 
   useEffect(() => {
     if (!data) return;
-    setOrg(data.organization);
-    setNotifications(data.notifications);
+    setSettings(data.settings);
   }, [data]);
 
   if (isLoading) {
     return <PageSkeleton variant="form" />;
   }
 
-  if (isError || !data || !org || !notifications) {
+  if (isError || !data || !settings) {
     return (
       <ErrorState
         message={
@@ -54,11 +53,38 @@ export function SettingsPage() {
     );
   }
 
+  async function handleSave() {
+    if (!settings) return;
+    try {
+      const saved = await updateSettings.mutateAsync(settingsValuesMap(settings));
+      setSettings(saved.settings);
+      toast({
+        title: 'Settings saved',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: 'Could not save',
+        description:
+          err instanceof ApiClientError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : 'Something went wrong',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }
+
   return (
     <Box maxW="720px">
       <PageHeader
         title="Settings"
-        description={`Last updated ${formatSettingsUpdatedAt(data.updated_at)}`}
+        description={`Last updated ${formatSettingsUpdatedAt(data.updatedAt)}`}
         actions={
           <IconButton
             aria-label="Open navigation"
@@ -75,90 +101,14 @@ export function SettingsPage() {
 
       <Flex direction="column" gap="18px">
         <Panel>
-          <Text fontSize="18px" fontWeight={700} mb="14px">
-            Business
-          </Text>
-          <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
-            <FormControl>
-              <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
-                Name
-              </FormLabel>
-              <Input
-                value={org.name}
-                onChange={(event) =>
-                  setOrg((current) =>
-                    current ? { ...current, name: event.target.value } : current,
-                  )
-                }
-                borderColor="line.500"
-                borderRadius="12px"
-                h="40px"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
-                Support email
-              </FormLabel>
-              <Input
-                type="email"
-                value={org.support_email}
-                onChange={(event) =>
-                  setOrg((current) =>
-                    current
-                      ? { ...current, support_email: event.target.value }
-                      : current,
-                  )
-                }
-                borderColor="line.500"
-                borderRadius="12px"
-                h="40px"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
-                Timezone
-              </FormLabel>
-              <Input
-                value={org.timezone}
-                onChange={(event) =>
-                  setOrg((current) =>
-                    current
-                      ? { ...current, timezone: event.target.value }
-                      : current,
-                  )
-                }
-                borderColor="line.500"
-                borderRadius="12px"
-                h="40px"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
-                Currency
-              </FormLabel>
-              <Input
-                value={org.currency}
-                onChange={(event) =>
-                  setOrg((current) =>
-                    current
-                      ? { ...current, currency: event.target.value }
-                      : current,
-                  )
-                }
-                borderColor="line.500"
-                borderRadius="12px"
-                h="40px"
-              />
-            </FormControl>
-          </Grid>
-        </Panel>
-
-        <Panel>
-          <Text fontSize="18px" fontWeight={700} mb="14px">
+          <Text fontSize="18px" fontWeight={700} mb="4px">
             Email alerts
           </Text>
+          <Text fontSize="13px" color="ink.300" mb="14px">
+            Choose which events notify your staff by email.
+          </Text>
           <Flex direction="column">
-            {NOTIFICATION_OPTIONS.map((option) => (
+            {settings.map((option) => (
               <Flex
                 key={option.key}
                 justify="space-between"
@@ -169,16 +119,28 @@ export function SettingsPage() {
                 borderColor="line.400"
                 _last={{ borderBottom: 0 }}
               >
-                <Text fontWeight={600} fontSize="14px">
-                  {option.label}
-                </Text>
+                <Box minW={0}>
+                  <Text fontWeight={600} fontSize="14px">
+                    {option.label}
+                  </Text>
+                  {option.description ? (
+                    <Text fontSize="12px" color="ink.300" mt="2px">
+                      {option.description}
+                    </Text>
+                  ) : null}
+                </Box>
                 <Switch
                   colorScheme="green"
-                  isChecked={notifications[option.key]}
+                  isChecked={option.value}
+                  isDisabled={!canManage || updateSettings.isPending}
                   onChange={(event) =>
-                    setNotifications((current) =>
+                    setSettings((current) =>
                       current
-                        ? { ...current, [option.key]: event.target.checked }
+                        ? current.map((item) =>
+                            item.key === option.key
+                              ? { ...item, value: event.target.checked }
+                              : item,
+                          )
                         : current,
                     )
                   }
@@ -188,9 +150,18 @@ export function SettingsPage() {
           </Flex>
         </Panel>
 
-        <Button alignSelf="flex-start" variant="dark" borderRadius="12px" h="40px">
-          Save changes
-        </Button>
+        {canManage ? (
+          <Button
+            alignSelf="flex-start"
+            variant="dark"
+            borderRadius="12px"
+            h="40px"
+            isLoading={updateSettings.isPending}
+            onClick={() => void handleSave()}
+          >
+            Save changes
+          </Button>
+        ) : null}
       </Flex>
     </Box>
   );

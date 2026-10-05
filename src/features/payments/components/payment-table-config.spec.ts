@@ -1,15 +1,14 @@
 import { getPaymentColumns } from './payment-table-config';
 
 describe('getPaymentColumns', () => {
-  it('returns the expected payment list columns', () => {
+  it('returns payment list columns', () => {
     expect(getPaymentColumns().map((column) => column.id)).toEqual([
       'reference',
-      'guest',
-      'property',
+      'booking',
       'amount',
-      'provider',
-      'date',
       'status',
+      'provider',
+      'created',
     ]);
   });
 });

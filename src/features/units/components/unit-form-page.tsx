@@ -27,6 +27,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { LuArrowLeft, LuMenu, LuTrash2, LuUpload } from 'react-icons/lu';
 import { useProperties } from '@/features/properties/hooks/use-properties';
+import { uploadPhoto } from '@/features/unit-media/api/unit-media-api';
 import { UnitGalleryTab } from '@/features/unit-media/components/unit-gallery-tab';
 import { useLeaveUploadGuard } from '@/features/unit-media/hooks/use-leave-upload-guard';
 import { useUploadQueueStore } from '@/features/unit-media/store/upload-queue-store';
@@ -188,11 +189,14 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     });
   };
 
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+
   const handleFile = async (fileList: FileList | null) => {
     const file = fileList?.[0];
     if (!file) return;
     try {
       const url = await readFileAsDataUrl(file);
+      setCoverFile(file);
       updateField('picture', url);
     } catch (error) {
       toast({
@@ -230,6 +234,24 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
         router.push('/units');
       } else {
         const created = await createMutation.mutateAsync(values);
+        if (coverFile) {
+          try {
+            await uploadPhoto(created.id, coverFile);
+          } catch (coverError) {
+            toast({
+              title: 'Unit created, but cover upload failed',
+              description:
+                coverError instanceof Error
+                  ? coverError.message
+                  : 'Open the gallery tab to try again.',
+              status: 'warning',
+              duration: 5000,
+              isClosable: true,
+            });
+            router.push(`/units/${created.id}/edit?tab=gallery`);
+            return;
+          }
+        }
         toast({
           title: 'Unit created',
           status: 'success',
@@ -789,7 +811,10 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                     leftIcon={<LuTrash2 size={16} />}
                     borderRadius="12px"
                     h="40px"
-                    onClick={() => updateField('picture', null)}
+                    onClick={() => {
+                      setCoverFile(null);
+                      updateField('picture', null);
+                    }}
                   >
                     Remove
                   </Button>

@@ -3,66 +3,64 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/api/query-keys';
 import {
-  cancelReservation,
-  checkInReservation,
-  createReservation,
-  refundReservation,
+  cancelBooking,
+  checkInBooking,
+  releaseDeposit,
 } from '../api/bookings-service';
-import type { BookingFormValues } from '../utils/booking-form';
+import type { ReleaseDepositInput } from '../types';
 
 async function invalidateBookingQueries(
   queryClient: ReturnType<typeof useQueryClient>,
+  bookingId?: string,
 ) {
   await Promise.all([
-    queryClient.invalidateQueries({ queryKey: queryKeys.reservations.all }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.availability.all }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all }),
     queryClient.invalidateQueries({ queryKey: queryKeys.payments.all }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.refunds.all }),
     queryClient.invalidateQueries({ queryKey: queryKeys.customers.all }),
+    bookingId
+      ? queryClient.invalidateQueries({
+          queryKey: queryKeys.bookings.detail(bookingId),
+        })
+      : Promise.resolve(),
   ]);
 }
 
-export function useCreateReservation() {
+export function useCheckInBooking() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (values: BookingFormValues) => createReservation(values),
-    onSuccess: async () => {
-      await invalidateBookingQueries(queryClient);
+    mutationFn: (id: string) => checkInBooking(id),
+    onSuccess: async (booking) => {
+      await invalidateBookingQueries(queryClient, booking.id);
     },
   });
 }
 
-export function useCheckInReservation() {
+export function useCancelBooking() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => checkInReservation(id),
-    onSuccess: async () => {
-      await invalidateBookingQueries(queryClient);
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      cancelBooking(id, reason),
+    onSuccess: async (booking) => {
+      await invalidateBookingQueries(queryClient, booking.id);
     },
   });
 }
 
-export function useCancelReservation() {
+export function useReleaseDeposit() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => cancelReservation(id),
-    onSuccess: async () => {
-      await invalidateBookingQueries(queryClient);
-    },
-  });
-}
-
-export function useRefundReservation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => refundReservation(id),
-    onSuccess: async () => {
-      await invalidateBookingQueries(queryClient);
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: ReleaseDepositInput;
+    }) => releaseDeposit(id, input),
+    onSuccess: async (booking) => {
+      await invalidateBookingQueries(queryClient, booking.id);
     },
   });
 }

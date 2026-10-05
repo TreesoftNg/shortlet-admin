@@ -1,4 +1,4 @@
-import { getBookingColumns } from './booking-table-config';
+import { getBookingColumns, getBookingListColumns } from './booking-table-config';
 
 describe('getBookingColumns', () => {
   it('returns dashboard columns including payment', () => {
@@ -14,15 +14,16 @@ describe('getBookingColumns', () => {
     ]);
   });
 
-  it('returns bookings-page columns without payment', () => {
-    const columns = getBookingColumns('bookings');
-    expect(columns.map((column) => column.id)).toEqual([
+  it('returns live booking list columns', () => {
+    expect(getBookingListColumns().map((column) => column.id)).toEqual([
       'reference',
       'guest',
       'property',
       'dates',
       'amount',
       'status',
+      'deposit',
     ]);
   });
 });
+

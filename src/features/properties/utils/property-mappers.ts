@@ -110,13 +110,29 @@ function listingStatusFromForm(listed: boolean): ApiListingStatus {
   return listed ? 'listed' : 'unlisted';
 }
 
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+/**
+ * Only http(s) URLs belong in JSON. Data/blob URLs are local previews;
+ * new files are uploaded via POST /cc/properties/:id/cover.
+ */
+export function publicPictureUrlFromForm(
+  values: PropertyFormValues,
+): string | null {
+  const fromImage = values.images[0]?.url?.trim() ?? '';
+  if (isHttpUrl(fromImage)) return fromImage;
+  const fromField = values.picture_url?.trim() ?? '';
+  if (isHttpUrl(fromField)) return fromField;
+  return null;
+}
+
 /** Build POST /properties body from the property form. */
 export function toCreatePropertyPayload(
   values: PropertyFormValues,
 ): CreatePropertyPayload {
-  const pictureUrl =
-    values.images[0]?.url ??
-    (values.picture_url?.trim() ? values.picture_url.trim() : null);
+  const hasPendingCover = values.images.some((image) => Boolean(image.file));
 
   return {
     name: values.name.trim(),
@@ -140,7 +156,8 @@ export function toCreatePropertyPayload(
     summary: values.summary.trim() || null,
     description: values.description.trim() || null,
     facilityIds: [...values.facility_ids],
-    pictureUrl,
+    // Pending file is uploaded after create; never send data: URLs.
+    pictureUrl: hasPendingCover ? null : publicPictureUrlFromForm(values),
   };
 }
 
@@ -148,5 +165,10 @@ export function toCreatePropertyPayload(
 export function toUpdatePropertyPayload(
   values: PropertyFormValues,
 ): UpdatePropertyPayload {
-  return toCreatePropertyPayload(values);
+  const payload = toCreatePropertyPayload(values);
+  if (values.images.some((image) => Boolean(image.file))) {
+    const { pictureUrl: _pictureUrl, ...rest } = payload;
+    return rest;
+  }
+  return payload;
 }

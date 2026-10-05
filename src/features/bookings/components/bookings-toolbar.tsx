@@ -64,7 +64,7 @@ export function BookingsToolbar({
       >
         <LuBuilding2 size={16} />
         <Select
-          variant="unstyled p-6"
+          variant="unstyled"
           h="auto"
           fontSize="13px"
           fontWeight={600}

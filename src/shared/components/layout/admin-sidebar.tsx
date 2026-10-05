@@ -26,7 +26,6 @@ import {
   LuRefreshCw,
   LuSettings,
   LuStar,
-  LuUndo2,
   LuUserCog,
   LuUsers,
   LuWallet,
@@ -55,7 +54,7 @@ const navSections: NavSection[] = [
   {
     items: [
       { label: 'Dashboard', href: '/', icon: LuLayoutDashboard, demo: true },
-      { label: 'Bookings', href: '/bookings', icon: LuCalendarCheck, count: 4, demo: true },
+      { label: 'Bookings', href: '/bookings', icon: LuCalendarCheck },
       { label: 'Availability', href: '/availability', icon: LuCalendarDays, demo: true },
       { label: 'Properties', href: '/properties', icon: LuBuilding2 },
       { label: 'Units', href: '/units', icon: LuDoorOpen },
@@ -72,8 +71,7 @@ const navSections: NavSection[] = [
   {
     title: 'Finance',
     items: [
-      { label: 'Payments', href: '/payments', icon: LuWallet, demo: true },
-      { label: 'Refunds', href: '/refunds', icon: LuUndo2, demo: true },
+      { label: 'Payments', href: '/payments', icon: LuWallet },
       { label: 'Reports', href: '/reports', icon: LuChartBar, demo: true },
     ],
   },
@@ -81,7 +79,7 @@ const navSections: NavSection[] = [
     title: 'Business',
     items: [
       { label: 'Staff', href: '/staff', icon: LuUserCog },
-      { label: 'Settings', href: '/settings', icon: LuSettings, demo: true },
+      { label: 'Settings', href: '/settings', icon: LuSettings },
     ],
   },
 ];

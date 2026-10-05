@@ -8,6 +8,5 @@ export function useSettings() {
   return useQuery({
     queryKey: queryKeys.settings.detail(),
     queryFn: fetchSettings,
-    select: (response) => response.data,
   });
 }

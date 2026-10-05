@@ -5,6 +5,8 @@ export type PropertyImageDraft = {
   url: string;
   caption: string;
   sort_order: number;
+  /** Local file pending multipart upload; never sent as JSON. */
+  file?: File;
 };
 
 export type PropertyFormValues = {
@@ -305,6 +307,7 @@ export function readFilesAsImageDrafts(
               url: String(reader.result ?? ''),
               caption: file.name.replace(/\.[^.]+$/, ''),
               sort_order: index,
+              file,
             });
           };
           reader.onerror = () =>
@@ -313,4 +316,9 @@ export function readFilesAsImageDrafts(
         }),
     ),
   );
+}
+
+/** First local image file waiting to be uploaded as the property cover. */
+export function pendingCoverFile(values: PropertyFormValues): File | null {
+  return values.images.find((image) => image.file)?.file ?? null;
 }

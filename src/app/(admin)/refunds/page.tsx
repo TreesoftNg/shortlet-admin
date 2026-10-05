@@ -1,5 +1,6 @@
-import { RefundsPage } from '@/features/refunds/components/refunds-page';
+import { redirect } from 'next/navigation';
 
+/** Refunds live on booking/payment detail; deposit queue is on Bookings. */
 export default function RefundsRoute() {
-  return <RefundsPage />;
+  redirect('/bookings?tab=deposits_due');
 }

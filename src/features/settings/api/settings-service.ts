@@ -1,7 +1,20 @@
-import { mockApi } from '@/mocks/api';
+import { apiClient } from '@/shared/api/client';
+import { adminPath } from '@/shared/api/paths';
+import type { TenantSettingsResponse } from '../types';
 
-// Local mock data until this feature is connected to the Shortlet API.
+/** GET /cc/tenant-settings — catalog merged with tenant overrides. */
+export async function fetchSettings(): Promise<TenantSettingsResponse> {
+  return (await apiClient<TenantSettingsResponse>(adminPath('/tenant-settings'))).data;
+}
 
-export function fetchSettings() {
-  return mockApi.getSettings();
+/** PUT /cc/tenant-settings — upsert notification toggles. */
+export async function updateSettings(
+  values: Record<string, boolean>,
+): Promise<TenantSettingsResponse> {
+  return (
+    await apiClient<TenantSettingsResponse>(adminPath('/tenant-settings'), {
+      method: 'PUT',
+      body: { values },
+    })
+  ).data;
 }

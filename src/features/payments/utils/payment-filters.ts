@@ -1,7 +1,8 @@
-import { mapPaymentStatusTone } from '@/features/bookings/utils/reservation-display';
-import type { PaymentListItem } from '@/mocks/data/payments';
-import type { StatusTone } from '@/shared/components/ui';
-import type { PaymentStatus } from '@/shared/types/hospitable';
+import type { PaymentStatus } from '@/features/bookings/types';
+import {
+  getPaymentStatusDisplay,
+} from '@/features/bookings/utils/booking-display';
+import type { ListPaymentsParams } from '../types';
 
 export type PaymentStatusTab =
   | 'all'
@@ -13,104 +14,43 @@ export type PaymentStatusTab =
 export type PaymentFilters = {
   tab: PaymentStatusTab;
   search: string;
+  page: number;
+  pageSize: number;
 };
-
-export type PaymentTabCount = Record<PaymentStatusTab, number>;
 
 export const DEFAULT_PAYMENT_FILTERS: PaymentFilters = {
   tab: 'all',
   search: '',
+  page: 1,
+  pageSize: 20,
 };
 
-const PENDING_STATUSES: PaymentStatus[] = ['INITIALIZED', 'PENDING'];
-const FAILED_STATUSES: PaymentStatus[] = ['FAILED', 'CANCELLED'];
-const REFUND_STATUSES: PaymentStatus[] = [
-  'REFUND_PENDING',
-  'REFUNDED',
-  'PARTIALLY_REFUNDED',
-];
+const TAB_STATUS: Partial<Record<PaymentStatusTab, PaymentStatus>> = {
+  successful: 'successful',
+  pending: 'initialized',
+  failed: 'failed',
+  refunds: 'refunded',
+};
 
-function matchesTab(payment: PaymentListItem, tab: PaymentStatusTab): boolean {
-  if (tab === 'successful') return payment.status === 'SUCCESS';
-  if (tab === 'pending') return PENDING_STATUSES.includes(payment.status);
-  if (tab === 'failed') return FAILED_STATUSES.includes(payment.status);
-  if (tab === 'refunds') return REFUND_STATUSES.includes(payment.status);
-  return true;
-}
-
-function matchesSearch(payment: PaymentListItem, search: string): boolean {
-  const query = search.trim().toLowerCase();
-  if (!query) return true;
-
-  const haystack = [
-    payment.reference,
-    payment.provider,
-    payment.status,
-    payment.reservation?.platform_id,
-    payment.reservation?.guest?.full_name,
-    payment.reservation?.property?.name,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
-
-  return haystack.includes(query);
-}
-
-export function countPaymentTabs(payments: PaymentListItem[]): PaymentTabCount {
-  return {
-    all: payments.length,
-    successful: payments.filter((item) => item.status === 'SUCCESS').length,
-    pending: payments.filter((item) => PENDING_STATUSES.includes(item.status))
-      .length,
-    failed: payments.filter((item) => FAILED_STATUSES.includes(item.status))
-      .length,
-    refunds: payments.filter((item) => REFUND_STATUSES.includes(item.status))
-      .length,
-  };
-}
-
-export function filterPayments(
-  payments: PaymentListItem[],
+/** Map UI filters to GET /cc/payments query params. */
+export function toListPaymentsParams(
   filters: PaymentFilters,
-): PaymentListItem[] {
-  return payments
-    .filter(
-      (payment) =>
-        matchesTab(payment, filters.tab) &&
-        matchesSearch(payment, filters.search),
-    )
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
-}
-
-export function getPaymentStatusDisplay(status: PaymentStatus): {
-  label: string;
-  tone: StatusTone;
-} {
-  const labels: Record<PaymentStatus, string> = {
-    INITIALIZED: 'Initialized',
-    PENDING: 'Pending',
-    SUCCESS: 'Successful',
-    FAILED: 'Failed',
-    CANCELLED: 'Cancelled',
-    REFUND_PENDING: 'Refund pending',
-    REFUNDED: 'Refunded',
-    PARTIALLY_REFUNDED: 'Partial refund',
+): ListPaymentsParams {
+  const params: ListPaymentsParams = {
+    page: filters.page,
+    limit: filters.pageSize,
   };
-
-  return {
-    label: labels[status] ?? status,
-    tone: mapPaymentStatusTone(status),
-  };
+  if (filters.search.trim()) {
+    params.search = filters.search.trim();
+  }
+  const status = TAB_STATUS[filters.tab];
+  if (status) {
+    params.status = status;
+  }
+  return params;
 }
 
-export function formatPaymentDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
+export { getPaymentStatusDisplay };
 
 export function formatPaymentDateTime(iso: string): string {
   return new Date(iso).toLocaleString('en-GB', {

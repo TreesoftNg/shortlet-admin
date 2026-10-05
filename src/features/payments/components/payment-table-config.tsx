@@ -1,57 +1,41 @@
 'use client';
 
-import { Flex, Text } from '@chakra-ui/react';
-import type { ReactNode } from 'react';
-import { formatMoney } from '@/features/bookings/utils/reservation-display';
-import type { PaymentListItem } from '@/mocks/data/payments';
+import { Box, Text } from '@chakra-ui/react';
+import { formatMoney } from '@/features/bookings/utils/booking-display';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
-import { StatusBadge } from '@/shared/components/ui';
+import { StatusBadge } from '@/shared/components/ui/status-badge';
+import type { PaymentView } from '../types';
 import {
-  formatPaymentDate,
+  formatPaymentDateTime,
   formatProviderLabel,
   getPaymentStatusDisplay,
 } from '../utils/payment-filters';
 
-export function getPaymentColumns(): DataTableColumn<PaymentListItem>[] {
+export function getPaymentColumns(): DataTableColumn<PaymentView>[] {
   return [
     {
       id: 'reference',
       header: 'Reference',
+      meta: { fontFamily: 'mono', fontWeight: 600 },
+      cell: (row) => row.reference,
+    },
+    {
+      id: 'booking',
+      header: 'Booking',
       cell: (row) => (
-        <Flex direction="column">
-          <Text fontWeight={700}>{row.reference}</Text>
-          <Text color="ink.300" fontSize="12px">
-            {row.reservation?.platform_id ?? row.reservation_id}
+        <Box>
+          <Text fontWeight={700}>{row.bookingReference ?? '—'}</Text>
+          <Text color="ink.300" fontSize="12px" fontFamily="mono">
+            {row.bookingId.slice(0, 8)}…
           </Text>
-        </Flex>
+        </Box>
       ),
-    },
-    {
-      id: 'guest',
-      header: 'Guest',
-      cell: (row) => row.reservation?.guest?.full_name ?? '—',
-    },
-    {
-      id: 'property',
-      header: 'Property',
-      cell: (row) => row.reservation?.property?.name ?? '—',
     },
     {
       id: 'amount',
       header: 'Amount',
-      cell: (row) => (
-        <Text fontWeight={700}>{formatMoney(row.amount, row.currency)}</Text>
-      ),
-    },
-    {
-      id: 'provider',
-      header: 'Provider',
-      cell: (row) => formatProviderLabel(row.provider),
-    },
-    {
-      id: 'date',
-      header: 'Date',
-      cell: (row) => formatPaymentDate(row.created_at),
+      meta: { fontWeight: 700 },
+      cell: (row) => formatMoney(row.amount, row.currency),
     },
     {
       id: 'status',
@@ -61,35 +45,15 @@ export function getPaymentColumns(): DataTableColumn<PaymentListItem>[] {
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
     },
+    {
+      id: 'provider',
+      header: 'Provider',
+      cell: (row) => formatProviderLabel(row.provider),
+    },
+    {
+      id: 'created',
+      header: 'Created',
+      cell: (row) => formatPaymentDateTime(row.createdAt),
+    },
   ];
-}
-
-export function renderPaymentMobileCard(payment: PaymentListItem): ReactNode {
-  const status = getPaymentStatusDisplay(payment.status);
-
-  return (
-    <>
-      <Flex justify="space-between" gap="8px" mb="8px" align="flex-start">
-        <Flex direction="column" minW={0}>
-          <Text fontWeight={700} noOfLines={1}>
-            {payment.reference}
-          </Text>
-          <Text color="ink.300" fontSize="12px" noOfLines={1}>
-            {payment.reservation?.guest?.full_name ?? '—'} ·{' '}
-            {payment.reservation?.property?.name ?? '—'}
-          </Text>
-        </Flex>
-        <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
-      </Flex>
-      <Flex justify="space-between" align="center" gap="8px">
-        <Text fontWeight={700}>
-          {formatMoney(payment.amount, payment.currency)}
-        </Text>
-        <Text fontSize="12px" color="ink.300">
-          {formatProviderLabel(payment.provider)} ·{' '}
-          {formatPaymentDate(payment.created_at)}
-        </Text>
-      </Flex>
-    </>
-  );
 }

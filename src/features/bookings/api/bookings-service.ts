@@ -1,24 +1,83 @@
-import { mockApi } from '@/mocks/api';
-import type { BookingFormValues } from '../utils/booking-form';
+import { apiClient } from '@/shared/api/client';
+import { adminPath } from '@/shared/api/paths';
+import type {
+  AdminBooking,
+  BookingListItem,
+  ListBookingsParams,
+  PaginatedBookings,
+  ReleaseDepositInput,
+} from '../types';
 
-// Local mock data until this feature is connected to the Shortlet API.
-
-export function fetchReservations() {
-  return mockApi.getReservations();
+function buildQuery(params: ListBookingsParams): string {
+  const search = new URLSearchParams();
+  if (params.page) search.set('page', String(params.page));
+  if (params.limit) search.set('limit', String(params.limit));
+  if (params.status) search.set('status', params.status);
+  if (params.unitId) search.set('unitId', params.unitId);
+  if (params.propertyId) search.set('propertyId', params.propertyId);
+  if (params.from) search.set('from', params.from);
+  if (params.to) search.set('to', params.to);
+  if (params.deposit) search.set('deposit', params.deposit);
+  if (params.search?.trim()) search.set('search', params.search.trim());
+  const query = search.toString();
+  return query ? `?${query}` : '';
 }
 
-export function createReservation(values: BookingFormValues) {
-  return mockApi.createReservation(values);
+/** GET /cc/bookings — paginated list with server-side filters. */
+export async function fetchBookings(
+  params: ListBookingsParams = {},
+): Promise<PaginatedBookings> {
+  const response = await apiClient<BookingListItem[]>(
+    adminPath(`/bookings${buildQuery(params)}`),
+  );
+  return {
+    items: response.data,
+    page: response.meta?.page ?? params.page ?? 1,
+    limit: response.meta?.limit ?? params.limit ?? 20,
+    total: response.meta?.total ?? response.data.length,
+    totalPages: response.meta?.totalPages ?? 1,
+  };
 }
 
-export function checkInReservation(id: string) {
-  return mockApi.checkInReservation(id);
+/** GET /cc/bookings/:id */
+export async function fetchBooking(id: string): Promise<AdminBooking> {
+  return (await apiClient<AdminBooking>(adminPath(`/bookings/${id}`))).data;
 }
 
-export function cancelReservation(id: string) {
-  return mockApi.cancelReservation(id);
+/** POST /cc/bookings/:id/check-in */
+export async function checkInBooking(id: string): Promise<AdminBooking> {
+  return (
+    await apiClient<AdminBooking>(adminPath(`/bookings/${id}/check-in`), {
+      method: 'POST',
+    })
+  ).data;
 }
 
-export function refundReservation(id: string) {
-  return mockApi.refundReservation(id);
+/** POST /cc/bookings/:id/cancel */
+export async function cancelBooking(
+  id: string,
+  reason: string,
+): Promise<AdminBooking> {
+  return (
+    await apiClient<AdminBooking>(adminPath(`/bookings/${id}/cancel`), {
+      method: 'POST',
+      body: { reason },
+    })
+  ).data;
+}
+
+/** POST /cc/bookings/:id/deposit/release */
+export async function releaseDeposit(
+  id: string,
+  input: ReleaseDepositInput,
+): Promise<AdminBooking> {
+  return (
+    await apiClient<AdminBooking>(adminPath(`/bookings/${id}/deposit/release`), {
+      method: 'POST',
+      body: {
+        refundAmount: input.refundAmount,
+        deductionReason: input.deductionReason ?? undefined,
+      },
+    })
+  ).data;
 }
