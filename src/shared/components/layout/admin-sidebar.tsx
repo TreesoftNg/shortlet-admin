@@ -55,7 +55,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Dashboard', href: '/', icon: LuLayoutDashboard, demo: true },
       { label: 'Bookings', href: '/bookings', icon: LuCalendarCheck },
-      { label: 'Availability', href: '/availability', icon: LuCalendarDays, demo: true },
+      { label: 'Availability', href: '/availability', icon: LuCalendarDays },
       { label: 'Properties', href: '/properties', icon: LuBuilding2 },
       { label: 'Units', href: '/units', icon: LuDoorOpen },
       { label: 'Calendar sync', href: '/calendar-sync', icon: LuRefreshCw },

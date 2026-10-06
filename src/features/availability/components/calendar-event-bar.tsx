@@ -1,24 +1,28 @@
 'use client';
 
-import { Box, Flex, Text } from '@chakra-ui/react';
-import type { CalendarBar } from '@/shared/types/hospitable';
+import { Flex, Text } from '@chakra-ui/react';
+import { LuTriangleAlert } from 'react-icons/lu';
+import type { CalendarEvent } from '../types';
 import { getEventBarStyles } from './calendar-legend';
 
 type CalendarEventBarProps = {
-  bar: CalendarBar;
+  event: CalendarEvent;
   leftPercent: number;
   widthCalc: string;
+  onClick?: (event: CalendarEvent) => void;
 };
 
-export function CalendarEventBar({
-  bar,
-  leftPercent,
-  widthCalc,
-}: CalendarEventBarProps) {
-  const styles = getEventBarStyles(bar.kind);
+/** One stay or block on a unit's row; opens its details when clicked. */
+export function CalendarEventBar({ event, leftPercent, widthCalc, onClick }: CalendarEventBarProps) {
+  const styles = getEventBarStyles(event.kind);
+  const title = event.conflict ? `${event.label} — overlaps another stay` : event.label;
 
   return (
     <Flex
+      as="button"
+      type="button"
+      aria-label={title}
+      title={title}
       position="absolute"
       top="12px"
       left={`${leftPercent}%`}
@@ -34,10 +38,15 @@ export function CalendarEventBar({
       whiteSpace="nowrap"
       overflow="hidden"
       textAlign="left"
-      title={bar.label}
+      cursor={onClick ? 'pointer' : 'default'}
+      _focusVisible={{ outline: '2px solid', outlineColor: 'brand.500', outlineOffset: '2px' }}
+      onMouseDown={(mouseEvent) => mouseEvent.stopPropagation()}
+      onClick={() => onClick?.(event)}
       {...styles}
+      {...(event.conflict ? { outline: '2px solid', outlineColor: 'status.danger' } : {})}
     >
-      {bar.initials ? (
+      {event.conflict ? <LuTriangleAlert size={14} aria-hidden /> : null}
+      {event.initials ? (
         <Flex
           w="22px"
           h="22px"
@@ -48,11 +57,11 @@ export function CalendarEventBar({
           fontSize="10px"
           flexShrink={0}
         >
-          {bar.initials}
+          {event.initials}
         </Flex>
       ) : null}
       <Text as="span" noOfLines={1}>
-        {bar.label}
+        {event.label}
       </Text>
     </Flex>
   );

@@ -333,49 +333,6 @@ export type CalendarDay = {
   closed_for_checkout: boolean;
 };
 
-/** Admin calendar event kinds (maps Hospitable reasons + local booking states). */
-export type CalendarEventKind =
-  | 'confirmed'
-  | 'checked_in'
-  | 'awaiting_payment'
-  | 'external'
-  | 'blocked';
-
-export type CalendarRange = 'week' | '2weeks' | 'month';
-
-export type CalendarBar = {
-  id: string;
-  unit_id: number | string;
-  /** Inclusive start date YYYY-MM-DD within the visible window. */
-  start_date: string;
-  /** Inclusive end date YYYY-MM-DD within the visible window. */
-  end_date: string;
-  kind: CalendarEventKind;
-  label: string;
-  initials: string | null;
-  source: string | null;
-};
-
-export type CalendarUnitRow = {
-  id: number;
-  property_id: number;
-  property_name: string;
-  name: string;
-  subtitle: string;
-};
-
-export type AvailabilityCalendar = {
-  anchor_date: string;
-  range: CalendarRange;
-  start_date: string;
-  end_date: string;
-  today: string;
-  currency: string;
-  nightly_rates: Record<string, number>;
-  units: CalendarUnitRow[];
-  bars: CalendarBar[];
-};
-
 export type DetailedRating = {
   type: 'cleanliness' | 'communication' | 'location' | 'checkin' | 'accuracy' | 'value';
   rating: number;

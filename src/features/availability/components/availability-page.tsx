@@ -1,52 +1,26 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Flex,
-  IconButton,
-  Select,
-  Skeleton,
-  Text,
-} from '@chakra-ui/react';
-import NextLink from 'next/link';
+import { Box, Button, Flex, IconButton, Select, Skeleton, Text, useToast } from '@chakra-ui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  LuBan,
-  LuChevronLeft,
-  LuChevronRight,
-  LuMenu,
-  LuRefreshCw,
-} from 'react-icons/lu';
-import { AvailabilityCalendarGrid } from '@/features/availability/components/availability-calendar-grid';
-import { CalendarLegend } from '@/features/availability/components/calendar-legend';
-import { useAvailabilityCalendar } from '@/features/availability/hooks/use-availability-calendar';
-import {
-  addDays,
-  formatRangeLabel,
-} from '@/features/availability/utils/calendar';
-import {
-  calendarSyncHref,
-  unitMatchesAvailabilityHighlight,
-} from '@/shared/utils/calendar-deep-links';
+import { LuBan, LuCalendarPlus, LuChevronLeft, LuChevronRight, LuMenu, LuRefreshCw } from 'react-icons/lu';
+import { useMe } from '@/features/auth/hooks/use-auth';
+import { hasPermission } from '@/features/auth/utils/auth-helpers';
+import { StaffBookingForm } from '@/features/bookings/live/staff-booking-form';
+import { useCalendarUnits } from '@/features/calendar-sync/hooks/use-calendar-sync-queries';
+import { formatStayDate } from '@/features/calendar-sync/utils/calendar-sync-format';
+import { useSyncAllImportFeeds } from '@/features/calendar-sync/hooks/use-calendar-sync-mutations';
 import { useProperties } from '@/features/properties/hooks/use-properties';
-import {
-  EmptyState,
-  ErrorState,
-  PageHeader,
-  PageSkeleton,
-} from '@/shared/components/ui';
+import { EmptyState, ErrorState, PageHeader, PageSkeleton } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
-import type { CalendarRange } from '@/shared/types/hospitable';
-import {
-  parsePropertyIdFilter,
-  propertyIdFilterToInputValue,
-  type PropertyIdFilter,
-} from '@/shared/utils/property-id';
-
-const DEFAULT_ANCHOR = '2026-09-26';
-const TODAY = '2026-09-26';
+import { parsePropertyIdFilter, propertyIdFilterToInputValue, type PropertyIdFilter } from '@/shared/utils/property-id';
+import { useAvailabilityCalendar } from '../hooks/use-availability-calendar';
+import type { CalendarEvent, CalendarRange, NightSelection } from '../types';
+import { addDays, calendarWindow, formatRangeLabel, RANGE_NIGHTS, todayInLagos } from '../utils/calendar';
+import { AvailabilityCalendarGrid } from './availability-calendar-grid';
+import { BlockDatesDialog } from './block-dates-dialog';
+import { CalendarLegend } from './calendar-legend';
+import { EventDetailsModal } from './event-details-modal';
 
 const RANGE_OPTIONS: Array<{ value: CalendarRange; label: string }> = [
   { value: 'week', label: 'Week' },
@@ -54,90 +28,88 @@ const RANGE_OPTIONS: Array<{ value: CalendarRange; label: string }> = [
   { value: 'month', label: 'Month' },
 ];
 
+const DESCRIPTION = 'Every unit, every night — bookings, holds and blocks in one view.';
+
 export function AvailabilityPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const toast = useToast();
+  const { data: profile } = useMe();
   const { data: properties = [] } = useProperties();
-  const [anchorDate, setAnchorDate] = useState(DEFAULT_ANCHOR);
+  const openMobileNav = useUiStore((state) => state.openMobileNav);
+
+  const [anchorDate, setAnchorDate] = useState(() => todayInLagos());
   const [range, setRange] = useState<CalendarRange>('2weeks');
   const [propertyId, setPropertyId] = useState<PropertyIdFilter>('all');
   const [highlightedUnitId, setHighlightedUnitId] = useState<string | null>(null);
-  const [highlightedUnitName, setHighlightedUnitName] = useState<string | null>(
-    null,
-  );
-  const openMobileNav = useUiStore((state) => state.openMobileNav);
+  const [selection, setSelection] = useState<NightSelection | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [dialog, setDialog] = useState<'block' | 'booking' | null>(null);
+
+  const canBlock = hasPermission(profile, 'availability.manage');
+  const canBook = hasPermission(profile, 'booking.create');
+  const canSync = hasPermission(profile, 'integration.manage');
 
   useEffect(() => {
     const propertyParam = searchParams.get('propertyId');
-    if (propertyParam) {
-      setPropertyId(parsePropertyIdFilter(propertyParam));
-    }
-
-    const unitParam = searchParams.get('unitId')?.trim() || null;
-    const unitNameParam = searchParams.get('unitName')?.trim() || null;
-    setHighlightedUnitId(unitParam);
-    setHighlightedUnitName(unitNameParam);
+    if (propertyParam) setPropertyId(parsePropertyIdFilter(propertyParam));
+    setHighlightedUnitId(searchParams.get('unitId')?.trim() || null);
   }, [searchParams]);
 
-  const step = range === 'week' ? 7 : range === 'month' ? 30 : 14;
-
-  const { data, isLoading, isError, error, refetch } = useAvailabilityCalendar({
-    anchorDate,
-    range,
+  const visibleRange = calendarWindow(anchorDate, range);
+  const { data, isLoading, isError, error, refetch, isFetching } = useAvailabilityCalendar({
+    ...visibleRange,
     propertyId,
   });
 
-  const isInitialLoad = isLoading && !data;
+  // Units with a Hospitable feed, for "Sync Hospitable" (needs integration.manage).
+  const calendarUnits = useCalendarUnits({ enabled: canSync });
+  const syncAll = useSyncAllImportFeeds();
+  const syncableUnitIds = (calendarUnits.data ?? []).filter((unit) => unit.feed).map((unit) => unit.unitId);
 
-  const rangeLabel = useMemo(() => {
-    if (!data) return '';
-    return formatRangeLabel(data.start_date, data.end_date);
-  }, [data]);
-
-  const focusedUnit = useMemo(() => {
-    if (!data || (!highlightedUnitId && !highlightedUnitName)) return null;
-    return (
-      data.units.find((unit) =>
-        unitMatchesAvailabilityHighlight(
-          unit,
-          highlightedUnitId,
-          highlightedUnitName,
-        ),
-      ) ?? null
-    );
-  }, [data, highlightedUnitId, highlightedUnitName]);
-
-  const calendarSyncLink = useMemo(() => {
-    if (highlightedUnitId) return calendarSyncHref(highlightedUnitId);
-    if (focusedUnit) return calendarSyncHref(focusedUnit.id);
-    return null;
-  }, [focusedUnit, highlightedUnitId]);
+  const rangeLabel = useMemo(
+    () => (data ? formatRangeLabel(data.from, addDays(data.to, -1)) : ''),
+    [data],
+  );
+  const focusedUnit = data?.units.find((unit) => unit.id === highlightedUnitId) ?? null;
+  const selectedUnit = data?.units.find((unit) => unit.id === (selection?.unitId ?? selectedEvent?.unitId)) ?? null;
 
   const updatePropertyId = (next: PropertyIdFilter) => {
     setPropertyId(next);
     setHighlightedUnitId(null);
-    setHighlightedUnitName(null);
+    setSelection(null);
     const params = new URLSearchParams(searchParams.toString());
-    if (next === 'all') {
-      params.delete('propertyId');
-    } else {
-      params.set('propertyId', String(next));
-    }
+    if (next === 'all') params.delete('propertyId');
+    else params.set('propertyId', next);
     params.delete('unitId');
     params.delete('unitName');
     const query = params.toString();
-    router.replace(query ? `/availability?${query}` : '/availability', {
-      scroll: false,
+    router.replace(query ? `/availability?${query}` : '/availability', { scroll: false });
+  };
+
+  const move = (days: number) => {
+    setSelection(null);
+    setAnchorDate((current) => addDays(current, days));
+  };
+
+  const syncHospitable = async () => {
+    if (!syncableUnitIds.length) {
+      toast({ status: 'info', title: 'No units are connected to Hospitable yet.' });
+      return;
+    }
+    const result = await syncAll.mutateAsync(syncableUnitIds);
+    toast({
+      status: result.failed ? 'warning' : 'success',
+      title: result.failed
+        ? `Synced ${result.succeeded} of ${result.total} units; ${result.failed} failed.`
+        : `Synced ${result.total} units from Hospitable.`,
     });
   };
 
-  if (isInitialLoad) {
+  if (isLoading && !data) {
     return (
       <Box>
-        <PageHeader
-          title="Availability"
-          description="Every unit, every night — bookings, holds and blocks in one view."
-        />
+        <PageHeader title="Availability" description={DESCRIPTION} />
         <PageSkeleton variant="calendar" />
       </Box>
     );
@@ -147,22 +119,27 @@ export function AvailabilityPage() {
     <Box>
       <PageHeader
         title="Availability"
-        description={
-          focusedUnit
-            ? `Focused on ${focusedUnit.name}.`
-            : 'Every unit, every night — bookings, holds and blocks in one view.'
-        }
+        description={focusedUnit ? `Focused on ${focusedUnit.name}.` : DESCRIPTION}
         actions={
-          <Flex gap="8px" align="center">
-            {calendarSyncLink ? (
+          <Flex gap="8px" align="center" wrap="wrap">
+            {canSync ? (
               <Button
-                as={NextLink}
-                href={calendarSyncLink}
-                size="sm"
-                variant="soft"
-                leftIcon={<LuRefreshCw size={14} />}
+                variant="secondary"
+                leftIcon={<LuRefreshCw size={16} />}
+                onClick={() => void syncHospitable()}
+                isLoading={syncAll.isPending}
               >
-                Calendar sync
+                Sync Hospitable
+              </Button>
+            ) : null}
+            {canBlock ? (
+              <Button variant="secondary" leftIcon={<LuBan size={16} />} onClick={() => setDialog('block')}>
+                Block dates
+              </Button>
+            ) : null}
+            {canBook ? (
+              <Button leftIcon={<LuCalendarPlus size={16} />} onClick={() => setDialog('booking')}>
+                New booking
               </Button>
             ) : null}
             <IconButton
@@ -179,13 +156,7 @@ export function AvailabilityPage() {
         }
       />
 
-      <Box
-        bg="white"
-        border="1px solid"
-        borderColor="line.500"
-        borderRadius="22px"
-        overflow="hidden"
-      >
+      <Box bg="white" border="1px solid" borderColor="line.500" borderRadius="22px" overflow="hidden">
         <Flex
           justify="space-between"
           align={{ base: 'stretch', md: 'center' }}
@@ -204,7 +175,7 @@ export function AvailabilityPage() {
               borderRadius="10px"
               h="36px"
               w="36px"
-              onClick={() => setAnchorDate((current) => addDays(current, -step))}
+              onClick={() => move(-RANGE_NIGHTS[range])}
             />
             <IconButton
               aria-label="Next range"
@@ -213,7 +184,7 @@ export function AvailabilityPage() {
               borderRadius="10px"
               h="36px"
               w="36px"
-              onClick={() => setAnchorDate((current) => addDays(current, step))}
+              onClick={() => move(RANGE_NIGHTS[range])}
             />
             <Text fontWeight={700} fontSize="14px" minW="160px">
               {rangeLabel || 'Loading range…'}
@@ -225,7 +196,10 @@ export function AvailabilityPage() {
               variant="secondary"
               fontSize="13px"
               fontWeight={600}
-              onClick={() => setAnchorDate(TODAY)}
+              onClick={() => {
+                setSelection(null);
+                setAnchorDate(data?.today ?? todayInLagos());
+              }}
             >
               Today
             </Button>
@@ -236,23 +210,23 @@ export function AvailabilityPage() {
               borderRadius="10px"
               h="36px"
               w="36px"
+              isLoading={isFetching}
               onClick={() => void refetch()}
             />
           </Flex>
 
           <Flex gap="8px" wrap="wrap" align="center">
             <Select
+              aria-label="Property"
               h="36px"
-              maxW="180px"
+              maxW="200px"
               borderColor="line.500"
               borderRadius="999px"
               bg="white"
               fontSize="13px"
               fontWeight={600}
               value={propertyIdFilterToInputValue(propertyId)}
-              onChange={(event) =>
-                updatePropertyId(parsePropertyIdFilter(event.target.value))
-              }
+              onChange={(event) => updatePropertyId(parsePropertyIdFilter(event.target.value))}
             >
               <option value="all">All properties</option>
               {properties.map((property) => (
@@ -280,6 +254,7 @@ export function AvailabilityPage() {
                     bg={active ? 'white' : 'transparent'}
                     color={active ? 'ink.500' : 'ink.300'}
                     boxShadow={active ? '0 1px 2px rgba(0,0,0,.08)' : 'none'}
+                    aria-pressed={active}
                     onClick={() => setRange(option.value)}
                   >
                     {option.label}
@@ -292,33 +267,104 @@ export function AvailabilityPage() {
 
         <CalendarLegend />
 
-        {isLoading ? (
-          <Box px="20px" pb="20px">
-            <Skeleton h="360px" borderRadius="14px" />
-          </Box>
-        ) : isError || !data ? (
-          <ErrorState
-            message={
-              error instanceof Error
-                ? error.message
-                : 'Failed to load availability calendar'
-            }
-            onRetry={() => void refetch()}
-          />
+        {selection && selectedUnit ? (
+          <Flex
+            px="20px"
+            py="10px"
+            gap="10px"
+            align="center"
+            wrap="wrap"
+            bg="brand.50"
+            borderBottom="1px solid"
+            borderColor="line.500"
+            fontSize="14px"
+            role="status"
+          >
+            <Text fontWeight={700}>
+              {selectedUnit.name}: {formatStayDate(selection.startDate)} → {formatStayDate(selection.endDate)} (
+              {countNights(selection)} {countNights(selection) === 1 ? 'night' : 'nights'})
+            </Text>
+            <Flex gap="8px" ml={{ md: 'auto' }}>
+              {canBlock ? (
+                <Button size="sm" variant="secondary" onClick={() => setDialog('block')}>
+                  Block these nights
+                </Button>
+              ) : null}
+              {canBook ? (
+                <Button size="sm" onClick={() => setDialog('booking')}>
+                  Create booking
+                </Button>
+              ) : null}
+              <Button size="sm" variant="ghost" onClick={() => setSelection(null)}>
+                Clear
+              </Button>
+            </Flex>
+          </Flex>
+        ) : null}
+
+        {isError || !data ? (
+          isLoading ? (
+            <Box px="20px" pb="20px">
+              <Skeleton h="360px" borderRadius="14px" />
+            </Box>
+          ) : (
+            <ErrorState
+              message={error instanceof Error ? error.message : 'Failed to load availability calendar'}
+              onRetry={() => void refetch()}
+            />
+          )
         ) : data.units.length === 0 ? (
           <EmptyState
             title="No units to show"
-            description="There are no units in this calendar view for the selected property and date range."
+            description="There are no units for the selected property."
             icon={<LuBan size={24} />}
           />
         ) : (
           <AvailabilityCalendarGrid
             data={data}
             highlightedUnitId={highlightedUnitId}
-            highlightedUnitName={highlightedUnitName}
+            selection={selection}
+            onSelectionChange={canBlock || canBook ? setSelection : undefined}
+            onEventClick={setSelectedEvent}
           />
         )}
       </Box>
+
+      {data ? (
+        <>
+          <BlockDatesDialog
+            isOpen={dialog === 'block'}
+            onClose={() => setDialog(null)}
+            units={data.units}
+            today={data.today}
+            initial={selection}
+            onBlocked={() => setSelection(null)}
+          />
+          <StaffBookingForm
+            isOpen={dialog === 'booking'}
+            onClose={() => {
+              setDialog(null);
+              setSelection(null);
+            }}
+            units={data.units.filter((unit) => unit.status === 'active')}
+            today={data.today}
+            initial={selection}
+          />
+          <EventDetailsModal
+            event={selectedEvent}
+            unit={selectedUnit}
+            onClose={() => setSelectedEvent(null)}
+            canManageBlocks={canBlock}
+            canRecordPayments={canBook}
+          />
+        </>
+      ) : null}
     </Box>
+  );
+}
+
+function countNights(selection: NightSelection): number {
+  return Math.round(
+    (Date.parse(`${selection.endDate}T00:00:00Z`) - Date.parse(`${selection.startDate}T00:00:00Z`)) / 86_400_000,
   );
 }

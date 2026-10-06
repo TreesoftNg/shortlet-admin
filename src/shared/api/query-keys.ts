@@ -37,6 +37,11 @@ export const queryKeys = {
     list: () => ['properties', 'list'] as const,
     detail: (id: string) => ['properties', 'detail', id] as const,
   },
+  adminBookings: {
+    all: ['admin-bookings'] as const,
+    detail: (id: string) => ['admin-bookings', 'detail', id] as const,
+    quote: (params: object) => ['admin-bookings', 'quote', params] as const,
+  },
   units: {
     all: ['units'] as const,
     list: () => ['units', 'list'] as const,

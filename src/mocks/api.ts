@@ -5,7 +5,6 @@ import {
   mockReservations,
   mockUnits,
 } from '@/mocks/data';
-import { buildMockAvailabilityCalendar } from '@/mocks/data/availability';
 import {
   mockConversations,
   mockMessages,
@@ -41,8 +40,6 @@ import { delay, ok } from '@/mocks/utils';
 import type { Customer } from '@/features/customers/types';
 import type { ApiSuccessResponse } from '@/shared/api/types';
 import type {
-  AvailabilityCalendar,
-  CalendarRange,
   DashboardSummary,
   Guest,
   Message,
@@ -404,19 +401,4 @@ export const mockApi = {
     return ok(mockTenantSettings, 'Settings retrieved');
   },
 
-  async getAvailabilityCalendar(params: {
-    anchorDate: string;
-    range: CalendarRange;
-    propertyId?: string | number | 'all';
-  }): Promise<ApiSuccessResponse<AvailabilityCalendar>> {
-    await delay();
-    return ok(
-      buildMockAvailabilityCalendar(
-        params.anchorDate,
-        params.range,
-        params.propertyId ?? 'all',
-      ),
-      'Availability calendar retrieved',
-    );
-  },
 };
