@@ -32,7 +32,7 @@ export function UnitCalendarDialog({ unit }: { unit: UnitCalendarSummary }) {
   );
 
   return (
-    <AppModal isOpen onClose={close} title={unit.name} size="2xl">
+    <AppModal isOpen onClose={close} title={unit.name} size="4xl">
       <Flex justify="flex-end" mb="10px">
         <Button
           as={NextLink}

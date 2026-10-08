@@ -10,6 +10,7 @@ import {
   Heading,
   Input,
   Select,
+  SimpleGrid,
   Text,
   Textarea,
   useToast,
@@ -572,269 +573,277 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
         ) : null}
       </Flex>
 
-      <KeyValueList
-        title="Guest"
-        items={[
-          { label: 'Name', value: <Text as="b">{name}</Text> },
-          { label: 'Email', value: <Text as="b">{booking.guest.email}</Text> },
-          { label: 'Phone', value: <Text as="b">{booking.guest.phone}</Text> },
-          {
-            label: 'Requests',
-            value: (
-              <Text as="b">{booking.specialRequests?.trim() || '—'}</Text>
-            ),
-          },
-          {
-            label: 'House rules accepted',
-            value: (
-              <Text as="b">
-                {formatDateTimeLabel(booking.houseRulesAcceptedAt)}
-              </Text>
-            ),
-          },
-        ]}
-      />
-
-      <KeyValueList
-        title="Stay"
-        items={[
-          { label: 'Unit', value: <Text as="b">{unitLabel(booking)}</Text> },
-          {
-            label: 'Dates',
-            value: (
-              <Text as="b">
-                {formatStayDates(booking.checkIn, booking.checkOut)} (
-                {booking.nights} nights)
-              </Text>
-            ),
-          },
-          {
-            label: 'Times',
-            value: (
-              <Text as="b">
-                In {booking.checkInTime} · Out {booking.checkOutTime}
-              </Text>
-            ),
-          },
-          {
-            label: 'Guests',
-            value: <Text as="b">{formatGuestsLabel(booking)}</Text>,
-          },
-        ]}
-      />
-
-      <KeyValueList
-        title="Price"
-        items={[
-          {
-            label: 'Nights',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.price.nightsSubtotal, booking.currency)}
-              </Text>
-            ),
-          },
-          {
-            label: 'Discount',
-            value: (
-              <Text as="b">
-                {booking.price.discount
-                  ? `−${formatMoney(booking.price.discount.amount, booking.currency)} (${booking.price.discount.percent}%)`
-                  : '—'}
-              </Text>
-            ),
-          },
-          {
-            label: 'Cleaning',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.price.cleaningFee, booking.currency)}
-              </Text>
-            ),
-          },
-          {
-            label: 'Service fee',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.price.serviceFee.amount, booking.currency)}
-              </Text>
-            ),
-          },
-          {
-            label: booking.price.tax.name || 'Tax',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.price.tax.amount, booking.currency)}
-              </Text>
-            ),
-          },
-          {
-            label: 'Stay total',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.stayTotal, booking.currency)}
-              </Text>
-            ),
-          },
-          {
-            label: 'Paid / refunded',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.amountPaid, booking.currency)} /{' '}
-                {formatMoney(booking.amountRefunded, booking.currency)}
-              </Text>
-            ),
-          },
-        ]}
-      />
-
-      <KeyValueList
-        title="Deposit"
-        items={[
-          {
-            label: 'Status',
-            value: (
-              <StatusBadge tone={deposit.tone}>{deposit.label}</StatusBadge>
-            ),
-          },
-          {
-            label: 'Amount',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.deposit.amount, booking.currency)} (
-                {booking.deposit.nights} night
-                {booking.deposit.nights === 1 ? '' : 's'})
-              </Text>
-            ),
-          },
-          {
-            label: 'Due by',
-            value: (
-              <Text as="b">
-                {booking.deposit.dueAt
-                  ? formatDateTimeLabel(booking.deposit.dueAt)
-                  : '—'}
-              </Text>
-            ),
-          },
-          {
-            label: 'Refunded',
-            value: (
-              <Text as="b">
-                {formatMoney(booking.deposit.refunded, booking.currency)}
-              </Text>
-            ),
-          },
-          {
-            label: 'Deduction reason',
-            value: (
-              <Text as="b">
-                {booking.deposit.deductionReason?.trim() || '—'}
-              </Text>
-            ),
-          },
-        ]}
-      />
-
-      <Box mb="16px">
-        <Text fontSize="13px" fontWeight={700} mb="8px" color="ink.400">
-          Payments
-        </Text>
-        {booking.payments.length === 0 ? (
-          <Text fontSize="14px" color="ink.300">
-            No payment attempts yet.
-          </Text>
-        ) : (
-          <VStack align="stretch" spacing="10px">
-            {booking.payments.map((payment) => {
-              const paymentStatus = getPaymentStatusDisplay(payment.status);
-              return (
-                <Box
-                  key={payment.id}
-                  border="1px solid"
-                  borderColor="line.500"
-                  borderRadius="12px"
-                  p="12px"
-                >
-                  <Flex justify="space-between" gap="8px" mb="6px">
-                    <Text fontFamily="mono" fontSize="13px" fontWeight={600}>
-                      {payment.reference}
-                    </Text>
-                    <StatusBadge tone={paymentStatus.tone}>
-                      {paymentStatus.label}
-                    </StatusBadge>
-                  </Flex>
-                  <Text fontSize="13px" color="ink.400">
-                    {formatMoney(payment.amount, payment.currency)}
-                    {payment.paymentMethod
-                      ? ` · ${payment.paymentMethod}`
-                      : ''}
-                    {payment.providerTransactionId
-                      ? ` · ${payment.providerTransactionId}`
-                      : ''}
+      <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px">
+        <Box minW={0}>
+          <KeyValueList
+            title="Guest"
+            items={[
+              { label: 'Name', value: <Text as="b">{name}</Text> },
+              { label: 'Email', value: <Text as="b">{booking.guest.email}</Text> },
+              { label: 'Phone', value: <Text as="b">{booking.guest.phone}</Text> },
+              {
+                label: 'Requests',
+                value: (
+                  <Text as="b">{booking.specialRequests?.trim() || '—'}</Text>
+                ),
+              },
+              {
+                label: 'House rules accepted',
+                value: (
+                  <Text as="b">
+                    {formatDateTimeLabel(booking.houseRulesAcceptedAt)}
                   </Text>
-                  <Flex gap="8px" mt="8px" wrap="wrap">
-                    <Button
-                      size="xs"
-                      variant="soft"
-                      onClick={() => void handleVerify(payment.id)}
-                      isLoading={verifyMutation.isPending}
-                      isDisabled={actionPending}
-                    >
-                      Check with Flutterwave
-                    </Button>
-                  </Flex>
-                </Box>
-              );
-            })}
-          </VStack>
-        )}
-      </Box>
+                ),
+              },
+            ]}
+          />
 
-      <Box mb="16px">
-        <Text fontSize="13px" fontWeight={700} mb="8px" color="ink.400">
-          Refunds
-        </Text>
-        {booking.refunds.length === 0 ? (
-          <Text fontSize="14px" color="ink.300">
-            No refunds yet.
-          </Text>
-        ) : (
-          <VStack align="stretch" spacing="10px">
-            {booking.refunds.map((refund) => {
-              const refundStatus = getRefundStatusDisplay(refund.status);
-              return (
-                <Box
-                  key={refund.id}
-                  border="1px solid"
-                  borderColor="line.500"
-                  borderRadius="12px"
-                  p="12px"
-                >
-                  <Flex justify="space-between" gap="8px" mb="6px">
-                    <Text fontSize="13px" fontWeight={700}>
-                      {formatRefundKind(refund.kind)} ·{' '}
-                      {formatMoney(refund.amount, booking.currency)}
-                    </Text>
-                    <StatusBadge tone={refundStatus.tone}>
-                      {refundStatus.label}
-                    </StatusBadge>
-                  </Flex>
-                  <Text fontSize="13px" color="ink.400" textTransform="capitalize">
-                    {formatRefundReason(refund.reason)}
-                    {refund.note ? ` · ${refund.note}` : ''}
+          <KeyValueList
+            title="Stay"
+            items={[
+              { label: 'Unit', value: <Text as="b">{unitLabel(booking)}</Text> },
+              {
+                label: 'Dates',
+                value: (
+                  <Text as="b">
+                    {formatStayDates(booking.checkIn, booking.checkOut)} (
+                    {booking.nights} nights)
                   </Text>
-                  {refund.failureReason ? (
-                    <Text fontSize="12px" color="red.500" mt="4px">
-                      {refund.failureReason}
+                ),
+              },
+              {
+                label: 'Times',
+                value: (
+                  <Text as="b">
+                    In {booking.checkInTime} · Out {booking.checkOutTime}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Guests',
+                value: <Text as="b">{formatGuestsLabel(booking)}</Text>,
+              },
+            ]}
+          />
+        </Box>
+        <Box minW={0}>
+          <KeyValueList
+            title="Price"
+            items={[
+              {
+                label: 'Nights',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.price.nightsSubtotal, booking.currency)}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Discount',
+                value: (
+                  <Text as="b">
+                    {booking.price.discount
+                      ? `−${formatMoney(booking.price.discount.amount, booking.currency)} (${booking.price.discount.percent}%)`
+                      : '—'}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Cleaning',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.price.cleaningFee, booking.currency)}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Service fee',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.price.serviceFee.amount, booking.currency)}
+                  </Text>
+                ),
+              },
+              {
+                label: booking.price.tax.name || 'Tax',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.price.tax.amount, booking.currency)}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Stay total',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.stayTotal, booking.currency)}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Paid / refunded',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.amountPaid, booking.currency)} /{' '}
+                    {formatMoney(booking.amountRefunded, booking.currency)}
+                  </Text>
+                ),
+              },
+            ]}
+          />
+
+          <KeyValueList
+            title="Deposit"
+            items={[
+              {
+                label: 'Status',
+                value: (
+                  <StatusBadge tone={deposit.tone}>{deposit.label}</StatusBadge>
+                ),
+              },
+              {
+                label: 'Amount',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.deposit.amount, booking.currency)} (
+                    {booking.deposit.nights} night
+                    {booking.deposit.nights === 1 ? '' : 's'})
+                  </Text>
+                ),
+              },
+              {
+                label: 'Due by',
+                value: (
+                  <Text as="b">
+                    {booking.deposit.dueAt
+                      ? formatDateTimeLabel(booking.deposit.dueAt)
+                      : '—'}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Refunded',
+                value: (
+                  <Text as="b">
+                    {formatMoney(booking.deposit.refunded, booking.currency)}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Deduction reason',
+                value: (
+                  <Text as="b">
+                    {booking.deposit.deductionReason?.trim() || '—'}
+                  </Text>
+                ),
+              },
+            ]}
+          />
+        </Box>
+      </SimpleGrid>
+
+      <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px" borderTop="1px solid" borderColor="line.500" pt="16px">
+        <Box mb="16px" minW={0}>
+          <Text fontSize="13px" fontWeight={700} mb="8px" color="ink.400">
+            Payments
+          </Text>
+          {booking.payments.length === 0 ? (
+            <Text fontSize="14px" color="ink.300">
+              No payment attempts yet.
+            </Text>
+          ) : (
+            <VStack align="stretch" spacing="10px">
+              {booking.payments.map((payment) => {
+                const paymentStatus = getPaymentStatusDisplay(payment.status);
+                return (
+                  <Box
+                    key={payment.id}
+                    border="1px solid"
+                    borderColor="line.500"
+                    borderRadius="12px"
+                    p="12px"
+                  >
+                    <Flex justify="space-between" gap="8px" mb="6px">
+                      <Text fontFamily="mono" fontSize="13px" fontWeight={600}>
+                        {payment.reference}
+                      </Text>
+                      <StatusBadge tone={paymentStatus.tone}>
+                        {paymentStatus.label}
+                      </StatusBadge>
+                    </Flex>
+                    <Text fontSize="13px" color="ink.400">
+                      {formatMoney(payment.amount, payment.currency)}
+                      {payment.paymentMethod
+                        ? ` · ${payment.paymentMethod}`
+                        : ''}
+                      {payment.providerTransactionId
+                        ? ` · ${payment.providerTransactionId}`
+                        : ''}
                     </Text>
-                  ) : null}
-                </Box>
-              );
-            })}
-          </VStack>
-        )}
-      </Box>
+                    <Flex gap="8px" mt="8px" wrap="wrap">
+                      <Button
+                        size="xs"
+                        variant="soft"
+                        onClick={() => void handleVerify(payment.id)}
+                        isLoading={verifyMutation.isPending}
+                        isDisabled={actionPending}
+                      >
+                        Check with Flutterwave
+                      </Button>
+                    </Flex>
+                  </Box>
+                );
+              })}
+            </VStack>
+          )}
+        </Box>
+
+        <Box mb="16px" minW={0}>
+          <Text fontSize="13px" fontWeight={700} mb="8px" color="ink.400">
+            Refunds
+          </Text>
+          {booking.refunds.length === 0 ? (
+            <Text fontSize="14px" color="ink.300">
+              No refunds yet.
+            </Text>
+          ) : (
+            <VStack align="stretch" spacing="10px">
+              {booking.refunds.map((refund) => {
+                const refundStatus = getRefundStatusDisplay(refund.status);
+                return (
+                  <Box
+                    key={refund.id}
+                    border="1px solid"
+                    borderColor="line.500"
+                    borderRadius="12px"
+                    p="12px"
+                  >
+                    <Flex justify="space-between" gap="8px" mb="6px">
+                      <Text fontSize="13px" fontWeight={700}>
+                        {formatRefundKind(refund.kind)} ·{' '}
+                        {formatMoney(refund.amount, booking.currency)}
+                      </Text>
+                      <StatusBadge tone={refundStatus.tone}>
+                        {refundStatus.label}
+                      </StatusBadge>
+                    </Flex>
+                    <Text fontSize="13px" color="ink.400" textTransform="capitalize">
+                      {formatRefundReason(refund.reason)}
+                      {refund.note ? ` · ${refund.note}` : ''}
+                    </Text>
+                    {refund.failureReason ? (
+                      <Text fontSize="12px" color="red.500" mt="4px">
+                        {refund.failureReason}
+                      </Text>
+                    ) : null}
+                  </Box>
+                );
+              })}
+            </VStack>
+          )}
+        </Box>
+
+      </SimpleGrid>
 
       {booking.cancellationReason ? (
         <KeyValueList

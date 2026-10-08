@@ -186,7 +186,7 @@ export function RefundsPage() {
         isOpen={Boolean(selected)}
         onClose={() => setSelectedId(null)}
         title="Refund details"
-        size="lg"
+        size="3xl"
       >
         <RefundDetailDrawer refund={selected} />
       </AppModal>

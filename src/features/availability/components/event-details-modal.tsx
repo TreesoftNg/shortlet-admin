@@ -38,6 +38,7 @@ function ExternalStayModal({ event, unit, onClose }: { event: CalendarEvent; uni
       isOpen
       onClose={onClose}
       title="Airbnb / Booking.com stay"
+      size="2xl"
       footer={
         <>
           <Button as={NextLink} href={calendarSyncHref(event.unitId)} variant="secondary">
@@ -95,6 +96,7 @@ function BlockModal({
       isOpen
       onClose={onClose}
       title="Blocked dates"
+      size="2xl"
       footer={
         <Flex gap="8px">
           {canManage ? (

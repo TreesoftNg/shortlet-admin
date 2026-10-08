@@ -189,7 +189,7 @@ export function ReviewsPage() {
         isOpen={Boolean(selected)}
         onClose={() => setSelectedId(null)}
         title="Review details"
-        size="lg"
+        size="2xl"
       >
         <ReviewDetailDrawer review={selected} canManage={canManage} />
       </AppModal>

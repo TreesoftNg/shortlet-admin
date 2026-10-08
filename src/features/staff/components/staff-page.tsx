@@ -248,7 +248,7 @@ export function StaffPage() {
         isOpen={Boolean(selected)}
         onClose={() => setSelectedId(null)}
         title="Staff details"
-        size="lg"
+        size="2xl"
       >
         <StaffDetailDrawer member={selected} canInvite={canInvite} />
       </AppModal>

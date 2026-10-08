@@ -2,12 +2,14 @@
 
 import {
   Badge,
+  Box,
   Button,
   Flex,
   FormControl,
   FormLabel,
   Input,
   Select,
+  SimpleGrid,
   Skeleton,
   Text,
   useClipboard,
@@ -44,6 +46,7 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
       isOpen
       onClose={onClose}
       title={booking ? `Booking ${booking.reference}` : 'Booking'}
+      size="3xl"
       footer={<Button onClick={onClose}>Close</Button>}
     >
       {isLoading ? <Skeleton h="240px" borderRadius="14px" /> : null}
@@ -60,48 +63,55 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
             </Badge>
             {booking.source === 'staff' ? <Badge>Booked by staff</Badge> : null}
           </Flex>
-          <KeyValueList
-            items={[
-              { label: 'Guest', value: `${booking.guest.firstName} ${booking.guest.lastName}` },
-              { label: 'Email', value: booking.guest.email },
-              { label: 'Phone', value: booking.guest.phone },
-              { label: 'Unit', value: booking.unit.publicName ?? booking.unit.name },
-              { label: 'Check-in', value: `${formatStayDate(booking.checkIn)}, from ${booking.checkInTime}` },
-              { label: 'Check-out', value: `${formatStayDate(booking.checkOut)}, by ${booking.checkOutTime}` },
-              {
-                label: 'Guests',
-                value: [
-                  plural(booking.guests.adults, 'adult', 'adults'),
-                  booking.guests.children ? plural(booking.guests.children, 'child', 'children') : null,
-                  booking.guests.infants ? plural(booking.guests.infants, 'infant', 'infants') : null,
-                ]
-                  .filter(Boolean)
-                  .join(', '),
-              },
-              ...(booking.specialRequests ? [{ label: 'Requests', value: booking.specialRequests }] : []),
-            ]}
-          />
-          <KeyValueList
-            title="Money"
-            items={[
-              ...(booking.price.staffDiscount
-                ? [
-                    {
-                      label: `Discount (${booking.price.staffDiscount.reason})`,
-                      value: `-${formatMoney(booking.price.staffDiscount.amount, booking.currency)}`,
-                    },
-                  ]
-                : []),
-              { label: 'Stay', value: formatMoney(booking.stayTotal, booking.currency) },
-              { label: 'Deposit', value: `${formatMoney(booking.deposit.amount, booking.currency)} (${booking.deposit.status})` },
-              { label: 'Total', value: formatMoney(booking.totalAmount, booking.currency), emphasize: true },
-              { label: 'Paid', value: formatMoney(booking.amountPaid, booking.currency) },
-              ...booking.payments.map((payment) => ({
-                label: `${payment.provider === 'offline' ? 'Offline' : 'Flutterwave'} · ${payment.status}`,
-                value: `${paymentMethodLabel(payment.paymentMethod)}${payment.offlineReference ? ` · ${payment.offlineReference}` : ''}`,
-              })),
-            ]}
-          />
+          <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px">
+            <Box minW={0}>
+              <KeyValueList
+                title="Stay"
+                items={[
+                  { label: 'Guest', value: `${booking.guest.firstName} ${booking.guest.lastName}` },
+                  { label: 'Email', value: booking.guest.email },
+                  { label: 'Phone', value: booking.guest.phone },
+                  { label: 'Unit', value: booking.unit.publicName ?? booking.unit.name },
+                  { label: 'Check-in', value: `${formatStayDate(booking.checkIn)}, from ${booking.checkInTime}` },
+                  { label: 'Check-out', value: `${formatStayDate(booking.checkOut)}, by ${booking.checkOutTime}` },
+                  {
+                    label: 'Guests',
+                    value: [
+                      plural(booking.guests.adults, 'adult', 'adults'),
+                      booking.guests.children ? plural(booking.guests.children, 'child', 'children') : null,
+                      booking.guests.infants ? plural(booking.guests.infants, 'infant', 'infants') : null,
+                    ]
+                      .filter(Boolean)
+                      .join(', '),
+                  },
+                  ...(booking.specialRequests ? [{ label: 'Requests', value: booking.specialRequests }] : []),
+                ]}
+              />
+            </Box>
+            <Box minW={0}>
+              <KeyValueList
+                title="Money"
+                items={[
+                  ...(booking.price.staffDiscount
+                    ? [
+                        {
+                          label: `Discount (${booking.price.staffDiscount.reason})`,
+                          value: `-${formatMoney(booking.price.staffDiscount.amount, booking.currency)}`,
+                        },
+                      ]
+                    : []),
+                  { label: 'Stay', value: formatMoney(booking.stayTotal, booking.currency) },
+                  { label: 'Deposit', value: `${formatMoney(booking.deposit.amount, booking.currency)} (${booking.deposit.status})` },
+                  { label: 'Total', value: formatMoney(booking.totalAmount, booking.currency), emphasize: true },
+                  { label: 'Paid', value: formatMoney(booking.amountPaid, booking.currency) },
+                  ...booking.payments.map((payment) => ({
+                    label: `${payment.provider === 'offline' ? 'Offline' : 'Flutterwave'} · ${payment.status}`,
+                    value: `${paymentMethodLabel(payment.paymentMethod)}${payment.offlineReference ? ` · ${payment.offlineReference}` : ''}`,
+                  })),
+                ]}
+              />
+            </Box>
+          </SimpleGrid>
           {waiting ? (
             <Flex direction="column" gap="10px" mt="8px">
               {booking.holdExpiresAt ? (

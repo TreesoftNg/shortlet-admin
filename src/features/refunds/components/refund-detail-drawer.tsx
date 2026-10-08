@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Button, Flex, Heading, Text } from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react';
 import {
   formatMoney,
   formatStayDates,
@@ -50,78 +50,83 @@ export function RefundDetailDrawer({ refund }: RefundDetailDrawerProps) {
         </Box>
       ) : null}
 
-      <KeyValueList
-        title="Refund"
-        items={[
-          {
-            label: 'Requested by',
-            value: <Text as="b">{refund.requested_by}</Text>,
-          },
-          {
-            label: 'Requested',
-            value: (
-              <Text as="b">{formatRefundDateTime(refund.created_at)}</Text>
-            ),
-          },
-          {
-            label: 'Processed',
-            value: (
-              <Text as="b">{formatRefundDateTime(refund.processed_at)}</Text>
-            ),
-          },
-          {
-            label: 'Payment',
-            value: (
-              <Text as="b">
-                {refund.payment?.reference ?? refund.payment_id}
-              </Text>
-            ),
-          },
-          {
-            label: 'Provider',
-            value: <Text as="b">Flutterwave</Text>,
-          },
-        ]}
-      />
-
-      <KeyValueList
-        title="Reservation"
-        items={[
-          {
-            label: 'Booking',
-            value: (
-              <Text as="b">
-                {reservation?.platform_id ?? refund.reservation_id}
-              </Text>
-            ),
-          },
-          {
-            label: 'Guest',
-            value: (
-              <Text as="b">{reservation?.guest?.full_name ?? '—'}</Text>
-            ),
-          },
-          {
-            label: 'Property',
-            value: (
-              <Text as="b">{reservation?.property?.name ?? '—'}</Text>
-            ),
-          },
-          {
-            label: 'Stay',
-            value: (
-              <Text as="b">
-                {reservation
-                  ? formatStayDates(
-                      reservation.arrival_date,
-                      reservation.departure_date,
-                    )
-                  : '—'}
-              </Text>
-            ),
-          },
-        ]}
-      />
+      <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px">
+        <Box minW={0}>
+          <KeyValueList
+            title="Refund"
+            items={[
+              {
+                label: 'Requested by',
+                value: <Text as="b">{refund.requested_by}</Text>,
+              },
+              {
+                label: 'Requested',
+                value: (
+                  <Text as="b">{formatRefundDateTime(refund.created_at)}</Text>
+                ),
+              },
+              {
+                label: 'Processed',
+                value: (
+                  <Text as="b">{formatRefundDateTime(refund.processed_at)}</Text>
+                ),
+              },
+              {
+                label: 'Payment',
+                value: (
+                  <Text as="b">
+                    {refund.payment?.reference ?? refund.payment_id}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Provider',
+                value: <Text as="b">Flutterwave</Text>,
+              },
+            ]}
+          />
+        </Box>
+        <Box minW={0}>
+          <KeyValueList
+            title="Reservation"
+            items={[
+              {
+                label: 'Booking',
+                value: (
+                  <Text as="b">
+                    {reservation?.platform_id ?? refund.reservation_id}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Guest',
+                value: (
+                  <Text as="b">{reservation?.guest?.full_name ?? '—'}</Text>
+                ),
+              },
+              {
+                label: 'Property',
+                value: (
+                  <Text as="b">{reservation?.property?.name ?? '—'}</Text>
+                ),
+              },
+              {
+                label: 'Stay',
+                value: (
+                  <Text as="b">
+                    {reservation
+                      ? formatStayDates(
+                          reservation.arrival_date,
+                          reservation.departure_date,
+                        )
+                      : '—'}
+                  </Text>
+                ),
+              },
+            ]}
+          />
+        </Box>
+      </SimpleGrid>
 
       <Flex gap="8px" mt="12px" wrap="wrap">
         {needsAction ? (
