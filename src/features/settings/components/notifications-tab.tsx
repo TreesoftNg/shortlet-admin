@@ -1,13 +1,13 @@
 'use client';
 
-import { Box, Flex, Switch, Text } from '@chakra-ui/react';
+import { Flex, Switch } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useSettings } from '@/features/settings/hooks/use-settings';
 import { useUpdateSettings } from '@/features/settings/hooks/use-settings-mutations';
 import { formatSettingsUpdatedAt, settingsValuesMap } from '@/features/settings/utils/settings-helpers';
-import { ErrorState, PageSkeleton } from '@/shared/components/ui';
+import { ErrorState, FormPanel, FormRow, PageSkeleton } from '@/shared/components/ui';
 import type { TenantSettingItem } from '../types';
-import { SaveBar, Section, useSettingsToasts } from './settings-form-parts';
+import { SaveBar, useSettingsToasts } from './settings-form-parts';
 
 /** Which events email the tenant's staff. */
 export function NotificationsTab({ canManage }: { canManage: boolean }) {
@@ -30,6 +30,8 @@ export function NotificationsTab({ canManage }: { canManage: boolean }) {
     );
   }
 
+  const isDirty = JSON.stringify(settingsValuesMap(settings)) !== JSON.stringify(settingsValuesMap(data.settings));
+
   const save = async () => {
     try {
       const saved = await updateSettings.mutateAsync(settingsValuesMap(settings));
@@ -41,53 +43,42 @@ export function NotificationsTab({ canManage }: { canManage: boolean }) {
   };
 
   return (
-    <Flex direction="column" gap="28px">
-      <Section
+    <Flex direction="column" gap="20px">
+      <FormPanel
         title="Email alerts"
-        description={`Choose which events notify your staff by email. Last updated ${formatSettingsUpdatedAt(data.updatedAt)}.`}
+        description={`Choose which events email owners and admins. Last updated ${formatSettingsUpdatedAt(data.updatedAt)}.`}
       >
-        <Flex direction="column">
-          {settings.map((option) => (
-            <Flex
-              key={option.key}
-              justify="space-between"
-              align="center"
-              gap="16px"
-              py="12px"
-              borderBottom="1px solid"
-              borderColor="line.400"
-              _last={{ borderBottom: 0 }}
-            >
-              <Box minW={0}>
-                <Text fontWeight={600} fontSize="14px">
-                  {option.label}
-                </Text>
-                {option.description ? (
-                  <Text fontSize="12px" color="ink.300" mt="2px">
-                    {option.description}
-                  </Text>
-                ) : null}
-              </Box>
-              <Switch
-                colorScheme="green"
-                isChecked={option.value}
-                isDisabled={!canManage || updateSettings.isPending}
-                onChange={(event) =>
-                  setSettings((current) =>
-                    current
-                      ? current.map((item) =>
-                          item.key === option.key ? { ...item, value: event.target.checked } : item,
-                        )
-                      : current,
-                  )
-                }
-              />
-            </Flex>
-          ))}
-        </Flex>
-      </Section>
+        {settings.map((option) => (
+          <FormRow
+            key={option.key}
+            label={option.label}
+            labelFor={`alert-${option.key}`}
+            description={option.description ?? undefined}
+            isInline
+          >
+            <Switch
+              id={`alert-${option.key}`}
+              colorScheme="green"
+              isChecked={option.value}
+              isDisabled={!canManage || updateSettings.isPending}
+              onChange={(event) =>
+                setSettings((current) =>
+                  current
+                    ? current.map((item) => (item.key === option.key ? { ...item, value: event.target.checked } : item))
+                    : current,
+                )
+              }
+            />
+          </FormRow>
+        ))}
+      </FormPanel>
 
-      <SaveBar canManage={canManage} isSaving={updateSettings.isPending} onSave={() => void save()} />
+      <SaveBar
+        canManage={canManage}
+        isSaving={updateSettings.isPending}
+        isDirty={isDirty}
+        onSave={() => void save()}
+      />
     </Flex>
   );
 }

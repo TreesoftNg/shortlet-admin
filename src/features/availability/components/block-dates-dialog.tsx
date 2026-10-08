@@ -1,24 +1,30 @@
 'use client';
 
 import {
+  Box,
   Button,
+  Flex,
   FormControl,
   FormErrorMessage,
+  FormHelperText,
   FormLabel,
   Input,
   Select,
   SimpleGrid,
+  Stack,
   Text,
   Textarea,
   useToast,
 } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { BlockReasonPicker } from '@/features/calendar-sync/components/block-reason-picker';
+import type { BlockReason } from '@/features/calendar-sync/types';
 import {
-  BLOCK_REASON_LABELS,
+  countNights,
   describeBlockApiError,
+  formatStayDate,
   validateBlockInput,
 } from '@/features/calendar-sync/utils/calendar-sync-format';
-import type { BlockReason } from '@/features/calendar-sync/types';
 import { AppModal } from '@/shared/components/ui';
 import { useBlockNights } from '../hooks/use-availability-actions';
 import type { CalendarUnitRow, NightSelection } from '../types';
@@ -33,12 +39,14 @@ type BlockDatesDialogProps = {
   onBlocked?: () => void;
 };
 
-const REASONS = Object.keys(BLOCK_REASON_LABELS) as BlockReason[];
+const inputProps = { borderColor: 'line.500', borderRadius: '10px', bg: 'white', h: '40px', fontSize: '14px' } as const;
+const labelProps = { fontSize: '13px', fontWeight: 600, color: 'ink.500' } as const;
 
 /** Takes nights off sale on a unit; Hospitable closes them on Airbnb too. */
 export function BlockDatesDialog({ isOpen, onClose, units, today, initial, onBlocked }: BlockDatesDialogProps) {
   const toast = useToast();
   const block = useBlockNights();
+  const reasonLabelId = useId();
   const [unitId, setUnitId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -61,6 +69,7 @@ export function BlockDatesDialog({ isOpen, onClose, units, today, initial, onBlo
 
   const errors = validateBlockInput({ startDate, endDate, reason }, today);
   const hasErrors = Object.keys(errors).length > 0;
+  const nights = startDate && endDate && endDate > startDate ? countNights(startDate, endDate) : 0;
 
   const submit = async () => {
     setSubmitted(true);
@@ -83,58 +92,119 @@ export function BlockDatesDialog({ isOpen, onClose, units, today, initial, onBlo
       isOpen={isOpen}
       onClose={onClose}
       title="Block dates"
+      size="2xl"
       footer={
-        <>
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={() => void submit()} isLoading={block.isPending}>
-            Block nights
-          </Button>
-        </>
+        <Flex
+          w="100%"
+          gap="12px"
+          align={{ base: 'stretch', md: 'center' }}
+          justify="space-between"
+          direction={{ base: 'column', md: 'row' }}
+        >
+          <Text fontSize="13px" color="ink.400">
+            {nights > 0 ? (
+              <>
+                <Text as="span" fontWeight={700} color="ink.500">
+                  {nights} night{nights === 1 ? '' : 's'} blocked
+                </Text>{' '}
+                · {formatStayDate(startDate)} → {formatStayDate(endDate)}
+              </>
+            ) : (
+              'Pick the first night and the checkout day.'
+            )}
+          </Text>
+          <Flex gap="8px">
+            <Button variant="secondary" h="40px" borderRadius="10px" onClick={onClose} flex={{ base: 1, md: 'none' }}>
+              Cancel
+            </Button>
+            <Button
+              h="40px"
+              px="18px"
+              borderRadius="10px"
+              onClick={() => void submit()}
+              isLoading={block.isPending}
+              flex={{ base: 1, md: 'none' }}
+            >
+              Block nights
+            </Button>
+          </Flex>
+        </Flex>
       }
     >
-      <FormControl mb="14px">
-        <FormLabel>Unit</FormLabel>
-        <Select aria-label="Unit" value={unitId} onChange={(event) => setUnitId(event.target.value)}>
-          {units.map((unit) => (
-            <option key={unit.id} value={unit.id}>
-              {unit.propertyName ? `${unit.propertyName} · ${unit.name}` : unit.name}
-            </option>
-          ))}
-        </Select>
-      </FormControl>
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap="14px" mb="14px">
-        <FormControl isInvalid={submitted && Boolean(errors.startDate)}>
-          <FormLabel>First night</FormLabel>
-          <Input type="date" aria-label="First night" min={today} value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-          <FormErrorMessage>{errors.startDate}</FormErrorMessage>
-        </FormControl>
-        <FormControl isInvalid={submitted && Boolean(errors.endDate)}>
-          <FormLabel>Checkout day</FormLabel>
-          <Input type="date" aria-label="Checkout day" min={startDate || today} value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-          <FormErrorMessage>{errors.endDate}</FormErrorMessage>
-        </FormControl>
-      </SimpleGrid>
-      <FormControl mb="14px">
-        <FormLabel>Reason</FormLabel>
-        <Select aria-label="Reason" value={reason} onChange={(event) => setReason(event.target.value as BlockReason)}>
-          {REASONS.map((value) => (
-            <option key={value} value={value}>
-              {BLOCK_REASON_LABELS[value]}
-            </option>
-          ))}
-        </Select>
-      </FormControl>
-      <FormControl>
-        <FormLabel>Note (staff only)</FormLabel>
-        <Textarea aria-label="Note" maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} />
-      </FormControl>
-      {block.error ? (
-        <Text mt="12px" color="status.danger" fontSize="14px" role="alert">
-          {describeBlockApiError(block.error)}
+      <Stack spacing="18px">
+        <Text fontSize="14px" color="ink.400">
+          Guests can&apos;t book these nights. Hospitable closes them on Airbnb and Booking.com too.
         </Text>
-      ) : null}
+        <FormControl>
+          <FormLabel {...labelProps}>Unit</FormLabel>
+          <Select aria-label="Unit" value={unitId} onChange={(event) => setUnitId(event.target.value)} {...inputProps}>
+            {units.map((unit) => (
+              <option key={unit.id} value={unit.id}>
+                {unit.propertyName ? `${unit.propertyName} · ${unit.name}` : unit.name}
+              </option>
+            ))}
+          </Select>
+        </FormControl>
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap="14px">
+          <FormControl isInvalid={submitted && Boolean(errors.startDate)}>
+            <FormLabel {...labelProps}>First night</FormLabel>
+            <Input
+              type="date"
+              aria-label="First night"
+              min={today}
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+              {...inputProps}
+            />
+            <FormErrorMessage>{errors.startDate}</FormErrorMessage>
+          </FormControl>
+          <FormControl isInvalid={submitted && Boolean(errors.endDate)}>
+            <FormLabel {...labelProps}>Checkout day</FormLabel>
+            <Input
+              type="date"
+              aria-label="Checkout day"
+              min={startDate || today}
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+              {...inputProps}
+            />
+            <FormErrorMessage>{errors.endDate}</FormErrorMessage>
+          </FormControl>
+        </SimpleGrid>
+        <Box>
+          <Text id={reasonLabelId} {...labelProps} mb="8px">
+            Reason
+          </Text>
+          <BlockReasonPicker labelledBy={reasonLabelId} value={reason} onChange={setReason} />
+        </Box>
+        <FormControl>
+          <FormLabel {...labelProps}>
+            Note{' '}
+            <Text as="span" fontWeight={500} color="ink.300">
+              (optional, staff only)
+            </Text>
+          </FormLabel>
+          <Textarea
+            aria-label="Note"
+            maxLength={500}
+            placeholder="e.g. Deep clean and AC service"
+            minH="76px"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            borderColor="line.500"
+            borderRadius="10px"
+            fontSize="14px"
+          />
+          <FormHelperText textAlign="right" fontSize="12px" color="ink.300">
+            {note.length}/500
+          </FormHelperText>
+        </FormControl>
+        {block.error ? (
+          <Text color="status.danger" fontSize="14px" role="alert">
+            {describeBlockApiError(block.error)}
+          </Text>
+        ) : null}
+      </Stack>
     </AppModal>
   );
 }

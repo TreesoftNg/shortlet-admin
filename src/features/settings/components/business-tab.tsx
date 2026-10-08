@@ -1,8 +1,8 @@
 'use client';
 
-import { Flex, Input, Select, SimpleGrid, Textarea } from '@chakra-ui/react';
+import { Flex, Input, Select, Textarea } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { ErrorState, PageSkeleton } from '@/shared/components/ui';
+import { ErrorState, FormPanel, FormRow, PageSkeleton } from '@/shared/components/ui';
 import { useBusinessProfile, useUpdateBusinessProfile } from '../hooks/use-business-settings';
 import {
   choicesWith,
@@ -14,7 +14,9 @@ import {
   TIMEZONE_CHOICES,
   validateProfile,
 } from '../utils/settings-forms';
-import { apiFieldErrors, Field, inputProps, SaveBar, Section, useSettingsToasts } from './settings-form-parts';
+import { apiFieldErrors, controlProps, SaveBar, useSettingsToasts } from './settings-form-parts';
+
+const fieldId = (field: keyof ProfileFormValues) => `business-${field}`;
 
 /** Name, contact details, website, social links and defaults for new properties. */
 export function BusinessTab({ canManage }: { canManage: boolean }) {
@@ -29,7 +31,7 @@ export function BusinessTab({ canManage }: { canManage: boolean }) {
   }, [data]);
 
   if (isLoading) return <PageSkeleton variant="form" />;
-  if (isError || !values) {
+  if (isError || !values || !data) {
     return (
       <ErrorState
         message={error instanceof Error ? error.message : 'Failed to load the business profile'}
@@ -38,16 +40,32 @@ export function BusinessTab({ canManage }: { canManage: boolean }) {
     );
   }
 
+  const isDirty = JSON.stringify(values) !== JSON.stringify(profileToForm(data));
   const set = (field: keyof ProfileFormValues) => (event: { target: { value: string } }) =>
     setValues((current) => (current ? { ...current, [field]: event.target.value } : current));
-  const fieldProps = (field: keyof ProfileFormValues) => ({
-    ...inputProps,
+  const fieldProps = (field: keyof ProfileFormValues, label: string) => ({
+    ...controlProps,
+    id: fieldId(field),
+    'aria-label': label,
     value: values[field],
     onChange: set(field),
     isReadOnly: !canManage,
+    isInvalid: Boolean(errors[field]),
   });
   const timezones = choicesWith(TIMEZONE_CHOICES, values.defaultTimezone);
   const currencies = choicesWith(CURRENCY_CHOICES, values.defaultCurrency);
+
+  /** A row whose control is a text input. */
+  const textRow = (
+    field: keyof ProfileFormValues,
+    label: string,
+    description: string,
+    input: { type?: string; placeholder?: string; maxLength?: number } = {},
+  ) => (
+    <FormRow label={label} labelFor={fieldId(field)} description={description} error={errors[field]}>
+      <Input {...fieldProps(field, label)} {...input} />
+    </FormRow>
+  );
 
   const save = async () => {
     const found = validateProfile(values);
@@ -67,100 +85,89 @@ export function BusinessTab({ canManage }: { canManage: boolean }) {
   };
 
   return (
-    <Flex direction="column" gap="28px">
-      <Section title="Business">
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap="16px">
-          <Field label="Business name" error={errors.name} isRequired>
-            <Input aria-label="Business name" maxLength={150} {...fieldProps('name')} />
-          </Field>
-          <Field label="Address" error={errors.address}>
-            <Input aria-label="Address" maxLength={500} {...fieldProps('address')} />
-          </Field>
-        </SimpleGrid>
-      </Section>
+    <Flex direction="column" gap="20px">
+      <FormPanel title="Business details" description="How guests see your business in emails and on the booking site.">
+        {textRow('name', 'Business name', 'Shown on booking emails and receipts.', { maxLength: 150 })}
+        {textRow('address', 'Address', 'Printed at the bottom of guest emails.', { maxLength: 500 })}
+      </FormPanel>
 
-      <Section
-        title="Contact"
-        description="Guests reply to the support email. The phone is shown on confirmations when a property has no manager contact."
-      >
-        <SimpleGrid columns={{ base: 1, md: 3 }} gap="16px">
-          <Field label="Support email" error={errors.supportEmail}>
-            <Input aria-label="Support email" type="email" {...fieldProps('supportEmail')} />
-          </Field>
-          <Field label="Support phone" error={errors.supportPhone}>
-            <Input aria-label="Support phone" {...fieldProps('supportPhone')} />
-          </Field>
-          <Field label="WhatsApp" error={errors.whatsappPhone}>
-            <Input aria-label="WhatsApp" {...fieldProps('whatsappPhone')} />
-          </Field>
-        </SimpleGrid>
-      </Section>
+      <FormPanel title="Contact" description="How guests reach you about a booking.">
+        {textRow('supportEmail', 'Support email', 'Guests who reply to a booking email write to this address.', {
+          type: 'email',
+          placeholder: 'hello@yourbusiness.com',
+        })}
+        {textRow('supportPhone', 'Support phone', "Shown on confirmations when a property has no manager's number.", {
+          placeholder: '+234 …',
+        })}
+        {textRow('whatsappPhone', 'WhatsApp', 'Used when there is no support phone.', { placeholder: '+234 …' })}
+      </FormPanel>
 
-      <Section title="Website and social">
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap="16px">
-          <Field label="Booking website" error={errors.websiteUrl} helper="Links in booking emails open here.">
-            <Input aria-label="Booking website" placeholder="https://" {...fieldProps('websiteUrl')} />
-          </Field>
-          <Field label="Instagram" error={errors.instagramUrl}>
-            <Input aria-label="Instagram" placeholder="https://instagram.com/…" {...fieldProps('instagramUrl')} />
-          </Field>
-          <Field label="Facebook" error={errors.facebookUrl}>
-            <Input aria-label="Facebook" placeholder="https://facebook.com/…" {...fieldProps('facebookUrl')} />
-          </Field>
-          <Field label="TikTok" error={errors.tiktokUrl}>
-            <Input aria-label="TikTok" placeholder="https://tiktok.com/@…" {...fieldProps('tiktokUrl')} />
-          </Field>
-          <Field label="X (Twitter)" error={errors.xUrl}>
-            <Input aria-label="X (Twitter)" placeholder="https://x.com/…" {...fieldProps('xUrl')} />
-          </Field>
-        </SimpleGrid>
-      </Section>
+      <FormPanel title="Website and social">
+        {textRow('websiteUrl', 'Booking website', 'Links in booking emails open here.', { placeholder: 'https://' })}
+        {textRow('instagramUrl', 'Instagram', 'Full link to your profile.', { placeholder: 'https://instagram.com/…' })}
+        {textRow('facebookUrl', 'Facebook', 'Full link to your page.', { placeholder: 'https://facebook.com/…' })}
+        {textRow('tiktokUrl', 'TikTok', 'Full link to your profile.', { placeholder: 'https://tiktok.com/@…' })}
+        {textRow('xUrl', 'X (Twitter)', 'Full link to your profile.', { placeholder: 'https://x.com/…' })}
+      </FormPanel>
 
-      <Section
+      <FormPanel
         title="Defaults for new properties"
-        description="New properties start with these; each property can still change them."
+        description="New properties start with these. Each property can still change them."
       >
-        <SimpleGrid columns={{ base: 1, md: 4 }} gap="16px" mb="16px">
-          <Field label="Currency" error={errors.defaultCurrency}>
-            <Select aria-label="Currency" {...fieldProps('defaultCurrency')} isDisabled={!canManage}>
-              {currencies.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Time zone" error={errors.defaultTimezone}>
-            <Select aria-label="Time zone" {...fieldProps('defaultTimezone')} isDisabled={!canManage}>
-              {timezones.map((zone) => (
-                <option key={zone} value={zone}>
-                  {zone}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Check-in from" error={errors.defaultCheckInTime}>
-            <Input aria-label="Check-in from" type="time" {...fieldProps('defaultCheckInTime')} />
-          </Field>
-          <Field label="Check-out by" error={errors.defaultCheckOutTime}>
-            <Input aria-label="Check-out by" type="time" {...fieldProps('defaultCheckOutTime')} />
-          </Field>
-        </SimpleGrid>
-        <Field label="House rules" error={errors.defaultHouseRules} helper="Guests agree to these before paying.">
+        <FormRow
+          label="Currency"
+          labelFor={fieldId('defaultCurrency')}
+          description="Prices and payments use this currency."
+          error={errors.defaultCurrency}
+        >
+          <Select {...fieldProps('defaultCurrency', 'Currency')} isDisabled={!canManage}>
+            {currencies.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </Select>
+        </FormRow>
+        <FormRow
+          label="Time zone"
+          labelFor={fieldId('defaultTimezone')}
+          description="Check-in and check-out times are in this time zone."
+          error={errors.defaultTimezone}
+        >
+          <Select {...fieldProps('defaultTimezone', 'Time zone')} isDisabled={!canManage}>
+            {timezones.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+          </Select>
+        </FormRow>
+        {textRow('defaultCheckInTime', 'Check-in from', 'Earliest time guests can arrive.', { type: 'time' })}
+        {textRow('defaultCheckOutTime', 'Check-out by', 'Latest time guests must leave.', { type: 'time' })}
+        <FormRow
+          label="House rules"
+          labelFor={fieldId('defaultHouseRules')}
+          description="Guests agree to these before paying. One rule per line."
+          error={errors.defaultHouseRules}
+          isStacked
+        >
           <Textarea
+            id={fieldId('defaultHouseRules')}
             aria-label="House rules"
             borderColor="line.500"
-            borderRadius="12px"
-            minH="140px"
+            borderRadius="10px"
+            fontSize="14px"
+            minH="150px"
             maxLength={5000}
             value={values.defaultHouseRules}
             onChange={set('defaultHouseRules')}
             isReadOnly={!canManage}
+            isInvalid={Boolean(errors.defaultHouseRules)}
           />
-        </Field>
-      </Section>
+        </FormRow>
+      </FormPanel>
 
-      <SaveBar canManage={canManage} isSaving={update.isPending} onSave={() => void save()} />
+      <SaveBar canManage={canManage} isSaving={update.isPending} isDirty={isDirty} onSave={() => void save()} />
     </Flex>
   );
 }

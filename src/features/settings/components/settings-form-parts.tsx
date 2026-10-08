@@ -1,104 +1,127 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Flex,
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
-  Text,
-  useToast,
-} from '@chakra-ui/react';
-import type { ReactNode } from 'react';
+import { Button, Flex, Input, InputGroup, InputRightAddon, Text, useToast } from '@chakra-ui/react';
+import type { ChangeEvent } from 'react';
 import { ApiClientError } from '@/shared/api/types';
 
-export const inputProps = {
+/** Inputs and selects shown on the right of a settings row. */
+export const controlProps = {
   borderColor: 'line.500',
-  borderRadius: '12px',
-  h: '44px',
+  borderRadius: '10px',
+  h: '40px',
   bg: 'white',
+  fontSize: '14px',
+  w: { base: '100%', md: '320px' },
+  flexShrink: 0,
 } as const;
 
-export function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <Box>
-      <Text
-        fontSize="12px"
-        fontWeight={800}
-        textTransform="uppercase"
-        letterSpacing="0.05em"
-        color="ink.300"
-        mb={description ? '4px' : '12px'}
-      >
-        {title}
-      </Text>
-      {description ? (
-        <Text fontSize="13px" color="ink.300" mb="12px">
-          {description}
-        </Text>
-      ) : null}
-      {children}
-    </Box>
-  );
-}
-
-export function Field({
+/** A number with its unit inside the field, e.g. "15 | minutes". */
+export function UnitInput({
+  id,
   label,
-  children,
-  error,
-  helper,
-  isRequired,
+  unit,
+  value,
+  min,
+  max,
+  step = 1,
+  isInvalid,
+  isReadOnly,
+  onChange,
 }: {
+  id: string;
   label: string;
-  children: ReactNode;
-  error?: string;
-  helper?: string;
-  isRequired?: boolean;
+  unit: string;
+  value: string;
+  min: number;
+  max: number;
+  step?: number | string;
+  isInvalid?: boolean;
+  isReadOnly?: boolean;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <FormControl isInvalid={Boolean(error)} isRequired={isRequired}>
-      <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
-        {label}
-      </FormLabel>
-      {children}
-      {helper && !error ? <FormHelperText color="ink.300">{helper}</FormHelperText> : null}
-      {error ? <FormErrorMessage>{error}</FormErrorMessage> : null}
-    </FormControl>
+    <InputGroup w={{ base: '100%', md: '168px' }} flexShrink={0}>
+      <Input
+        id={id}
+        aria-label={label}
+        type="number"
+        inputMode="decimal"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={onChange}
+        isReadOnly={isReadOnly}
+        isInvalid={isInvalid}
+        h="40px"
+        fontSize="14px"
+        borderColor="line.500"
+        borderRadius="10px"
+        bg="white"
+      />
+      <InputRightAddon
+        h="40px"
+        minW="72px"
+        justifyContent="center"
+        borderColor="line.500"
+        borderLeftWidth={0}
+        borderRadius="0 10px 10px 0"
+        bg="bg.400"
+        color="ink.300"
+        fontSize="13px"
+      >
+        {unit}
+      </InputRightAddon>
+    </InputGroup>
   );
 }
 
-/** Save button for a settings tab; hidden for staff who cannot change settings. */
+/** Bottom bar of a settings tab: save state on the left, Save on the right. */
 export function SaveBar({
   canManage,
   isSaving,
+  isDirty,
   onSave,
 }: {
   canManage: boolean;
   isSaving: boolean;
+  isDirty: boolean;
   onSave: () => void;
 }) {
-  if (!canManage) {
-    return (
-      <Text fontSize="13px" color="ink.300">
-        Only owners and admins can change these settings.
-      </Text>
-    );
-  }
+  const highlight = canManage && isDirty;
   return (
-    <Flex>
-      <Button variant="dark" borderRadius="12px" h="40px" isLoading={isSaving} onClick={onSave}>
-        Save changes
-      </Button>
+    <Flex
+      align={{ base: 'stretch', md: 'center' }}
+      justify="space-between"
+      direction={{ base: 'column', md: 'row' }}
+      gap="12px"
+      px="18px"
+      py="12px"
+      border="1px solid"
+      borderColor="line.500"
+      borderRadius="14px"
+      bg="bg.400"
+    >
+      <Text fontSize="13px" color={highlight ? 'ink.500' : 'ink.300'} fontWeight={highlight ? 600 : 400}>
+        {!canManage
+          ? 'Only owners and admins can change these settings.'
+          : isDirty
+            ? 'You have unsaved changes.'
+            : 'All changes saved.'}
+      </Text>
+      {canManage ? (
+        <Button
+          variant="dark"
+          h="40px"
+          px="18px"
+          borderRadius="10px"
+          w={{ base: '100%', md: 'auto' }}
+          isLoading={isSaving}
+          onClick={onSave}
+        >
+          Save changes
+        </Button>
+      ) : null}
     </Flex>
   );
 }

@@ -99,6 +99,13 @@ describe('Business tab', () => {
     expect(await screen.findByText('Settings saved')).toBeInTheDocument();
   });
 
+  it('shows when there are unsaved changes', async () => {
+    renderAs('business');
+    expect(await screen.findByText('All changes saved.')).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Address'), '1 Test Close');
+    expect(screen.getByText('You have unsaved changes.')).toBeInTheDocument();
+  });
+
   it('shows validation errors and does not save', async () => {
     renderAs('business');
     await userEvent.type(await screen.findByLabelText('Support email'), 'nope');

@@ -129,6 +129,61 @@ export const theme = extendTheme({
         variant: 'secondary',
       },
     },
+    FormLabel: {
+      baseStyle: {
+        fontSize: '13px',
+        fontWeight: 600,
+        color: 'ink.500',
+        mb: '6px',
+      },
+    },
+    Input: {
+      sizes: {
+        md: {
+          field: { h: '40px', fontSize: '14px', px: '12px', borderRadius: '10px' },
+          addon: { h: '40px', fontSize: '13px', borderRadius: '10px' },
+        },
+      },
+      variants: {
+        outline: {
+          field: {
+            bg: 'white',
+            borderColor: 'line.500',
+            _hover: { borderColor: 'ink.300' },
+            _focusVisible: { borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' },
+          },
+          addon: { bg: 'bg.400', borderColor: 'line.500', color: 'ink.300' },
+        },
+      },
+    },
+    Select: {
+      sizes: {
+        md: { field: { h: '40px', fontSize: '14px', borderRadius: '10px' } },
+      },
+      variants: {
+        outline: {
+          field: {
+            bg: 'white',
+            borderColor: 'line.500',
+            _hover: { borderColor: 'ink.300' },
+            _focusVisible: { borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' },
+          },
+        },
+      },
+    },
+    Textarea: {
+      sizes: {
+        md: { fontSize: '14px', px: '12px', borderRadius: '10px' },
+      },
+      variants: {
+        outline: {
+          bg: 'white',
+          borderColor: 'line.500',
+          _hover: { borderColor: 'ink.300' },
+          _focusVisible: { borderColor: 'brand.500', boxShadow: '0 0 0 1px var(--chakra-colors-brand-500)' },
+        },
+      },
+    },
     Badge: {
       baseStyle: {
         borderRadius: 'full',

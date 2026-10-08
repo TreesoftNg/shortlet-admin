@@ -95,7 +95,7 @@ export function AppModal({
             borderTop="1px solid"
             borderColor="line.500"
             gap="10px"
-            justifyContent="flex-start"
+            justifyContent="flex-end"
             flexShrink={0}
             px={{ base: '16px', md: '28px' }}
             py={{ base: '14px', md: '16px' }}
