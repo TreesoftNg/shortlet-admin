@@ -1,45 +1,22 @@
-import {
-  formatChannelLabel,
-  formatOccupancy,
-  formatShare,
-  getFinanceCards,
-  getPropertyPerformanceTotals,
-  getSliceForPeriod,
-} from './report-formatters';
-import { mockReportsSummary } from '@/mocks/data/reports';
+import { getFinanceRows, getPropertyPerformanceTotals } from './report-formatters';
 
-describe('report-formatters', () => {
-  const slice = mockReportsSummary.by_period['30d'];
-
-  it('formats occupancy and share', () => {
-    expect(formatOccupancy(78)).toBe('78%');
-    expect(formatShare(61)).toBe('61%');
+describe('report formatters', () => {
+  it('adds up property rows', () => {
+    expect(
+      getPropertyPerformanceTotals([
+        { propertyId: 'a', propertyName: 'A', revenue: 100, bookings: 2, nights: 5, occupancyPercent: 10, avgNightlyRate: 20 },
+        { propertyId: 'b', propertyName: 'B', revenue: 50, bookings: 1, nights: 3, occupancyPercent: 5, avgNightlyRate: 17 },
+      ]),
+    ).toEqual({ revenue: 150, bookings: 3, nights: 8 });
   });
 
-  it('labels channels', () => {
-    expect(formatChannelLabel('direct')).toBe('Direct');
-    expect(formatChannelLabel('airbnb')).toBe('Airbnb');
-  });
-
-  it('sums property performance', () => {
-    const totals = getPropertyPerformanceTotals(slice.property_performance);
-    expect(totals.bookings).toBeGreaterThan(0);
-    expect(totals.revenue).toBeGreaterThan(0);
-  });
-
-  it('builds finance cards', () => {
-    const cards = getFinanceCards(slice.finance);
-    expect(cards.map((item) => item.id)).toEqual([
-      'gross',
-      'refunds',
-      'net',
-      'pending',
+  it('formats the finance summary in the business currency', () => {
+    const rows = getFinanceRows({ grossRevenue: 950000, stayRefunds: 50000, netRevenue: 900000, pendingRefunds: 0 }, 'NGN');
+    expect(rows.map((row) => [row.label, row.value])).toEqual([
+      ['Gross revenue', '₦950,000'],
+      ['Stay refunds', '₦50,000'],
+      ['Net revenue', '₦900,000'],
+      ['Pending refunds', '₦0'],
     ]);
-    expect(cards[2].label).toBe('Net revenue');
-  });
-
-  it('resolves period slices', () => {
-    expect(getSliceForPeriod(mockReportsSummary.by_period, '7d')).not.toBeNull();
-    expect(getSliceForPeriod(mockReportsSummary.by_period, 'bad')).toBeNull();
   });
 });

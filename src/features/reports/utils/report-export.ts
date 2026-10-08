@@ -1,34 +1,13 @@
-import type { PropertyPerformanceRow } from '@/shared/types/hospitable';
 import type { CsvColumn } from '@/shared/utils/export-csv';
+import type { PropertyPerformance } from '../types';
 
-export const reportPropertyExportColumns: CsvColumn<PropertyPerformanceRow>[] =
-  [
-    {
-      header: 'Property',
-      accessor: (row) => row.property_name,
-    },
-    {
-      header: 'Revenue',
-      accessor: (row) => row.revenue,
-    },
-    {
-      header: 'Currency',
-      accessor: (row) => row.currency,
-    },
-    {
-      header: 'Bookings',
-      accessor: (row) => row.bookings,
-    },
-    {
-      header: 'Occupancy %',
-      accessor: (row) => row.occupancy_percent,
-    },
-    {
-      header: 'Avg nightly rate',
-      accessor: (row) => row.avg_nightly_rate,
-    },
-    {
-      header: 'Nights booked',
-      accessor: (row) => row.nights_booked,
-    },
+export function propertyPerformanceExportColumns(currency: string): CsvColumn<PropertyPerformance>[] {
+  return [
+    { header: 'Property', accessor: (row) => row.propertyName },
+    { header: `Revenue (${currency})`, accessor: (row) => row.revenue },
+    { header: 'Bookings', accessor: (row) => row.bookings },
+    { header: 'Nights', accessor: (row) => row.nights },
+    { header: 'Occupancy %', accessor: (row) => row.occupancyPercent },
+    { header: `Avg nightly rate (${currency})`, accessor: (row) => row.avgNightlyRate },
   ];
+}

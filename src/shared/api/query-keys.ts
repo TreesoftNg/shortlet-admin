@@ -12,7 +12,7 @@ export const queryKeys = {
   },
   dashboard: {
     all: ['dashboard'] as const,
-    summary: (period?: string) => ['dashboard', 'summary', period ?? '30d'] as const,
+    summary: (period: string) => ['dashboard', 'summary', period] as const,
   },
   bookings: {
     all: ['bookings'] as const,
@@ -81,7 +81,7 @@ export const queryKeys = {
   },
   reports: {
     all: ['reports'] as const,
-    summary: () => ['reports', 'summary'] as const,
+    summary: (period: string) => ['reports', 'summary', period] as const,
   },
   staff: {
     all: ['staff'] as const,

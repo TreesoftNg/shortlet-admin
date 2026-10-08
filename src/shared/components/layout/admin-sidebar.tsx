@@ -53,7 +53,7 @@ type NavSection = {
 const navSections: NavSection[] = [
   {
     items: [
-      { label: 'Dashboard', href: '/', icon: LuLayoutDashboard, demo: true },
+      { label: 'Dashboard', href: '/', icon: LuLayoutDashboard },
       { label: 'Bookings', href: '/bookings', icon: LuCalendarCheck },
       { label: 'Availability', href: '/availability', icon: LuCalendarDays },
       { label: 'Properties', href: '/properties', icon: LuBuilding2 },
@@ -72,7 +72,7 @@ const navSections: NavSection[] = [
     title: 'Finance',
     items: [
       { label: 'Payments', href: '/payments', icon: LuWallet },
-      { label: 'Reports', href: '/reports', icon: LuChartBar, demo: true },
+      { label: 'Reports', href: '/reports', icon: LuChartBar },
     ],
   },
   {

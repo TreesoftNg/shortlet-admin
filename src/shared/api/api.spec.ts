@@ -26,14 +26,6 @@ describe('api envelope helpers', () => {
 });
 
 describe('mockApi', () => {
-  it('returns dashboard summary in success envelope', async () => {
-    const response = await mockApi.getDashboardSummary();
-    expect(response.success).toBe(true);
-    expect(response.data.kpis).toHaveLength(4);
-    expect(response.data.revenue_overview.series['30d'].length).toBeGreaterThan(0);
-    expect(response.data.recent_reservations.length).toBeGreaterThan(0);
-  });
-
   it('returns reservations with pagination meta', async () => {
     const response = await mockApi.getReservations();
     expect(response.success).toBe(true);

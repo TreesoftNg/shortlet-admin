@@ -1,7 +1,8 @@
-import { mockApi } from '@/mocks/api';
+import { apiClient } from '@/shared/api/client';
+import { adminPath } from '@/shared/api/paths';
+import type { DashboardData, ReportPeriod } from '../types';
 
-// Local mock data until this feature is connected to the Shortlet API.
-
-export function fetchDashboardSummary() {
-  return mockApi.getDashboardSummary();
+/** GET /cc/dashboard?period= */
+export async function fetchDashboard(period: ReportPeriod): Promise<DashboardData> {
+  return (await apiClient<DashboardData>(adminPath(`/dashboard?period=${period}`))).data;
 }

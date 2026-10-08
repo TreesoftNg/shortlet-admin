@@ -1,5 +1,4 @@
 import {
-  mockDashboardSummary,
   mockGuests,
   mockProperties,
   mockReservations,
@@ -18,7 +17,6 @@ import {
   buildRefundList,
   type RefundListItem,
 } from '@/mocks/data/refunds';
-import { mockReportsSummary } from '@/mocks/data/reports';
 import { mockReviews } from '@/mocks/data/reviews';
 import { mockStaff } from '@/mocks/data/staff';
 import {
@@ -39,11 +37,9 @@ import { delay, ok } from '@/mocks/utils';
 import type { Customer } from '@/features/customers/types';
 import type { ApiSuccessResponse } from '@/shared/api/types';
 import type {
-  DashboardSummary,
   Guest,
   Message,
   Property,
-  ReportsSummary,
   Reservation,
   Review,
   StaffMember,
@@ -63,10 +59,6 @@ function nextUnitId(): string {
 }
 
 export const mockApi = {
-  async getDashboardSummary(): Promise<ApiSuccessResponse<DashboardSummary>> {
-    await delay();
-    return ok(mockDashboardSummary);
-  },
 
   async getReservations(): Promise<ApiSuccessResponse<Reservation[]>> {
     await delay();
@@ -379,10 +371,6 @@ export const mockApi = {
     });
   },
 
-  async getReports(): Promise<ApiSuccessResponse<ReportsSummary>> {
-    await delay();
-    return ok(mockReportsSummary, 'Reports retrieved');
-  },
 
   async getStaff(): Promise<ApiSuccessResponse<StaffMember[]>> {
     await delay();

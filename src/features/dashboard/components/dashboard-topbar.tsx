@@ -1,24 +1,18 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Flex,
-  IconButton,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Text,
-} from '@chakra-ui/react';
-import { LuBell, LuCalendar, LuMenu, LuPlus, LuSearch } from 'react-icons/lu';
+import { Box, Flex, IconButton, Text } from '@chakra-ui/react';
+import type { ReactNode } from 'react';
+import { LuMenu } from 'react-icons/lu';
 import { useUiStore } from '@/shared/store/ui-store';
+import { greetingFor } from '../utils/report-format';
 
 type DashboardTopbarProps = {
-  greetingName: string;
-  periodLabel: string;
+  firstName: string | null;
+  subtitle: string;
+  actions?: ReactNode;
 };
 
-export function DashboardTopbar({ greetingName, periodLabel }: DashboardTopbarProps) {
+export function DashboardTopbar({ firstName, subtitle, actions }: DashboardTopbarProps) {
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
   return (
@@ -39,20 +33,16 @@ export function DashboardTopbar({ greetingName, periodLabel }: DashboardTopbarPr
           onClick={openMobileNav}
         />
         <Box>
-          <Text
-            as="h1"
-            fontSize={{ base: '22px', md: '26px' }}
-            fontWeight={800}
-            letterSpacing="-0.02em"
-            lineHeight="1.2"
-          >
-            Good morning, {greetingName} 👋
+          <Text as="h1" fontSize={{ base: '22px', md: '26px' }} fontWeight={800} letterSpacing="-0.02em" lineHeight="1.2">
+            {greetingFor()}
+            {firstName ? `, ${firstName}` : ''}
           </Text>
           <Text color="ink.400" fontSize="14px" mt="4px">
-            Here&apos;s what&apos;s happening across your properties today.
+            {subtitle}
           </Text>
         </Box>
       </Flex>
+      {actions ? <Flex align="center">{actions}</Flex> : null}
     </Flex>
   );
 }
