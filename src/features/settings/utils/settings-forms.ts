@@ -188,12 +188,27 @@ export function formToRules(values: RulesFormValues): BookingRules {
   return Object.fromEntries(Object.entries(values).map(([key, value]) => [key, Number(value)])) as BookingRules;
 }
 
-const nights = (count: number) => `${count} ${count === 1 ? 'night' : 'nights'}`;
+/** The two switches on the deposit section, worked out from saved rules. */
+export type DepositSwitches = { chargeDeposit: boolean; longStayDeposit: boolean };
 
-/** e.g. "1 night at the base rate, or 2 nights for stays of 15+ nights". */
-export function describeDepositRule(rules: Pick<BookingRules, 'depositNights' | 'longStayDepositNights' | 'longStayMinNights'>): string {
-  const usual = rules.depositNights === 0 ? 'No deposit' : `${nights(rules.depositNights)} at the base rate`;
-  if (rules.longStayDepositNights === rules.depositNights) return usual;
-  const long = rules.longStayDepositNights === 0 ? 'no deposit' : nights(rules.longStayDepositNights);
-  return `${usual}, or ${long} for stays of ${rules.longStayMinNights}+ nights`;
+export function depositSwitches(rules: BookingRules): DepositSwitches {
+  return {
+    chargeDeposit: rules.depositNights > 0 || rules.longStayDepositNights > 0,
+    longStayDeposit: rules.longStayDepositNights !== rules.depositNights,
+  };
+}
+
+/**
+ * The form values to save once the switches are applied: no deposit clears both
+ * deposits, and without a long-stay deposit long stays pay the usual one.
+ */
+export function applyDepositSwitches(values: RulesFormValues, switches: DepositSwitches): RulesFormValues {
+  if (!switches.chargeDeposit) return { ...values, depositNights: '0', longStayDepositNights: '0' };
+  if (!switches.longStayDeposit) return { ...values, longStayDepositNights: values.depositNights };
+  return values;
+}
+
+/** Stay lengths for the deposit example: a short stay and the first long one. */
+export function depositExampleStays(rules: Pick<BookingRules, 'longStayMinNights'>): { short: number; long: number } {
+  return { short: Math.max(1, Math.min(3, rules.longStayMinNights - 1)), long: rules.longStayMinNights };
 }

@@ -1,7 +1,9 @@
 import { bookingSettings, businessProfile } from '../test-fixtures';
 import {
+  applyDepositSwitches,
   choicesWith,
-  describeDepositRule,
+  depositExampleStays,
+  depositSwitches,
   formToProfileInput,
   formToRules,
   pricingExample,
@@ -91,23 +93,45 @@ describe('booking rules form', () => {
       depositNights: 'Enter a whole number from 0 to 7.',
     });
   });
-
-  it('describes the deposit rule', () => {
-    expect(describeDepositRule({ depositNights: 1, longStayDepositNights: 2, longStayMinNights: 15 })).toBe(
-      '1 night at the base rate, or 2 nights for stays of 15+ nights',
-    );
-    expect(describeDepositRule({ depositNights: 2, longStayDepositNights: 2, longStayMinNights: 15 })).toBe(
-      '2 nights at the base rate',
-    );
-    expect(describeDepositRule({ depositNights: 0, longStayDepositNights: 1, longStayMinNights: 30 })).toBe(
-      'No deposit, or 1 night for stays of 30+ nights',
-    );
-  });
 });
 
 describe('choicesWith', () => {
   it('keeps a saved value that is not in the list', () => {
     expect(choicesWith(['NGN', 'USD'], 'NGN')).toEqual(['NGN', 'USD']);
     expect(choicesWith(['NGN', 'USD'], 'XOF')).toEqual(['XOF', 'NGN', 'USD']);
+  });
+});
+
+describe('deposit switches', () => {
+  const rules = bookingSettings();
+
+  it('reads the switches from saved rules', () => {
+    expect(depositSwitches(rules)).toEqual({ chargeDeposit: true, longStayDeposit: true });
+    expect(depositSwitches({ ...rules, longStayDepositNights: 1 })).toEqual({ chargeDeposit: true, longStayDeposit: false });
+    expect(depositSwitches({ ...rules, depositNights: 0, longStayDepositNights: 0 })).toEqual({
+      chargeDeposit: false,
+      longStayDeposit: false,
+    });
+    expect(depositSwitches({ ...rules, depositNights: 0 }).chargeDeposit).toBe(true);
+  });
+
+  it('applies the switches to the values to save', () => {
+    const values = rulesToForm(rules);
+    expect(applyDepositSwitches(values, { chargeDeposit: true, longStayDeposit: true })).toBe(values);
+    expect(applyDepositSwitches(values, { chargeDeposit: true, longStayDeposit: false })).toMatchObject({
+      depositNights: '1',
+      longStayDepositNights: '1',
+    });
+    expect(applyDepositSwitches(values, { chargeDeposit: false, longStayDeposit: true })).toMatchObject({
+      depositNights: '0',
+      longStayDepositNights: '0',
+      longStayMinNights: '15',
+    });
+  });
+
+  it('picks example stay lengths around the long-stay threshold', () => {
+    expect(depositExampleStays({ longStayMinNights: 15 })).toEqual({ short: 3, long: 15 });
+    expect(depositExampleStays({ longStayMinNights: 3 })).toEqual({ short: 2, long: 3 });
+    expect(depositExampleStays({ longStayMinNights: 2 })).toEqual({ short: 1, long: 2 });
   });
 });

@@ -161,20 +161,26 @@ describe('Pricing tab', () => {
 });
 
 describe('Bookings & deposits tab', () => {
-  it('describes the deposit rule and saves new rules', async () => {
+  it('shows the rules as sentences with a worked deposit example', async () => {
     renderAs('bookings');
-    expect(await screen.findByTestId('deposit-rule')).toHaveTextContent(
-      '1 night at the base rate, or 2 nights for stays of 15+ nights.',
-    );
+    expect(await screen.findByLabelText('Website payment hold (minutes)')).toHaveValue(15);
     expect(screen.getByText(/Changes apply to new bookings only/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Charge a security deposit')).toBeChecked();
+    expect(screen.getByLabelText('Different deposit for long stays')).toBeChecked();
+    const example = screen.getByTestId('deposit-example');
+    expect(example).toHaveTextContent('3-night stay ₦50,000 deposit');
+    expect(example).toHaveTextContent('15-night stay ₦100,000 deposit');
+  });
 
-    const deposit = screen.getByLabelText('Deposit (nights)');
+  it('saves new rules and updates the example as you type', async () => {
+    renderAs('bookings');
+    const deposit = await screen.findByLabelText('Deposit (nights)');
     await userEvent.clear(deposit);
     await userEvent.type(deposit, '2');
     const hold = screen.getByLabelText('Website payment hold (minutes)');
     await userEvent.clear(hold);
     await userEvent.type(hold, '30');
-    expect(screen.getByTestId('deposit-rule')).toHaveTextContent('2 nights at the base rate.');
+    expect(screen.getByTestId('deposit-example')).toHaveTextContent('3-night stay ₦100,000 deposit');
     await userEvent.click(saveButton());
 
     await waitFor(() =>
@@ -189,6 +195,39 @@ describe('Bookings & deposits tab', () => {
     );
   });
 
+  it('turning off the long-stay deposit makes long stays pay the usual deposit', async () => {
+    renderAs('bookings');
+    await userEvent.click(await screen.findByLabelText('Different deposit for long stays'));
+    expect(screen.queryByLabelText('Long stays from (nights)')).not.toBeInTheDocument();
+    expect(screen.getByTestId('deposit-example')).not.toHaveTextContent('15-night');
+    await userEvent.click(saveButton());
+    await waitFor(() =>
+      expect(business.updateBookingSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ depositNights: 1, longStayDepositNights: 1, longStayMinNights: 15 }),
+      ),
+    );
+  });
+
+  it('turning off the deposit saves no deposit and hides the deposit rules', async () => {
+    renderAs('bookings');
+    await userEvent.click(await screen.findByLabelText('Charge a security deposit'));
+    expect(screen.queryByLabelText('Deposit (nights)')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('deposit-example')).not.toBeInTheDocument();
+    await userEvent.click(saveButton());
+    await waitFor(() =>
+      expect(business.updateBookingSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ depositNights: 0, longStayDepositNights: 0 }),
+      ),
+    );
+  });
+
+  it('opens with the deposit off when none is charged', async () => {
+    business.fetchBookingSettings.mockResolvedValue(bookingSettings({ depositNights: 0, longStayDepositNights: 0 }));
+    renderAs('bookings');
+    expect(await screen.findByLabelText('Charge a security deposit')).not.toBeChecked();
+    expect(screen.queryByLabelText('Deposit (nights)')).not.toBeInTheDocument();
+  });
+
   it('rejects values outside the limits', async () => {
     renderAs('bookings');
     const linkHold = await screen.findByLabelText('Payment link hold (hours)');
@@ -197,6 +236,13 @@ describe('Bookings & deposits tab', () => {
     await userEvent.click(saveButton());
     expect(await screen.findByText('Enter a whole number from 1 to 24.')).toBeInTheDocument();
     expect(business.updateBookingSettings).not.toHaveBeenCalled();
+  });
+
+  it('is read-only without settings.manage', async () => {
+    renderAs('bookings', []);
+    expect(await screen.findByLabelText('Deposit (nights)')).toHaveAttribute('readonly');
+    expect(screen.getByLabelText('Charge a security deposit')).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Save changes' })).not.toBeInTheDocument();
   });
 });
 
