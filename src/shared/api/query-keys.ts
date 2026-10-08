@@ -90,5 +90,9 @@ export const queryKeys = {
   settings: {
     all: ['settings'] as const,
     detail: () => ['settings', 'detail'] as const,
+    profile: () => ['settings', 'profile'] as const,
+    pricing: () => ['settings', 'pricing'] as const,
+    booking: () => ['settings', 'booking'] as const,
+    payments: () => ['settings', 'payments'] as const,
   },
 } as const;

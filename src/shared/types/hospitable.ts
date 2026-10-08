@@ -150,51 +150,6 @@ export type StaffMember = {
   updated_at: string;
 };
 
-/** Tenant admin settings (organization, notifications, payments, integrations). */
-export type TenantOrganizationSettings = {
-  name: string;
-  legal_name: string;
-  support_email: string;
-  support_phone: string | null;
-  timezone: string;
-  currency: string;
-  default_check_in: string;
-  default_check_out: string;
-};
-
-export type TenantNotificationSettings = {
-  email_new_booking: boolean;
-  email_payment_received: boolean;
-  email_refund_request: boolean;
-  email_new_review: boolean;
-  email_guest_message: boolean;
-  digest_daily: boolean;
-};
-
-export type TenantPaymentSettings = {
-  provider: 'flutterwave';
-  public_key_hint: string;
-  webhook_url: string;
-  connected: boolean;
-  settlement_currency: string;
-};
-
-export type TenantIntegration = {
-  id: string;
-  name: string;
-  description: string;
-  connected: boolean;
-  status_label: string;
-};
-
-export type TenantSettings = {
-  organization: TenantOrganizationSettings;
-  notifications: TenantNotificationSettings;
-  payments: TenantPaymentSettings;
-  integrations: TenantIntegration[];
-  updated_at: string;
-};
-
 /** Bookable inventory under a property (multi-unit extension).
  * Shared listing content (address, house rules, photos gallery) lives on
  * Property. Amenities are set per unit (can differ within the same property).

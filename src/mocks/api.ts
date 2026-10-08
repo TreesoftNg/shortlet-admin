@@ -21,7 +21,6 @@ import {
 import { mockReportsSummary } from '@/mocks/data/reports';
 import { mockReviews } from '@/mocks/data/reviews';
 import { mockStaff } from '@/mocks/data/staff';
-import { mockTenantSettings } from '@/mocks/data/settings';
 import {
   buildGuestFromForm,
   buildReservationFromForm,
@@ -48,7 +47,6 @@ import type {
   Reservation,
   Review,
   StaffMember,
-  TenantSettings,
   Unit,
 } from '@/shared/types/hospitable';
 
@@ -394,11 +392,6 @@ export const mockApi = {
       total: mockStaff.length,
       totalPages: 1,
     });
-  },
-
-  async getSettings(): Promise<ApiSuccessResponse<TenantSettings>> {
-    await delay();
-    return ok(mockTenantSettings, 'Settings retrieved');
   },
 
 };

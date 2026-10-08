@@ -27,9 +27,7 @@ import {
 } from '@/features/properties/hooks/use-property-mutations';
 import { useProperty } from '@/features/properties/hooks/use-properties';
 import {
-  CURRENCY_OPTIONS,
   PROPERTY_TYPE_OPTIONS,
-  TIMEZONE_OPTIONS,
   createEmptyPropertyForm,
   propertyToFormValues,
   readFilesAsImageDrafts,
@@ -37,6 +35,12 @@ import {
   type PropertyFormErrors,
   type PropertyFormValues,
 } from '@/features/properties/utils/property-form';
+import { useBusinessProfile } from '@/features/settings/hooks/use-business-settings';
+import {
+  choicesWith,
+  CURRENCY_CHOICES,
+  TIMEZONE_CHOICES,
+} from '@/features/settings/utils/settings-forms';
 import { useFacilities } from '@/features/units/hooks/use-facilities';
 import {
   ErrorState,
@@ -73,6 +77,8 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
     error: facilitiesErrorValue,
     refetch: refetchFacilities,
   } = useFacilities();
+  // New properties start with the business defaults; the form still works if they fail to load.
+  const { data: business, isPending: businessPending } = useBusinessProfile(!isEdit);
 
   const [values, setValues] = useState<PropertyFormValues>(createEmptyPropertyForm);
   const [errors, setErrors] = useState<PropertyFormErrors>({});
@@ -89,13 +95,25 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
       return;
     }
 
-    if (hydratedKey === 'create') return;
+    if (hydratedKey === 'create' || businessPending) return;
     setErrors({});
-    setValues(createEmptyPropertyForm());
+    setValues(
+      createEmptyPropertyForm(
+        business
+          ? {
+              check_in: business.defaultCheckInTime,
+              check_out: business.defaultCheckOutTime,
+              timezone: business.defaultTimezone,
+              currency: business.defaultCurrency,
+            }
+          : {},
+      ),
+    );
     setHydratedKey('create');
-  }, [hydratedKey, isEdit, property]);
+  }, [business, businessPending, hydratedKey, isEdit, property]);
 
-  const isLoading = facilitiesLoading || (isEdit && propertyLoading);
+  const isLoading =
+    facilitiesLoading || (isEdit ? propertyLoading : businessPending);
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
   const goBack = () => {
@@ -503,7 +521,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
                   }
                   {...inputProps}
                 >
-                  {TIMEZONE_OPTIONS.map((zone) => (
+                  {choicesWith(TIMEZONE_CHOICES, values.timezone).map((zone) => (
                     <option key={zone} value={zone}>
                       {zone}
                     </option>
@@ -518,7 +536,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
                   }
                   {...inputProps}
                 >
-                  {CURRENCY_OPTIONS.map((currency) => (
+                  {choicesWith(CURRENCY_CHOICES, values.currency).map((currency) => (
                     <option key={currency} value={currency}>
                       {currency}
                     </option>
