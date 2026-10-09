@@ -92,15 +92,30 @@ export function BusinessTab({ canManage }: { canManage: boolean }) {
         {textRow('address', 'Address', 'Printed at the bottom of guest emails.', { maxLength: 500 })}
       </FormPanel>
 
-      <FormPanel title="Contact" description="How guests reach you about a booking.">
-        {textRow('supportEmail', 'Support email', 'Guests who reply to a booking email write to this address.', {
-          type: 'email',
-          placeholder: 'hello@yourbusiness.com',
-        })}
-        {textRow('supportPhone', 'Support phone', "Shown on confirmations when a property has no manager's number.", {
+      <FormPanel
+        title="Contact"
+        description="Used on the guest Contact Us page and in booking emails."
+      >
+        {textRow(
+          'supportEmail',
+          'Support email',
+          'Contact Us messages and guest replies to booking emails go here.',
+          {
+            type: 'email',
+            placeholder: 'hello@yourbusiness.com',
+          },
+        )}
+        {textRow(
+          'supportPhone',
+          'Support phone',
+          'Shown on Contact Us and on confirmations when a property has no manager number.',
+          {
+            placeholder: '+234 …',
+          },
+        )}
+        {textRow('whatsappPhone', 'WhatsApp', 'Shown on the guest Contact Us page.', {
           placeholder: '+234 …',
         })}
-        {textRow('whatsappPhone', 'WhatsApp', 'Used when there is no support phone.', { placeholder: '+234 …' })}
       </FormPanel>
 
       <FormPanel title="Website and social">
