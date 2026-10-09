@@ -94,5 +94,6 @@ export const queryKeys = {
     pricing: () => ['settings', 'pricing'] as const,
     booking: () => ['settings', 'booking'] as const,
     payments: () => ['settings', 'payments'] as const,
+    domains: () => ['settings', 'domains'] as const,
   },
 } as const;

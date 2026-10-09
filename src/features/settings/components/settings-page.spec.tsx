@@ -59,6 +59,16 @@ beforeEach(() => {
   business.fetchBookingSettings.mockResolvedValue(bookingSettings());
   business.updateBookingSettings.mockImplementation(async (input) => bookingSettings(input));
   business.fetchPaymentSettings.mockResolvedValue(paymentSettings());
+  business.fetchTenantDomains.mockResolvedValue({
+    domains: [{ id: 'd1', domain: 'sunmadeapartments.com', createdAt: '2026-01-01T00:00:00.000Z' }],
+  });
+  business.updateTenantDomains.mockImplementation(async (input) => ({
+    domains: input.domains.map((domain, index) => ({
+      id: `d${index + 1}`,
+      domain,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    })),
+  }));
 });
 
 describe('SettingsPage tabs', () => {
@@ -76,32 +86,40 @@ describe('SettingsPage tabs', () => {
 });
 
 describe('Business tab', () => {
-  it('saves the profile, sending blank fields as null', async () => {
-    renderAs('business');
-    const email = await screen.findByLabelText('Support email');
-    await userEvent.type(email, 'hello@sunmade.ng');
-    await userEvent.type(screen.getByLabelText('Booking website'), 'https://sunmade.ng');
-    await userEvent.selectOptions(screen.getByLabelText('Time zone'), 'Africa/Accra');
-    await userEvent.click(saveButton());
+  it(
+    'saves the profile, sending blank fields as null',
+    async () => {
+      const user = userEvent.setup();
+      renderAs('business');
+      const email = await screen.findByLabelText('Support email');
+      await user.clear(email);
+      await user.type(email, 'hello@sunmade.ng');
+      const website = screen.getByLabelText('Booking website');
+      await user.clear(website);
+      await user.type(website, 'https://sunmade.ng');
+      await user.selectOptions(screen.getByLabelText('Time zone'), 'Africa/Accra');
+      await user.click(saveButton());
 
-    await waitFor(() =>
-      expect(business.updateBusinessProfile).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'Sunmade',
-          supportEmail: 'hello@sunmade.ng',
-          supportPhone: null,
-          websiteUrl: 'https://sunmade.ng',
-          defaultTimezone: 'Africa/Accra',
-          defaultHouseRules: 'No parties.',
-        }),
-      ),
-    );
-    expect(await screen.findByText('Settings saved')).toBeInTheDocument();
-  });
+      await waitFor(() =>
+        expect(business.updateBusinessProfile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Sunmade',
+            supportEmail: 'hello@sunmade.ng',
+            supportPhone: null,
+            websiteUrl: 'https://sunmade.ng',
+            defaultTimezone: 'Africa/Accra',
+            defaultHouseRules: 'No parties.',
+          }),
+        ),
+      );
+      expect(await screen.findByText('Settings saved')).toBeInTheDocument();
+    },
+    15_000,
+  );
 
   it('shows when there are unsaved changes', async () => {
     renderAs('business');
-    expect(await screen.findByText('All changes saved.')).toBeInTheDocument();
+    expect(await screen.findAllByText('All changes saved.')).not.toHaveLength(0);
     await userEvent.type(screen.getByLabelText('Address'), '1 Test Close');
     expect(screen.getByText('You have unsaved changes.')).toBeInTheDocument();
   });

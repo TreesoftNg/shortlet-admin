@@ -72,3 +72,18 @@ export type PaymentSettings = {
   webhookSecretSet: boolean;
   lastWebhookAt: string | null;
 };
+
+/** GET/PUT /cc/tenant-domains — hostnames for Origin + booking return URLs. */
+export type TenantDomainItem = {
+  id: string;
+  domain: string;
+  createdAt: string;
+};
+
+export type TenantDomainsResponse = {
+  domains: TenantDomainItem[];
+};
+
+export type TenantDomainsInput = {
+  domains: string[];
+};

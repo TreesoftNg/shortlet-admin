@@ -15,6 +15,7 @@ import {
   TIMEZONE_CHOICES,
   validateProfile,
 } from '../utils/settings-forms';
+import { DomainsPanel } from './domains-panel';
 import { controlProps, SaveBar, useSettingsToasts } from './settings-form-parts';
 
 const fieldId = (field: keyof ProfileFormValues) => `business-${field}`;
@@ -184,6 +185,8 @@ export function BusinessTab({ canManage }: { canManage: boolean }) {
       </FormPanel>
 
       <SaveBar canManage={canManage} isSaving={update.isPending} isDirty={isDirty} onSave={() => void save()} />
+
+      <DomainsPanel canManage={canManage} />
     </Flex>
   );
 }

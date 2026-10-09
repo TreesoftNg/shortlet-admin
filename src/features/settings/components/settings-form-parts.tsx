@@ -81,11 +81,13 @@ export function SaveBar({
   isSaving,
   isDirty,
   onSave,
+  saveLabel = 'Save changes',
 }: {
   canManage: boolean;
   isSaving: boolean;
   isDirty: boolean;
   onSave: () => void;
+  saveLabel?: string;
 }) {
   const highlight = canManage && isDirty;
   return (
@@ -118,7 +120,7 @@ export function SaveBar({
           isLoading={isSaving}
           onClick={onSave}
         >
-          Save changes
+          {saveLabel}
         </Button>
       ) : null}
     </Flex>

@@ -4,7 +4,11 @@ import { Flex, Switch } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useSettings } from '@/features/settings/hooks/use-settings';
 import { useUpdateSettings } from '@/features/settings/hooks/use-settings-mutations';
-import { formatSettingsUpdatedAt, settingsValuesMap } from '@/features/settings/utils/settings-helpers';
+import {
+  formatSettingsUpdatedAt,
+  notificationSettings,
+  settingsValuesMap,
+} from '@/features/settings/utils/settings-helpers';
 import { ErrorState, FormPanel, FormRow, PageSkeleton } from '@/shared/components/ui';
 import type { TenantSettingItem } from '../types';
 import { SaveBar, useSettingsToasts } from './settings-form-parts';
@@ -17,7 +21,7 @@ export function NotificationsTab({ canManage }: { canManage: boolean }) {
   const [settings, setSettings] = useState<TenantSettingItem[] | null>(null);
 
   useEffect(() => {
-    if (data) setSettings(data.settings);
+    if (data) setSettings(notificationSettings(data.settings));
   }, [data]);
 
   if (isLoading) return <PageSkeleton variant="form" />;
@@ -30,7 +34,10 @@ export function NotificationsTab({ canManage }: { canManage: boolean }) {
     );
   }
 
-  const isDirty = JSON.stringify(settingsValuesMap(settings)) !== JSON.stringify(settingsValuesMap(data.settings));
+  const savedNotifications = notificationSettings(data.settings);
+  const isDirty =
+    JSON.stringify(settingsValuesMap(settings)) !==
+    JSON.stringify(settingsValuesMap(savedNotifications));
 
   const save = async () => {
     try {

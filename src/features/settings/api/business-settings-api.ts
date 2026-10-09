@@ -8,6 +8,8 @@ import type {
   PaymentSettings,
   PricingSettings,
   PricingSettingsInput,
+  TenantDomainsInput,
+  TenantDomainsResponse,
 } from '../types';
 
 export async function fetchBusinessProfile(): Promise<BusinessProfile> {
@@ -36,4 +38,17 @@ export async function updateBookingSettings(input: BookingRules): Promise<Bookin
 
 export async function fetchPaymentSettings(): Promise<PaymentSettings> {
   return (await apiClient<PaymentSettings>(adminPath('/payment-settings'))).data;
+}
+
+export async function fetchTenantDomains(): Promise<TenantDomainsResponse> {
+  return (await apiClient<TenantDomainsResponse>(adminPath('/tenant-domains'))).data;
+}
+
+export async function updateTenantDomains(input: TenantDomainsInput): Promise<TenantDomainsResponse> {
+  return (
+    await apiClient<TenantDomainsResponse>(adminPath('/tenant-domains'), {
+      method: 'PUT',
+      body: input,
+    })
+  ).data;
 }

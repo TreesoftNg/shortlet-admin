@@ -7,11 +7,18 @@ import {
   fetchBusinessProfile,
   fetchPaymentSettings,
   fetchPricingSettings,
+  fetchTenantDomains,
   updateBookingSettings,
   updateBusinessProfile,
   updatePricingSettings,
+  updateTenantDomains,
 } from '../api/business-settings-api';
-import type { BookingRules, BusinessProfileInput, PricingSettingsInput } from '../types';
+import type {
+  BookingRules,
+  BusinessProfileInput,
+  PricingSettingsInput,
+  TenantDomainsInput,
+} from '../types';
 
 export function useBusinessProfile(enabled = true) {
   return useQuery({ queryKey: queryKeys.settings.profile(), queryFn: fetchBusinessProfile, enabled });
@@ -60,6 +67,24 @@ export function useUpdateBookingSettings() {
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.settings.booking(), saved);
       queryClient.removeQueries({ queryKey: [...queryKeys.adminBookings.all, 'quote'] });
+    },
+  });
+}
+
+export function useTenantDomains(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.settings.domains(),
+    queryFn: fetchTenantDomains,
+    enabled,
+  });
+}
+
+export function useUpdateTenantDomains() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: TenantDomainsInput) => updateTenantDomains(input),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(queryKeys.settings.domains(), saved);
     },
   });
 }
