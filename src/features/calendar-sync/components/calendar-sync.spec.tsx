@@ -310,7 +310,10 @@ describe('BlockedDatesTab', () => {
 
     fireEvent.change(screen.getByLabelText(/first night/i), { target: { value: '2099-10-10' } });
     fireEvent.change(screen.getByLabelText(/checkout day/i), { target: { value: '2099-10-12' } });
-    await userEvent.selectOptions(screen.getByLabelText(/reason/i), 'owner_stay');
+    expect(screen.getByRole('radio', { name: 'Maintenance' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(screen.getByRole('radio', { name: 'Owner stay' }));
+    expect(screen.getByRole('radio', { name: 'Owner stay' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText('2 nights blocked')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Block dates' }));
 
     await waitFor(() =>
@@ -330,6 +333,13 @@ describe('BlockedDatesTab', () => {
 
     expect(await screen.findByText('Checkout must be after the first night.')).toBeInTheDocument();
     expect(api.createBlock).not.toHaveBeenCalled();
+  });
+
+  it('shows a compact empty state', async () => {
+    api.fetchBlocks.mockResolvedValue([]);
+    renderAs(<BlockedDatesTab unit={unit()} />);
+    expect(await screen.findByText('No blocked dates. Blocks you add appear here.')).toBeInTheDocument();
+    expect(screen.getByText('Pick the first night and the checkout day.')).toBeInTheDocument();
   });
 
   it('lists and removes blocks', async () => {

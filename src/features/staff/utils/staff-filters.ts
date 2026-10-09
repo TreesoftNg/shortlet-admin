@@ -6,7 +6,7 @@ import type {
 } from '@/shared/types/hospitable';
 import type { AdminProfile } from '@/features/auth/types';
 
-export type StaffStatusTab = 'all' | 'active' | 'invited';
+export type StaffStatusTab = 'all' | 'active' | 'invited' | 'suspended';
 
 export type StaffFilters = {
   tab: StaffStatusTab;
@@ -34,6 +34,7 @@ export const INVITE_ROLE_OPTIONS = STAFF_ROLE_OPTIONS;
 function matchesTab(member: StaffMember, tab: StaffStatusTab): boolean {
   if (tab === 'active') return member.status === 'active';
   if (tab === 'invited') return member.status === 'invited';
+  if (tab === 'suspended') return member.status === 'suspended';
   return true;
 }
 
@@ -65,6 +66,7 @@ export function countStaffTabs(members: StaffMember[]): StaffTabCount {
     all: members.length,
     active: members.filter((item) => item.status === 'active').length,
     invited: members.filter((item) => item.status === 'invited').length,
+    suspended: members.filter((item) => item.status === 'suspended').length,
   };
 }
 

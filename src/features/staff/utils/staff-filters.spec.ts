@@ -14,14 +14,21 @@ describe('staff-filters', () => {
     expect(counts.all).toBe(mockStaff.length);
     expect(counts.active).toBeGreaterThan(0);
     expect(counts.invited).toBeGreaterThan(0);
+    expect(counts.suspended).toBeGreaterThan(0);
   });
 
-  it('filters invited tab', () => {
-    const result = filterStaff(mockStaff, {
+  it('filters invited and suspended tabs', () => {
+    const invited = filterStaff(mockStaff, {
       ...DEFAULT_STAFF_FILTERS,
       tab: 'invited',
     });
-    expect(result.every((item) => item.status === 'invited')).toBe(true);
+    expect(invited.every((item) => item.status === 'invited')).toBe(true);
+
+    const suspended = filterStaff(mockStaff, {
+      ...DEFAULT_STAFF_FILTERS,
+      tab: 'suspended',
+    });
+    expect(suspended.every((item) => item.status === 'suspended')).toBe(true);
   });
 
   it('filters by search and role', () => {

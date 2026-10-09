@@ -10,6 +10,7 @@ import {
   Heading,
   Input,
   Select,
+  SimpleGrid,
   Text,
   Textarea,
   useToast,
@@ -243,75 +244,80 @@ export function PaymentDetailDrawer({
         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
       </Flex>
 
-      <KeyValueList
-        title="Payment"
-        items={[
-          {
-            label: 'Provider',
-            value: <Text as="b">{formatProviderLabel(payment.provider)}</Text>,
-          },
-          {
-            label: 'Method',
-            value: <Text as="b">{payment.paymentMethod ?? '—'}</Text>,
-          },
-          {
-            label: 'Flutterwave id',
-            value: (
-              <Text as="b">{payment.providerTransactionId ?? '—'}</Text>
-            ),
-          },
-          {
-            label: 'Fee',
-            value: (
-              <Text as="b">
-                {payment.providerFee
-                  ? formatMoney(payment.providerFee, payment.currency)
-                  : '—'}
-              </Text>
-            ),
-          },
-          {
-            label: 'Refunded',
-            value: (
-              <Text as="b">
-                {formatMoney(payment.amountRefunded, payment.currency)}
-              </Text>
-            ),
-          },
-          {
-            label: 'Paid at',
-            value: (
-              <Text as="b">
-                {payment.paidAt
-                  ? formatPaymentDateTime(payment.paidAt)
-                  : '—'}
-              </Text>
-            ),
-          },
-          {
-            label: 'Created',
-            value: (
-              <Text as="b">{formatPaymentDateTime(payment.createdAt)}</Text>
-            ),
-          },
-          {
-            label: 'Failure',
-            value: <Text as="b">{payment.failureReason ?? '—'}</Text>,
-          },
-        ]}
-      />
-
-      <KeyValueList
-        title="Booking"
-        items={[
-          {
-            label: 'Reference',
-            value: (
-              <Text as="b">{payment.bookingReference ?? payment.bookingId}</Text>
-            ),
-          },
-        ]}
-      />
+      <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px">
+        <Box minW={0}>
+          <KeyValueList
+            title="Payment"
+            items={[
+              {
+                label: 'Provider',
+                value: <Text as="b">{formatProviderLabel(payment.provider)}</Text>,
+              },
+              {
+                label: 'Method',
+                value: <Text as="b">{payment.paymentMethod ?? '—'}</Text>,
+              },
+              {
+                label: 'Flutterwave id',
+                value: (
+                  <Text as="b">{payment.providerTransactionId ?? '—'}</Text>
+                ),
+              },
+              {
+                label: 'Fee',
+                value: (
+                  <Text as="b">
+                    {payment.providerFee
+                      ? formatMoney(payment.providerFee, payment.currency)
+                      : '—'}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Refunded',
+                value: (
+                  <Text as="b">
+                    {formatMoney(payment.amountRefunded, payment.currency)}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Paid at',
+                value: (
+                  <Text as="b">
+                    {payment.paidAt
+                      ? formatPaymentDateTime(payment.paidAt)
+                      : '—'}
+                  </Text>
+                ),
+              },
+              {
+                label: 'Created',
+                value: (
+                  <Text as="b">{formatPaymentDateTime(payment.createdAt)}</Text>
+                ),
+              },
+              {
+                label: 'Failure',
+                value: <Text as="b">{payment.failureReason ?? '—'}</Text>,
+              },
+            ]}
+          />
+        </Box>
+        <Box minW={0}>
+          <KeyValueList
+            title="Booking"
+            items={[
+              {
+                label: 'Reference',
+                value: (
+                  <Text as="b">{payment.bookingReference ?? payment.bookingId}</Text>
+                ),
+              },
+            ]}
+          />
+        </Box>
+      </SimpleGrid>
 
       <Box mb="16px">
         <Text fontSize="13px" fontWeight={700} mb="8px" color="ink.400">

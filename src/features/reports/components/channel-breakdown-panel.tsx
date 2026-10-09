@@ -1,54 +1,48 @@
 'use client';
 
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { formatMoney } from '@/features/bookings/utils/reservation-display';
-import {
-  formatChannelLabel,
-  formatShare,
-} from '@/features/reports/utils/report-formatters';
+import { formatAmount, formatPercent } from '@/features/dashboard/utils/report-format';
 import { Panel } from '@/shared/components/ui';
-import type { ChannelBreakdownRow } from '@/shared/types/hospitable';
+import type { ChannelMix } from '../types';
 
-type ChannelBreakdownPanelProps = {
-  rows: ChannelBreakdownRow[];
+const CHANNEL_COLORS: Record<ChannelMix['channel'], string> = {
+  website: 'brand.500',
+  staff: 'brand.300',
+  imported: '#F59E0B',
 };
 
-export function ChannelBreakdownPanel({ rows }: ChannelBreakdownPanelProps) {
+export function ChannelBreakdownPanel({ rows, currency }: { rows: ChannelMix[]; currency: string }) {
   return (
     <Panel h="100%">
-      <Text fontSize="18px" fontWeight={700} mb="4px">
+      <Text fontSize="18px" fontWeight={700}>
         Channel mix
       </Text>
-      <Text color="ink.400" fontSize="14px" mb="16px">
-        Bookings and revenue by channel
+      <Text color="ink.300" fontSize="13px" mt="2px" mb="16px">
+        Where this period&apos;s bookings came from
       </Text>
 
-      <Flex direction="column" gap="14px">
+      <Flex direction="column" gap="16px">
         {rows.map((row) => (
           <Box key={row.channel}>
-            <Flex justify="space-between" align="center" mb="6px" gap="8px">
-              <Text fontWeight={700}>{formatChannelLabel(row.channel)}</Text>
-              <Text fontSize="13px" color="ink.300">
-                {row.bookings} bookings · {formatShare(row.share_percent)}
+            <Flex justify="space-between" align="baseline" mb="6px" gap="8px">
+              <Text fontWeight={700} fontSize="14px">
+                {row.label}
+              </Text>
+              <Text fontSize="13px" color="ink.400" fontWeight={600}>
+                {formatPercent(row.sharePercent)}
               </Text>
             </Flex>
-            <Box
-              h="8px"
-              bg="bg.400"
-              borderRadius="999px"
-              overflow="hidden"
-              mb="6px"
-            >
-              <Box
-                h="100%"
-                w={`${row.share_percent}%`}
-                bg={row.channel === 'direct' ? 'brand.500' : 'brand.200'}
-                borderRadius="999px"
-              />
+            <Box h="8px" bg="bg.400" borderRadius="full" overflow="hidden" mb="6px">
+              <Box h="100%" w={`${row.sharePercent}%`} bg={CHANNEL_COLORS[row.channel]} borderRadius="full" />
             </Box>
-            <Text fontWeight={700} fontSize="14px">
-              {formatMoney(row.revenue, row.currency)}
-            </Text>
+            <Flex justify="space-between" fontSize="13px" color="ink.300" gap="8px">
+              <Text>
+                {row.bookings} booking{row.bookings === 1 ? '' : 's'} · {row.nights} night{row.nights === 1 ? '' : 's'}
+              </Text>
+              <Text fontWeight={700} color={row.revenue === null ? 'ink.300' : 'ink.500'}>
+                {row.revenue === null ? 'Price not shared' : formatAmount(row.revenue, currency)}
+              </Text>
+            </Flex>
           </Box>
         ))}
       </Flex>

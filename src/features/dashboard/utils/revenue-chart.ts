@@ -1,4 +1,5 @@
-import type { RevenuePoint } from '@/shared/types/hospitable';
+/** A value on the chart's x axis. */
+export type RevenuePoint = { date: string; label: string; amount: number };
 
 export type ChartPadding = {
   top: number;
@@ -77,10 +78,15 @@ export function buildSmoothLinePath(points: ChartPoint[]): string {
     const p2 = points[i + 1];
     const p3 = points[i + 2] ?? p2;
 
+    // Control points stay between the two ends, so the curve never dips
+    // below zero or overshoots a peak.
+    const low = Math.min(p1.y, p2.y);
+    const high = Math.max(p1.y, p2.y);
+    const clamp = (y: number) => Math.min(high, Math.max(low, y));
     const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp1y = clamp(p1.y + (p2.y - p0.y) / 6);
     const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    const cp2y = clamp(p2.y - (p3.y - p1.y) / 6);
 
     path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
   }
@@ -101,18 +107,6 @@ export function buildAreaPath(
   const last = points[points.length - 1];
 
   return `${line} L ${last.x} ${baseline} L ${first.x} ${baseline} Z`;
-}
-
-export function findHighlightIndex(
-  points: RevenuePoint[],
-  highlightDate?: string,
-): number {
-  if (!highlightDate || points.length === 0) {
-    return Math.max(points.length - 1, 0);
-  }
-
-  const index = points.findIndex((point) => point.date === highlightDate);
-  return index >= 0 ? index : Math.max(points.length - 1, 0);
 }
 
 export const chartPadding = DEFAULT_PADDING;

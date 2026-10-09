@@ -39,20 +39,20 @@ export function EditMediaModal({ item, isSaving, onClose, onSave }: EditMediaMod
     >
       <Flex direction="column" gap="14px">
         <FormControl>
-          <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
+          <FormLabel>
             Caption
           </FormLabel>
-          <Input value={caption} onChange={(event) => setCaption(event.target.value)} borderRadius="12px" />
+          <Input value={caption} onChange={(event) => setCaption(event.target.value)} />
         </FormControl>
         <FormControl>
-          <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
+          <FormLabel>
             Alt text
           </FormLabel>
           <Textarea
             value={altText}
             onChange={(event) => setAltText(event.target.value)}
             minH="90px"
-            borderRadius="12px"
+           
             placeholder="Describe the image for screen readers"
           />
         </FormControl>

@@ -1,35 +1,43 @@
-import type { AdminProfile } from '@/features/auth/types';
 import { createEmptyStaffInviteForm } from './staff-invite-form';
 import {
   mapInviteToStaffMember,
-  mapProfileToStaffMember,
+  mapStaffListItemToMember,
   mapStaffRole,
-  mergeStaffDirectory,
   toInviteStaffPayload,
-  upsertPendingInvite,
 } from './staff-mappers';
+import type { StaffListItem } from '../types';
 
-const profile: AdminProfile = {
-  user: {
-    id: 'u1',
-    email: 'ada@sunmadeapartments.com',
-    firstName: 'Ada',
-    lastName: 'Okafor',
-  },
-  tenant: { id: 't1', slug: 'sunmade', name: 'Sunmade' },
-  role: { code: 'owner', name: 'Owner' },
-  permissions: ['property.read', 'staff.manage'],
+const listItem: StaffListItem = {
+  id: 'mem-1',
+  userId: 'u1',
+  firstName: 'Ada',
+  lastName: 'Okafor',
+  fullName: 'Ada Okafor',
+  email: 'ada@sunmadeapartments.com',
+  phone: null,
+  role: 'owner',
+  roleName: 'Owner',
+  status: 'active',
+  avatarUrl: null,
+  lastActiveAt: '2026-10-01T12:00:00.000Z',
+  invitedAt: null,
+  createdAt: '2025-01-01T00:00:00.000Z',
+  updatedAt: '2026-10-01T12:00:00.000Z',
 };
 
 describe('staff mappers', () => {
-  it('maps /auth/me into a staff row', () => {
-    const member = mapProfileToStaffMember(profile);
-    expect(member.id).toBe('u1');
+  it('maps GET /cc/staff rows into table members with is_you', () => {
+    const member = mapStaffListItemToMember(listItem, 'u1');
+    expect(member.id).toBe('mem-1');
+    expect(member.first_name).toBe('Ada');
+    expect(member.last_name).toBe('Okafor');
     expect(member.email).toBe('ada@sunmadeapartments.com');
     expect(member.role).toBe('owner');
     expect(member.status).toBe('active');
     expect(member.is_you).toBe(true);
-    expect(member.permissions).toEqual(['property.read', 'staff.manage']);
+    expect(member.permissions).toEqual([]);
+    expect(member.invite_expires_at).toBeNull();
+    expect(mapStaffListItemToMember(listItem, 'other').is_you).toBe(false);
   });
 
   it('builds invite payloads and pending rows', () => {
@@ -55,34 +63,6 @@ describe('staff mappers', () => {
     expect(invite.status).toBe('invited');
     expect(invite.is_you).toBe(false);
     expect(invite.invite_expires_at).toBe('2026-10-11T00:00:00.000Z');
-  });
-
-  it('merges you with pending invites and replaces the same email', () => {
-    const you = mapProfileToStaffMember(profile);
-    const first = mapInviteToStaffMember(
-      {
-        first_name: 'Funmi',
-        last_name: 'Ade',
-        email: 'funmi@sunmadeapartments.com',
-        role: 'staff',
-      },
-      {
-        email: 'funmi@sunmadeapartments.com',
-        role: 'staff',
-        expiresAt: '2026-10-11T00:00:00.000Z',
-      },
-    );
-    const resent = { ...first, invite_expires_at: '2026-10-18T00:00:00.000Z' };
-    const pending = upsertPendingInvite([first], resent);
-    expect(pending).toHaveLength(1);
-    expect(pending[0].invite_expires_at).toBe('2026-10-18T00:00:00.000Z');
-
-    const directory = mergeStaffDirectory(you, [
-      ...pending,
-      { ...you, is_you: false, id: 'dup' },
-    ]);
-    expect(directory[0].is_you).toBe(true);
-    expect(directory).toHaveLength(2);
   });
 
   it('falls back unknown roles to staff', () => {

@@ -3,6 +3,7 @@
 import { Flex, Text } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import { PropertyCell, StatusBadge } from '@/shared/components/ui';
 import type { UnitListItem } from '../utils/unit-filters';
 import { getUnitStatusDisplay } from '../utils/unit-filters';
@@ -66,6 +67,10 @@ export function getUnitColumns(): DataTableColumn<UnitListItem>[] {
         );
       },
     },
+    ...timestampColumns<UnitListItem>(
+      (row) => row.created_at,
+      (row) => row.updated_at,
+    ),
   ];
 }
 

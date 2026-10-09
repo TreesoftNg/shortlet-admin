@@ -199,7 +199,7 @@ export function BookingsPage() {
         isOpen={Boolean(selectedId)}
         onClose={() => setSelectedId(null)}
         title="Booking details"
-        size="xl"
+        size="4xl"
       >
         <BookingDetailDrawer bookingId={selectedId} />
       </AppModal>

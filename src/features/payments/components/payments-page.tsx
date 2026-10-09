@@ -176,7 +176,7 @@ export function PaymentsPage() {
         isOpen={Boolean(selectedId)}
         onClose={() => setSelectedId(null)}
         title="Payment details"
-        size="lg"
+        size="3xl"
       >
         <PaymentDetailDrawer
           paymentId={selectedId}
@@ -191,7 +191,7 @@ export function PaymentsPage() {
         isOpen={Boolean(bookingId)}
         onClose={() => setBookingId(null)}
         title="Booking details"
-        size="xl"
+        size="4xl"
       >
         <BookingDetailDrawer bookingId={bookingId} />
       </AppModal>

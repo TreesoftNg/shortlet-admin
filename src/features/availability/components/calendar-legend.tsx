@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Flex, Text } from '@chakra-ui/react';
-import type { CalendarEventKind } from '@/shared/types/hospitable';
+import type { CalendarEventKind } from '../types';
 
 export const CALENDAR_LEGEND: Array<{
   kind: CalendarEventKind;
@@ -9,6 +9,7 @@ export const CALENDAR_LEGEND: Array<{
 }> = [
   { kind: 'confirmed', label: 'Confirmed' },
   { kind: 'checked_in', label: 'Checked in' },
+  { kind: 'completed', label: 'Completed' },
   { kind: 'awaiting_payment', label: 'Awaiting payment' },
   { kind: 'external', label: 'External (Hospitable)' },
   { kind: 'blocked', label: 'Blocked' },
@@ -27,6 +28,13 @@ export function getEventBarStyles(kind: CalendarEventKind) {
         bg: 'ink.500',
         color: 'white',
         border: 'none',
+      };
+    case 'completed':
+      return {
+        bg: 'brand.500',
+        color: 'white',
+        border: 'none',
+        opacity: 0.55,
       };
     case 'awaiting_payment':
       return {
@@ -64,6 +72,8 @@ export function getLegendSwatchStyles(kind: CalendarEventKind) {
       return { bg: 'brand.500' };
     case 'checked_in':
       return { bg: 'ink.500' };
+    case 'completed':
+      return { bg: 'brand.500', opacity: 0.55 };
     case 'awaiting_payment':
       return {
         bg: 'white',

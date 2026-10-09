@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { formatMoney } from '@/features/bookings/utils/reservation-display';
 import type { RefundListItem } from '@/mocks/data/refunds';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import { StatusBadge } from '@/shared/components/ui';
 import {
   formatRefundDate,
@@ -46,18 +47,6 @@ export function getRefundColumns(): DataTableColumn<RefundListItem>[] {
       cell: (row) => getRefundReasonLabel(row.reason),
     },
     {
-      id: 'payment',
-      header: 'Payment',
-      cell: (row) => (
-        <Text fontSize="13px">{row.payment?.reference ?? row.payment_id}</Text>
-      ),
-    },
-    {
-      id: 'date',
-      header: 'Requested',
-      cell: (row) => formatRefundDate(row.created_at),
-    },
-    {
       id: 'status',
       header: 'Status',
       cell: (row) => {
@@ -65,6 +54,10 @@ export function getRefundColumns(): DataTableColumn<RefundListItem>[] {
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
     },
+    ...timestampColumns<RefundListItem>(
+      (row) => row.created_at,
+      (row) => row.updated_at,
+    ),
   ];
 }
 

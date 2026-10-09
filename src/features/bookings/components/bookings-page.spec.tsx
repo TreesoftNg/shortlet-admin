@@ -71,7 +71,8 @@ beforeEach(() => {
 describe('BookingsPage', () => {
   it('lists bookings from the API', async () => {
     renderAs();
-    expect(await screen.findByText('SM-ABC123')).toBeInTheDocument();
+    expect(await screen.findByText('ada@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('SM-ABC123')).not.toBeInTheDocument();
     expect(screen.getByText('Ada Okafor')).toBeInTheDocument();
     expect(api.fetchBookings).toHaveBeenCalled();
   });
@@ -84,13 +85,13 @@ describe('BookingsPage', () => {
 
   it('does not show create booking', async () => {
     renderAs();
-    await screen.findByText('SM-ABC123');
+    await screen.findByText('ada@example.com');
     expect(screen.queryByRole('link', { name: /add booking/i })).not.toBeInTheDocument();
   });
 
   it('opens detail and checks in', async () => {
     renderAs();
-    await userEvent.click(await screen.findByText('SM-ABC123'));
+    await userEvent.click(await screen.findByText('ada@example.com'));
     expect(await screen.findByText('Check in')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Check in' }));
     await waitFor(() => {
@@ -102,7 +103,7 @@ describe('BookingsPage', () => {
 
   it('cancels with a reason', async () => {
     renderAs();
-    await userEvent.click(await screen.findByText('SM-ABC123'));
+    await userEvent.click(await screen.findByText('ada@example.com'));
     await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
     await userEvent.type(
       screen.getByPlaceholderText(/why is this booking/i),

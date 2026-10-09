@@ -31,6 +31,7 @@ export function bookingListItem(
     depositStatus: 'held',
     depositDueAt: '2026-10-14T12:00:00.000Z',
     createdAt: '2026-10-01T10:00:00.000Z',
+    updatedAt: '2026-10-03T16:30:00.000Z',
     ...overrides,
   };
 }
@@ -40,6 +41,8 @@ export function paymentView(overrides: Partial<PaymentView> = {}): PaymentView {
     id: '44444444-4444-4444-4444-444444444444',
     bookingId: '11111111-1111-1111-1111-111111111111',
     bookingReference: 'SM-ABC123',
+    guestName: 'Ada Okafor',
+    unitName: 'Azure Lekki Studio',
     provider: 'flutterwave',
     reference: 'pay_SM_ABC123',
     providerTransactionId: 'flw_123',
@@ -52,6 +55,7 @@ export function paymentView(overrides: Partial<PaymentView> = {}): PaymentView {
     paidAt: '2026-10-01T10:05:00.000Z',
     failureReason: null,
     createdAt: '2026-10-01T10:00:00.000Z',
+    updatedAt: '2026-10-01T10:05:00.000Z',
     ...overrides,
   };
 }

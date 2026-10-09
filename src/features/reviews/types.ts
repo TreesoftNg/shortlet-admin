@@ -17,4 +17,5 @@ export type Review = {
   respondedAt: string | null;
   canRespond: boolean;
   createdAt: string;
+  updatedAt: string;
 };

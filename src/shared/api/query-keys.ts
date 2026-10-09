@@ -12,7 +12,7 @@ export const queryKeys = {
   },
   dashboard: {
     all: ['dashboard'] as const,
-    summary: (period?: string) => ['dashboard', 'summary', period ?? '30d'] as const,
+    summary: (period: string) => ['dashboard', 'summary', period] as const,
   },
   bookings: {
     all: ['bookings'] as const,
@@ -36,6 +36,11 @@ export const queryKeys = {
     all: ['properties'] as const,
     list: () => ['properties', 'list'] as const,
     detail: (id: string) => ['properties', 'detail', id] as const,
+  },
+  adminBookings: {
+    all: ['admin-bookings'] as const,
+    detail: (id: string) => ['admin-bookings', 'detail', id] as const,
+    quote: (params: object) => ['admin-bookings', 'quote', params] as const,
   },
   units: {
     all: ['units'] as const,
@@ -76,7 +81,7 @@ export const queryKeys = {
   },
   reports: {
     all: ['reports'] as const,
-    summary: () => ['reports', 'summary'] as const,
+    summary: (period: string) => ['reports', 'summary', period] as const,
   },
   staff: {
     all: ['staff'] as const,
@@ -85,5 +90,9 @@ export const queryKeys = {
   settings: {
     all: ['settings'] as const,
     detail: () => ['settings', 'detail'] as const,
+    profile: () => ['settings', 'profile'] as const,
+    pricing: () => ['settings', 'pricing'] as const,
+    booking: () => ['settings', 'booking'] as const,
+    payments: () => ['settings', 'payments'] as const,
   },
 } as const;

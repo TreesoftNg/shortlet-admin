@@ -1,106 +1,46 @@
 'use client';
 
-import {
-  Box,
-  Button,
-  Flex,
-  IconButton,
-  Input,
-  Switch,
-  Text,
-  useToast,
-} from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
+import { Box, Flex, IconButton, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { LuMenu } from 'react-icons/lu';
 import { useMe } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/utils/auth-helpers';
-import { useSettings } from '@/features/settings/hooks/use-settings';
-import { useUpdateSettings } from '@/features/settings/hooks/use-settings-mutations';
-import {
-  contactSettings,
-  formatSettingsUpdatedAt,
-  notificationSettings,
-  settingsValuesMap,
-} from '@/features/settings/utils/settings-helpers';
-import { ErrorState, PageHeader, PageSkeleton, Panel } from '@/shared/components/ui';
+import { PageHeader, Panel } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
-import { ApiClientError } from '@/shared/api/types';
-import type { TenantSettingItem } from '../types';
+import { BookingRulesTab } from './booking-rules-tab';
+import { BusinessTab } from './business-tab';
+import { NotificationsTab } from './notifications-tab';
+import { PaymentsTab } from './payments-tab';
+import { PricingTab } from './pricing-tab';
+
+const SETTINGS_TABS = [
+  { id: 'business', label: 'Business' },
+  { id: 'pricing', label: 'Pricing & tax' },
+  { id: 'bookings', label: 'Bookings & deposits' },
+  { id: 'payments', label: 'Payments' },
+  { id: 'notifications', label: 'Notifications' },
+] as const;
+
+type SettingsTabId = (typeof SETTINGS_TABS)[number]['id'];
 
 export function SettingsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: profile } = useMe();
   const canManage = hasPermission(profile, 'settings.manage');
-  const { data, isLoading, isError, error, refetch } = useSettings();
-  const updateSettings = useUpdateSettings();
-  const toast = useToast();
   const openMobileNav = useUiStore((state) => state.openMobileNav);
-  const [settings, setSettings] = useState<TenantSettingItem[] | null>(null);
 
-  useEffect(() => {
-    if (!data) return;
-    setSettings(data.settings);
-  }, [data]);
-
-  if (isLoading) {
-    return <PageSkeleton variant="form" />;
-  }
-
-  if (isError || !data || !settings) {
-    return (
-      <ErrorState
-        message={
-          error instanceof Error ? error.message : 'Failed to load settings'
-        }
-        onRetry={() => void refetch()}
-      />
-    );
-  }
-
-  const alerts = notificationSettings(settings);
-  const contact = contactSettings(settings);
-
-  async function handleSave() {
-    if (!settings) return;
-    try {
-      const saved = await updateSettings.mutateAsync(settingsValuesMap(settings));
-      setSettings(saved.settings);
-      toast({
-        title: 'Settings saved',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (err) {
-      toast({
-        title: 'Could not save',
-        description:
-          err instanceof ApiClientError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : 'Something went wrong',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  }
-
-  function setSettingValue(key: string, value: boolean | string) {
-    setSettings((current) =>
-      current
-        ? current.map((item) =>
-            item.key === key ? { ...item, value } : item,
-          )
-        : current,
-    );
-  }
+  const tabIndex = Math.max(
+    0,
+    SETTINGS_TABS.findIndex((tab) => tab.id === searchParams.get('tab')),
+  );
+  const currentTab: SettingsTabId = SETTINGS_TABS[tabIndex].id;
 
   return (
-    <Box maxW="720px">
+    <Box maxW="960px">
       <PageHeader
         title="Settings"
-        description={`Last updated ${formatSettingsUpdatedAt(data.updatedAt)}`}
+        description="Business details, prices, booking rules and alerts"
         actions={
           <IconButton
             aria-label="Open navigation"
@@ -115,92 +55,57 @@ export function SettingsPage() {
         }
       />
 
-      <Flex direction="column" gap="18px">
-        <Panel>
-          <Text fontSize="18px" fontWeight={700} mb="4px">
-            Contact
-          </Text>
-          <Text fontSize="13px" color="ink.300" mb="14px">
-            How guests reach you about a booking.
-          </Text>
-          <Flex direction="column" gap="14px">
-            {contact.map((option) => (
-              <Box key={option.key}>
-                <Text fontWeight={600} fontSize="14px" mb="6px">
-                  {option.label}
-                </Text>
-                <Input
-                  value={typeof option.value === 'string' ? option.value : ''}
-                  isDisabled={!canManage || updateSettings.isPending}
-                  onChange={(event) =>
-                    setSettingValue(option.key, event.target.value)
-                  }
-                />
-                {option.description ? (
-                  <Text fontSize="12px" color="ink.300" mt="6px">
-                    {option.description}
-                  </Text>
-                ) : null}
-              </Box>
-            ))}
-          </Flex>
-        </Panel>
-
-        <Panel>
-          <Text fontSize="18px" fontWeight={700} mb="4px">
-            Email alerts
-          </Text>
-          <Text fontSize="13px" color="ink.300" mb="14px">
-            Choose which events notify your staff by email.
-          </Text>
-          <Flex direction="column">
-            {alerts.map((option) => (
-              <Flex
-                key={option.key}
-                justify="space-between"
-                align="center"
-                gap="16px"
-                py="12px"
-                borderBottom="1px solid"
-                borderColor="line.400"
-                _last={{ borderBottom: 0 }}
-              >
-                <Box minW={0}>
-                  <Text fontWeight={600} fontSize="14px">
-                    {option.label}
-                  </Text>
-                  {option.description ? (
-                    <Text fontSize="12px" color="ink.300" mt="2px">
-                      {option.description}
-                    </Text>
-                  ) : null}
-                </Box>
-                <Switch
-                  colorScheme="green"
-                  isChecked={option.value === true}
-                  isDisabled={!canManage || updateSettings.isPending}
-                  onChange={(event) =>
-                    setSettingValue(option.key, event.target.checked)
-                  }
-                />
-              </Flex>
-            ))}
-          </Flex>
-        </Panel>
-
-        {canManage ? (
-          <Button
-            alignSelf="flex-start"
-            variant="dark"
-            borderRadius="12px"
-            h="40px"
-            isLoading={updateSettings.isPending}
-            onClick={() => void handleSave()}
+      <Panel p={{ base: '18px', md: '28px' }}>
+        <Flex direction="column" gap="28px">
+          <Tabs
+            index={tabIndex}
+            onChange={(index) => {
+              const tab = SETTINGS_TABS[index]?.id ?? 'business';
+              router.replace(tab === 'business' ? '/settings' : `/settings?tab=${tab}`, { scroll: false });
+            }}
+            variant="unstyled"
           >
-            Save changes
-          </Button>
-        ) : null}
-      </Flex>
+            <TabList
+              overflowX="auto"
+              borderBottom="1px solid"
+              borderColor="line.500"
+              gap={{ base: '14px', md: '22px' }}
+              css={{ '&::-webkit-scrollbar': { display: 'none' }, scrollbarWidth: 'none' }}
+            >
+              {SETTINGS_TABS.map((tab) => (
+                <Tab
+                  key={tab.id}
+                  fontWeight={700}
+                  fontSize="14px"
+                  whiteSpace="nowrap"
+                  h="auto"
+                  minW="auto"
+                  px="2px"
+                  pb="12px"
+                  borderRadius="0"
+                  color="ink.300"
+                  borderBottom="3px solid transparent"
+                  mb="-1px"
+                  _selected={{ color: 'ink.500', borderBottomColor: 'brand.500' }}
+                >
+                  {tab.label}
+                </Tab>
+              ))}
+            </TabList>
+            <TabPanels display="none">
+              {SETTINGS_TABS.map((tab) => (
+                <TabPanel key={tab.id} />
+              ))}
+            </TabPanels>
+          </Tabs>
+
+          {currentTab === 'business' ? <BusinessTab canManage={canManage} /> : null}
+          {currentTab === 'pricing' ? <PricingTab canManage={canManage} /> : null}
+          {currentTab === 'bookings' ? <BookingRulesTab canManage={canManage} /> : null}
+          {currentTab === 'payments' ? <PaymentsTab canManage={canManage} /> : null}
+          {currentTab === 'notifications' ? <NotificationsTab canManage={canManage} /> : null}
+        </Flex>
+      </Panel>
     </Box>
   );
 }

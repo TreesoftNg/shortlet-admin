@@ -19,6 +19,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { acceptStaffInvite, fetchStaffInvite, type StaffInvitePreview } from '../api/auth-api';
 import { SunmadeLogo } from '@/shared/components/brand';
 import { PasswordInput } from '@/shared/components/ui';
+import { PASSWORD_HINT } from '../utils/password-rules';
 import { ApiClientError } from '@/shared/api/types';
 
 const inputProps = {
@@ -28,8 +29,6 @@ const inputProps = {
   bg: 'white',
 } as const;
 
-const PASSWORD_HINT =
-  'At least 12 characters, with an uppercase letter and a special character.';
 
 export function AcceptInvitePage() {
   const router = useRouter();

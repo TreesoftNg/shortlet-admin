@@ -7,6 +7,8 @@ describe('getStaffColumns', () => {
       'role',
       'activity',
       'status',
+      'created',
+      'updated',
     ]);
   });
 });

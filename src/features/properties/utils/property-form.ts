@@ -59,15 +59,14 @@ export const AMENITY_OPTIONS = [
   { value: 'workspace', label: 'Workspace' },
 ] as const;
 
-export const TIMEZONE_OPTIONS = [
-  'Africa/Lagos',
-  'Africa/Accra',
-  'UTC',
-] as const;
+/** Business-wide defaults (Settings → Business) a new property starts with. */
+export type PropertyFormDefaults = Partial<
+  Pick<PropertyFormValues, 'check_in' | 'check_out' | 'timezone' | 'currency'>
+>;
 
-export const CURRENCY_OPTIONS = ['NGN', 'USD', 'GBP', 'EUR'] as const;
-
-export function createEmptyPropertyForm(): PropertyFormValues {
+export function createEmptyPropertyForm(
+  defaults: PropertyFormDefaults = {},
+): PropertyFormValues {
   return {
     name: '',
     public_name: '',
@@ -83,10 +82,10 @@ export function createEmptyPropertyForm(): PropertyFormValues {
     bedrooms: 1,
     beds: 1,
     bathrooms: 1,
-    check_in: '14:00',
-    check_out: '11:00',
-    timezone: 'Africa/Lagos',
-    currency: 'NGN',
+    check_in: defaults.check_in ?? '15:00',
+    check_out: defaults.check_out ?? '11:00',
+    timezone: defaults.timezone ?? 'Africa/Lagos',
+    currency: defaults.currency ?? 'NGN',
     summary: '',
     description: '',
     facility_ids: [],

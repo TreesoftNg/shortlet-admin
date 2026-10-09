@@ -18,4 +18,5 @@ export type Customer = {
   upcomingStays: number;
   status: CustomerStatus;
   createdAt: string;
+  updatedAt: string;
 };

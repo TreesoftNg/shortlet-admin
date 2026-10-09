@@ -1,33 +1,28 @@
 'use client';
 
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { formatMoney } from '@/features/bookings/utils/reservation-display';
-import {
-  formatOccupancy,
-  getPropertyPerformanceTotals,
-} from '@/features/reports/utils/report-formatters';
+import { formatAmount, formatPercent } from '@/features/dashboard/utils/report-format';
+import { getPropertyPerformanceTotals } from '@/features/reports/utils/report-formatters';
 import { Panel } from '@/shared/components/ui';
-import type { PropertyPerformanceRow } from '@/shared/types/hospitable';
+import type { PropertyPerformance } from '../types';
 
 type PropertyPerformanceTableProps = {
-  rows: PropertyPerformanceRow[];
+  rows: PropertyPerformance[];
+  currency: string;
 };
 
-export function PropertyPerformanceTable({
-  rows,
-}: PropertyPerformanceTableProps) {
+export function PropertyPerformanceTable({ rows, currency }: PropertyPerformanceTableProps) {
   const totals = getPropertyPerformanceTotals(rows);
-  const currency = rows[0]?.currency ?? 'NGN';
 
   return (
-    <Panel pt="18px" overflowX="auto">
+    <Panel pt="18px" minW={0} overflowX="auto">
       <Flex justify="space-between" align="center" mb="14px" px="2px">
         <Box>
           <Text fontSize="18px" fontWeight={700}>
             Property performance
           </Text>
           <Text color="ink.400" fontSize="14px" mt="2px">
-            Revenue, bookings and occupancy by property
+            Revenue, bookings and occupancy by property for this period
           </Text>
         </Box>
       </Flex>
@@ -41,7 +36,7 @@ export function PropertyPerformanceTable({
               'Bookings',
               'Nights',
               'Occupancy',
-              'ADR',
+              'Avg rate',
             ].map((header) => (
               <Box
                 as="th"
@@ -64,27 +59,27 @@ export function PropertyPerformanceTable({
           {rows.map((row) => (
             <Box
               as="tr"
-              key={row.property_id}
+              key={row.propertyId ?? row.propertyName}
               borderBottom="1px solid"
               borderColor="line.400"
             >
               <Box as="td" py="14px" px="8px" fontWeight={700}>
-                {row.property_name}
+                {row.propertyName}
               </Box>
               <Box as="td" py="14px" px="8px" textAlign="right" fontWeight={700}>
-                {formatMoney(row.revenue, row.currency)}
+                {formatAmount(row.revenue, currency)}
               </Box>
               <Box as="td" py="14px" px="8px" textAlign="right">
                 {row.bookings}
               </Box>
               <Box as="td" py="14px" px="8px" textAlign="right">
-                {row.nights_booked}
+                {row.nights}
               </Box>
               <Box as="td" py="14px" px="8px" textAlign="right">
-                {formatOccupancy(row.occupancy_percent)}
+                {formatPercent(row.occupancyPercent)}
               </Box>
               <Box as="td" py="14px" px="8px" textAlign="right">
-                {formatMoney(row.avg_nightly_rate, row.currency)}
+                {formatAmount(row.avgNightlyRate, currency)}
               </Box>
             </Box>
           ))}
@@ -95,13 +90,13 @@ export function PropertyPerformanceTable({
               Total
             </Box>
             <Box as="td" py="14px" px="8px" textAlign="right" fontWeight={800}>
-              {formatMoney(totals.revenue, currency)}
+              {formatAmount(totals.revenue, currency)}
             </Box>
             <Box as="td" py="14px" px="8px" textAlign="right" fontWeight={700}>
               {totals.bookings}
             </Box>
             <Box as="td" py="14px" px="8px" textAlign="right" fontWeight={700}>
-              {totals.nights_booked}
+              {totals.nights}
             </Box>
             <Box as="td" py="14px" px="8px" textAlign="right" color="ink.300">
               —

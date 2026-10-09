@@ -45,24 +45,24 @@ export function AddVideoLinkModal({ isOpen, onClose, isSaving, onSave }: AddVide
     >
       <Flex direction="column" gap="14px">
         <FormControl>
-          <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
+          <FormLabel>
             YouTube or Vimeo URL
           </FormLabel>
           <Input
             value={url}
             onChange={(event) => setUrl(event.target.value)}
             placeholder="https://youtu.be/…"
-            borderRadius="12px"
+           
           />
         </FormControl>
         <FormControl>
-          <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
+          <FormLabel>
             Caption
           </FormLabel>
           <Input
             value={caption}
             onChange={(event) => setCaption(event.target.value)}
-            borderRadius="12px"
+           
           />
         </FormControl>
         {url && !parsed ? (

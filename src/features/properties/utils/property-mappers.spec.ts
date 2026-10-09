@@ -104,7 +104,7 @@ describe('property mappers', () => {
       bedrooms: 2,
       beds: 2,
       bathrooms: 2,
-      checkInTime: '14:00',
+      checkInTime: '15:00',
       checkOutTime: '11:00',
       timezone: 'Africa/Lagos',
       currency: 'NGN',

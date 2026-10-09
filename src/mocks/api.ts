@@ -1,11 +1,9 @@
 import {
-  mockDashboardSummary,
   mockGuests,
   mockProperties,
   mockReservations,
   mockUnits,
 } from '@/mocks/data';
-import { buildMockAvailabilityCalendar } from '@/mocks/data/availability';
 import {
   mockConversations,
   mockMessages,
@@ -19,10 +17,8 @@ import {
   buildRefundList,
   type RefundListItem,
 } from '@/mocks/data/refunds';
-import { mockReportsSummary } from '@/mocks/data/reports';
 import { mockReviews } from '@/mocks/data/reviews';
 import { mockStaff } from '@/mocks/data/staff';
-import { mockTenantSettings } from '@/mocks/data/settings';
 import {
   buildGuestFromForm,
   buildReservationFromForm,
@@ -38,20 +34,14 @@ import {
   type UnitFormValues,
 } from '@/features/units/utils/unit-form';
 import { delay, ok } from '@/mocks/utils';
-import type { Customer } from '@/features/customers/types';
 import type { ApiSuccessResponse } from '@/shared/api/types';
 import type {
-  AvailabilityCalendar,
-  CalendarRange,
-  DashboardSummary,
   Guest,
   Message,
   Property,
-  ReportsSummary,
   Reservation,
   Review,
   StaffMember,
-  TenantSettings,
   Unit,
 } from '@/shared/types/hospitable';
 
@@ -68,10 +58,6 @@ function nextUnitId(): string {
 }
 
 export const mockApi = {
-  async getDashboardSummary(): Promise<ApiSuccessResponse<DashboardSummary>> {
-    await delay();
-    return ok(mockDashboardSummary);
-  },
 
   async getReservations(): Promise<ApiSuccessResponse<Reservation[]>> {
     await delay();
@@ -304,33 +290,6 @@ export const mockApi = {
     return ok(unit, 'Unit updated');
   },
 
-  async getCustomers(): Promise<ApiSuccessResponse<Customer[]>> {
-    await delay();
-    const customers: Customer[] = mockGuests.map((guest) => ({
-      id: guest.id,
-      userId: guest.id,
-      firstName: guest.first_name,
-      lastName: guest.last_name,
-      fullName: guest.full_name ?? `${guest.first_name} ${guest.last_name}`.trim(),
-      email: guest.email ?? '',
-      phone: guest.phone,
-      location: guest.location,
-      locale: guest.locale,
-      pictureUrl: guest.picture_url,
-      staysCount: 0,
-      totalSpent: 0,
-      currency: 'NGN',
-      upcomingStays: 0,
-      status: 'new',
-      createdAt: '2026-10-01T00:00:00.000Z',
-    }));
-    return ok(customers, 'Customers retrieved', {
-      page: 1,
-      limit: 50,
-      total: customers.length,
-      totalPages: 1,
-    });
-  },
 
   async getConversations(): Promise<ApiSuccessResponse<ConversationListItem[]>> {
     await delay();
@@ -384,10 +343,6 @@ export const mockApi = {
     });
   },
 
-  async getReports(): Promise<ApiSuccessResponse<ReportsSummary>> {
-    await delay();
-    return ok(mockReportsSummary, 'Reports retrieved');
-  },
 
   async getStaff(): Promise<ApiSuccessResponse<StaffMember[]>> {
     await delay();
@@ -399,24 +354,4 @@ export const mockApi = {
     });
   },
 
-  async getSettings(): Promise<ApiSuccessResponse<TenantSettings>> {
-    await delay();
-    return ok(mockTenantSettings, 'Settings retrieved');
-  },
-
-  async getAvailabilityCalendar(params: {
-    anchorDate: string;
-    range: CalendarRange;
-    propertyId?: string | number | 'all';
-  }): Promise<ApiSuccessResponse<AvailabilityCalendar>> {
-    await delay();
-    return ok(
-      buildMockAvailabilityCalendar(
-        params.anchorDate,
-        params.range,
-        params.propertyId ?? 'all',
-      ),
-      'Availability calendar retrieved',
-    );
-  },
 };

@@ -1,83 +1,61 @@
 'use client';
 
 import { Box, Flex, Text } from '@chakra-ui/react';
-import { getFinanceCards } from '@/features/reports/utils/report-formatters';
+import { OccupancyPanel } from '@/features/dashboard/components/occupancy-panel';
+import type { PropertyOccupancy } from '@/features/dashboard/types';
 import { Panel } from '@/shared/components/ui';
-import type { OccupancyByProperty, ReportsFinanceSummary } from '@/shared/types/hospitable';
+import type { FinanceSummary } from '../types';
+import { getFinanceRows } from '../utils/report-formatters';
 
 type ReportsSidePanelProps = {
-  finance: ReportsFinanceSummary;
-  occupancyAvg: number;
-  occupancyByProperty: OccupancyByProperty[];
+  finance: FinanceSummary;
+  currency: string;
+  occupancyPercent: number;
+  occupancyByProperty: PropertyOccupancy[];
 };
 
-export function ReportsSidePanel({
-  finance,
-  occupancyAvg,
-  occupancyByProperty,
-}: ReportsSidePanelProps) {
-  const cards = getFinanceCards(finance);
-
+export function ReportsSidePanel({ finance, currency, occupancyPercent, occupancyByProperty }: ReportsSidePanelProps) {
   return (
     <Flex direction="column" gap="18px" h="100%">
       <Panel>
-        <Text fontSize="18px" fontWeight={700} mb="4px">
+        <Text fontSize="18px" fontWeight={700}>
           Finance summary
         </Text>
-        <Text color="ink.400" fontSize="14px" mb="14px">
-          Gross vs refunds for this period
+        <Text color="ink.300" fontSize="13px" mt="2px" mb="12px">
+          Stay money only; deposits are not revenue
         </Text>
-        <Flex direction="column" gap="10px">
-          {cards.map((card) => (
+        <Box border="1px solid" borderColor="line.500" borderRadius="12px" overflow="hidden">
+          {getFinanceRows(finance, currency).map((row) => (
             <Flex
-              key={card.id}
+              key={row.id}
               justify="space-between"
               align="center"
-              bg="bg.400"
-              borderRadius="12px"
-              px="12px"
+              gap="12px"
+              px="14px"
               py="10px"
+              borderTop="1px solid"
+              borderColor="line.500"
+              _first={{ borderTop: 0 }}
+              bg={'emphasize' in row ? 'bg.400' : 'white'}
             >
-              <Text fontSize="13px" color="ink.400" fontWeight={600}>
-                {card.label}
-              </Text>
-              <Text fontWeight={800} fontSize="14px">
-                {card.value}
+              <Box minW={0}>
+                <Text fontSize="14px" fontWeight={600}>
+                  {row.label}
+                </Text>
+                <Text fontSize="12px" color="ink.300">
+                  {row.hint}
+                </Text>
+              </Box>
+              <Text fontWeight={800} fontSize="14px" flexShrink={0}>
+                {row.value}
               </Text>
             </Flex>
           ))}
-        </Flex>
+        </Box>
       </Panel>
-
-      <Panel flex="1">
-        <Flex justify="space-between" align="center" mb="14px">
-          <Text fontSize="18px" fontWeight={700}>
-            Occupancy
-          </Text>
-          <Text fontWeight={800}>{occupancyAvg}%</Text>
-        </Flex>
-        {occupancyByProperty.map((item) => (
-          <Flex
-            key={item.property_id}
-            align="center"
-            gap="10px"
-            fontSize="14px"
-            mb="10px"
-          >
-            <Box
-              w="10px"
-              h="10px"
-              borderRadius="3px"
-              bg={item.color}
-              flexShrink={0}
-            />
-            <Text flex="1" noOfLines={1}>
-              {item.property_name}
-            </Text>
-            <Text fontWeight={700}>{item.occupancy_percent}%</Text>
-          </Flex>
-        ))}
-      </Panel>
+      <Box flex="1">
+        <OccupancyPanel overallPercent={occupancyPercent} properties={occupancyByProperty} title="Occupancy" />
+      </Box>
     </Flex>
   );
 }

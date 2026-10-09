@@ -17,6 +17,7 @@ export function review(overrides: Partial<Review> = {}): Review {
     respondedAt: null,
     canRespond: true,
     createdAt: '2026-10-02T10:00:00.000Z',
+    updatedAt: '2026-10-04T12:00:00.000Z',
     ...overrides,
   };
 }

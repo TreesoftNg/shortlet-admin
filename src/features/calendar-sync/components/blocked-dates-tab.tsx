@@ -14,7 +14,6 @@ import {
   FormLabel,
   IconButton,
   Input,
-  Select,
   SimpleGrid,
   Spinner,
   Stack,
@@ -22,13 +21,14 @@ import {
   Textarea,
   useToast,
 } from '@chakra-ui/react';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useId, useMemo, useState, type FormEvent } from 'react';
 import { LuTrash2 } from 'react-icons/lu';
 import { useMe } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/utils/auth-helpers';
-import { EmptyState, ErrorState, StatusBadge } from '@/shared/components/ui';
+import { ErrorState, FormPanel, FormPanelBody, StatusBadge } from '@/shared/components/ui';
 import { useCreateBlock, useDeleteBlock } from '../hooks/use-calendar-sync-mutations';
 import { useBlocks } from '../hooks/use-calendar-sync-queries';
+import { BlockReasonPicker } from './block-reason-picker';
 import type { AvailabilityBlock, BlockReason, CreateBlockInput, UnitCalendarSummary } from '../types';
 import {
   BLOCK_REASON_LABELS,
@@ -46,7 +46,8 @@ import {
 
 const EMPTY_FORM: CreateBlockInput = { startDate: '', endDate: '', reason: 'maintenance', note: '' };
 
-const inputProps = { borderColor: 'line.500', borderRadius: '12px', bg: 'white' } as const;
+const inputProps = { borderColor: 'line.500', borderRadius: '10px', bg: 'white' } as const;
+const labelProps = { fontSize: '13px', fontWeight: 600, color: 'ink.500' } as const;
 
 /** Nights taken off sale here; sent to Hospitable through the export link. */
 export function BlockedDatesTab({ unit }: { unit: UnitCalendarSummary }) {
@@ -84,7 +85,18 @@ export function BlockedDatesTab({ unit }: { unit: UnitCalendarSummary }) {
         ) : blocks.isError ? (
           <ErrorState minH="160px" message={errorMessage(blocks.error)} onRetry={() => void blocks.refetch()} />
         ) : sortedBlocks.length === 0 ? (
-          <EmptyState minH="140px" title="No blocked dates" description="Blocks you add appear here." />
+          <Box
+            border="1px dashed"
+            borderColor="line.500"
+            borderRadius="12px"
+            py="18px"
+            px="16px"
+            textAlign="center"
+            fontSize="13px"
+            color="ink.300"
+          >
+            No blocked dates. Blocks you add appear here.
+          </Box>
         ) : (
           <Stack spacing="8px">
             {sortedBlocks.map((block) => (
@@ -154,123 +166,128 @@ function NewBlockForm({
   };
 
   const noteLength = form.note?.length ?? 0;
+  const reasonLabelId = useId();
 
   return (
-    <Box as="form" onSubmit={submit} noValidate border="1px solid" borderColor="line.500" borderRadius="14px" p="16px">
-      <Text fontWeight={700} mb="12px">
-        Block new dates
-      </Text>
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing="12px">
-        <FormControl isInvalid={Boolean(errors.startDate)} isRequired>
-          <FormLabel fontSize="13px">First night</FormLabel>
-          <Input
-            type="date"
-            min={today}
-            value={form.startDate}
-            onChange={(event) => update({ startDate: event.target.value })}
-            {...inputProps}
-          />
-          <FormHelperText>Guests cannot check in on this night.</FormHelperText>
-          <FormErrorMessage>{errors.startDate}</FormErrorMessage>
-        </FormControl>
-        <FormControl isInvalid={Boolean(errors.endDate)} isRequired>
-          <FormLabel fontSize="13px">Checkout day</FormLabel>
-          <Input
-            type="date"
-            min={form.startDate ? addDaysIso(form.startDate, 1) : today}
-            value={form.endDate}
-            onChange={(event) => update({ endDate: event.target.value })}
-            {...inputProps}
-          />
-          <FormHelperText>
-            Day after the last blocked night
-            {nights > 0 ? ` · ${nights} night${nights === 1 ? '' : 's'}` : ''}.
-          </FormHelperText>
-          <FormErrorMessage>{errors.endDate}</FormErrorMessage>
-        </FormControl>
-        <FormControl>
-          <FormLabel fontSize="13px">Reason</FormLabel>
-          <Select
-            value={form.reason}
-            onChange={(event) => update({ reason: event.target.value as BlockReason })}
-            {...inputProps}
-          >
-            {Object.entries(BLOCK_REASON_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </Select>
-          <Flex mt="8px" gap="6px" wrap="wrap">
-            <StatusBadge tone={BLOCK_REASON_TONES[form.reason]}>
-              {BLOCK_REASON_LABELS[form.reason]}
-            </StatusBadge>
-          </Flex>
-        </FormControl>
-        <FormControl>
-          <FormLabel fontSize="13px">Note (internal only)</FormLabel>
-          <Textarea
-            value={form.note}
-            maxLength={500}
-            placeholder="e.g. Deep clean and AC service"
-            minH="84px"
-            onChange={(event) => update({ note: event.target.value })}
-            borderColor="line.500"
-            borderRadius="12px"
-            bg="white"
-          />
-          <FormHelperText textAlign="right">{noteLength}/500</FormHelperText>
-        </FormControl>
-      </SimpleGrid>
-
-      {nights > 0 && overlaps.length === 0 ? (
-        <Alert status="info" borderRadius="12px" mt="12px">
-          <AlertIcon />
-          <AlertDescription>
-            Blocking {formatStayDate(form.startDate)} → {formatStayDate(form.endDate)} ({nights}{' '}
-            night{nights === 1 ? '' : 's'}).
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
-      {overlaps.length > 0 ? (
-        <Alert status="warning" borderRadius="12px" mt="12px" alignItems="flex-start">
-          <AlertIcon mt="2px" />
-          <Box>
-            <AlertTitle fontSize="14px" mb="4px">
-              Overlaps an existing block
-            </AlertTitle>
-            <AlertDescription>
-              Conflicts with{' '}
-              {overlaps
-                .slice(0, 2)
-                .map(
-                  (block) =>
-                    `${formatStayDate(block.startDate)} → ${formatStayDate(block.endDate)}`,
-                )
-                .join('; ')}
-              {overlaps.length > 2 ? ` and ${overlaps.length - 2} more` : ''}. Adjust the range
-              before saving.
-            </AlertDescription>
-          </Box>
-        </Alert>
-      ) : null}
-
-      {create.isError ? (
-        <Alert status="error" borderRadius="12px" mt="12px">
-          <AlertIcon />
-          <AlertDescription>{describeBlockApiError(create.error)}</AlertDescription>
-        </Alert>
-      ) : null}
-
-      <Button
-        type="submit"
-        mt="14px"
-        isLoading={create.isPending}
-        isDisabled={overlaps.length > 0}
+    <Box as="form" onSubmit={submit} noValidate>
+      <FormPanel
+        title="Block new dates"
+        footer={
+          <>
+            <Text fontSize="13px" color="ink.400" alignSelf={{ base: 'flex-start', md: 'center' }}>
+              {nights > 0 ? (
+                <>
+                  <Text as="span" fontWeight={700} color="ink.500">
+                    {nights} night{nights === 1 ? '' : 's'} blocked
+                  </Text>{' '}
+                  · {formatStayDate(form.startDate)} → {formatStayDate(form.endDate)}
+                </>
+              ) : (
+                'Pick the first night and the checkout day.'
+              )}
+            </Text>
+            <Button
+              type="submit"
+              h="40px"
+              px="18px"
+              borderRadius="10px"
+              w={{ base: '100%', md: 'auto' }}
+              isLoading={create.isPending}
+              isDisabled={overlaps.length > 0}
+            >
+              Block dates
+            </Button>
+          </>
+        }
       >
-        Block dates
-      </Button>
+        <FormPanelBody>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing="14px">
+            <FormControl isInvalid={Boolean(errors.startDate)} isRequired>
+              <FormLabel {...labelProps}>First night</FormLabel>
+              <Input
+                type="date"
+                min={today}
+                value={form.startDate}
+                onChange={(event) => update({ startDate: event.target.value })}
+                {...inputProps}
+              />
+              <FormErrorMessage>{errors.startDate}</FormErrorMessage>
+            </FormControl>
+            <FormControl isInvalid={Boolean(errors.endDate)} isRequired>
+              <FormLabel {...labelProps}>Checkout day</FormLabel>
+              <Input
+                type="date"
+                min={form.startDate ? addDaysIso(form.startDate, 1) : today}
+                value={form.endDate}
+                onChange={(event) => update({ endDate: event.target.value })}
+                {...inputProps}
+              />
+              <FormErrorMessage>{errors.endDate}</FormErrorMessage>
+            </FormControl>
+          </SimpleGrid>
+
+          <Box>
+            <Text id={reasonLabelId} {...labelProps} mb="8px">
+              Reason
+            </Text>
+            <BlockReasonPicker
+              labelledBy={reasonLabelId}
+              value={form.reason}
+              onChange={(reason) => update({ reason })}
+            />
+          </Box>
+
+          <FormControl>
+            <FormLabel {...labelProps}>
+              Note{' '}
+              <Text as="span" fontWeight={500} color="ink.300">
+                (optional, staff only)
+              </Text>
+            </FormLabel>
+            <Textarea
+              value={form.note}
+              maxLength={500}
+              placeholder="e.g. Deep clean and AC service"
+              minH="76px"
+              onChange={(event) => update({ note: event.target.value })}
+              {...inputProps}
+            />
+            <FormHelperText textAlign="right" fontSize="12px" color="ink.300">
+              {noteLength}/500
+            </FormHelperText>
+          </FormControl>
+
+          {overlaps.length > 0 ? (
+            <Alert status="warning" borderRadius="12px" alignItems="flex-start">
+              <AlertIcon mt="2px" />
+              <Box>
+                <AlertTitle fontSize="14px" mb="4px">
+                  Overlaps an existing block
+                </AlertTitle>
+                <AlertDescription>
+                  Conflicts with{' '}
+                  {overlaps
+                    .slice(0, 2)
+                    .map(
+                      (block) =>
+                        `${formatStayDate(block.startDate)} → ${formatStayDate(block.endDate)}`,
+                    )
+                    .join('; ')}
+                  {overlaps.length > 2 ? ` and ${overlaps.length - 2} more` : ''}. Adjust the range
+                  before saving.
+                </AlertDescription>
+              </Box>
+            </Alert>
+          ) : null}
+
+          {create.isError ? (
+            <Alert status="error" borderRadius="12px">
+              <AlertIcon />
+              <AlertDescription>{describeBlockApiError(create.error)}</AlertDescription>
+            </Alert>
+          ) : null}
+        </FormPanelBody>
+      </FormPanel>
     </Box>
   );
 }

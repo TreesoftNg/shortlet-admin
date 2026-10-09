@@ -9,6 +9,8 @@ describe('getPropertyColumns', () => {
       'capacity',
       'channels',
       'status',
+      'created',
+      'updated',
     ]);
   });
 });

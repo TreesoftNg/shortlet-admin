@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { endSession } from '@/shared/api/session';
 import { queryKeys } from '@/shared/api/query-keys';
 import { useSessionStore } from '@/shared/store/session-store';
-import { fetchMe, login, logout } from '../api/auth-api';
+import { changePassword, fetchMe, login, logout } from '../api/auth-api';
 import type { LoginInput } from '../types';
 
 /** True once the stored session is known and holds a refresh token. */
@@ -52,5 +52,12 @@ export function useLogout() {
       endSession();
       queryClient.clear();
     },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (input: { currentPassword: string; newPassword: string }) =>
+      (await changePassword(input)).data,
   });
 }

@@ -64,7 +64,9 @@ beforeEach(() => {
 describe('PaymentsPage', () => {
   it('lists payments from the API', async () => {
     renderAs();
-    expect(await screen.findByText('pay_SM_ABC123')).toBeInTheDocument();
+    expect(await screen.findByText('Ada Okafor')).toBeInTheDocument();
+    expect(screen.getByText('Azure Lekki Studio')).toBeInTheDocument();
+    expect(screen.queryByText('pay_SM_ABC123')).not.toBeInTheDocument();
     expect(api.fetchPayments).toHaveBeenCalled();
   });
 
@@ -76,7 +78,7 @@ describe('PaymentsPage', () => {
 
   it('verifies a payment with Flutterwave', async () => {
     renderAs();
-    await userEvent.click(await screen.findByText('pay_SM_ABC123'));
+    await userEvent.click(await screen.findByText('Ada Okafor'));
     await userEvent.click(
       await screen.findByRole('button', { name: 'Check with Flutterwave' }),
     );
@@ -89,7 +91,7 @@ describe('PaymentsPage', () => {
 
   it('refunds a stay from the payment drawer', async () => {
     renderAs();
-    await userEvent.click(await screen.findByText('pay_SM_ABC123'));
+    await userEvent.click(await screen.findByText('Ada Okafor'));
     await userEvent.click(
       await screen.findByRole('button', { name: 'Refund stay' }),
     );

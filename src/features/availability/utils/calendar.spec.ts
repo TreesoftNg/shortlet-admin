@@ -6,6 +6,11 @@ import {
   getBarLayout,
   groupUnitsByProperty,
   isWeekend,
+  calendarWindow,
+  coversNight,
+  getEventLayout,
+  selectNights,
+  todayInLagos,
 } from './calendar';
 
 describe('calendar utils', () => {
@@ -48,27 +53,79 @@ describe('calendar utils', () => {
     expect(getBarLayout('2026-09-01', '2026-09-03', dates)).toBeNull();
   });
 
-  it('groups units by property', () => {
+  it('groups units by property, with units without one last', () => {
     const groups = groupUnitsByProperty([
-      {
-        property_id: 1,
-        property_name: 'Azure',
-        id: 'u1',
-      },
-      {
-        property_id: 1,
-        property_name: 'Azure',
-        id: 'u2',
-      },
-      {
-        property_id: 2,
-        property_name: 'Palms',
-        id: 'u3',
-      },
+      { id: 'u0', propertyId: null, propertyName: null },
+      { id: 'u1', propertyId: 'p1', propertyName: 'Azure' },
+      { id: 'u2', propertyId: 'p1', propertyName: 'Azure' },
+      { id: 'u3', propertyId: 'p2', propertyName: 'Palms' },
     ]);
 
-    expect(groups).toHaveLength(2);
-    expect(groups[0].units).toHaveLength(2);
-    expect(groups[1].propertyName).toBe('Palms');
+    expect(groups.map((group) => [group.propertyName, group.units.length])).toEqual([
+      ['Azure', 2],
+      ['Palms', 1],
+      ['No property', 1],
+    ]);
+  });
+
+  it('builds the visible window and today in Lagos', () => {
+    expect(calendarWindow('2026-10-06', 'week')).toEqual({ from: '2026-10-06', to: '2026-10-13' });
+    expect(calendarWindow('2026-10-06', 'month').to).toBe('2026-11-06');
+    expect(todayInLagos(new Date('2026-10-05T23:30:00Z'))).toBe('2026-10-06');
+  });
+
+  describe('getEventLayout', () => {
+    const nights = eachDateInRange('2026-10-06', '2026-10-12'); // 7 nights
+
+    it('runs from midday of the first night to midday of check-out', () => {
+      expect(getEventLayout('2026-10-07', '2026-10-09', nights)).toMatchObject({
+        startIndex: 1,
+        leftPercent: 50,
+        widthCalc: 'calc(200% - 4px)',
+        clippedStart: false,
+        clippedEnd: false,
+      });
+    });
+
+    it('keeps stays that cross the window edges, drawn to the edge', () => {
+      expect(getEventLayout('2026-10-03', '2026-10-08', nights)).toMatchObject({
+        startIndex: 0,
+        leftPercent: 0,
+        widthCalc: 'calc(250% - 4px)',
+        clippedStart: true,
+      });
+      expect(getEventLayout('2026-10-11', '2026-10-20', nights)).toMatchObject({
+        startIndex: 5,
+        widthCalc: 'calc(150% - 4px)',
+        clippedEnd: true,
+      });
+      expect(getEventLayout('2026-10-12', '2026-10-13', nights)).toMatchObject({
+        startIndex: 6,
+        widthCalc: 'calc(50% - 4px)',
+        clippedEnd: true,
+      });
+      expect(getEventLayout('2026-10-01', '2026-10-30', nights)).toMatchObject({
+        startIndex: 0,
+        widthCalc: 'calc(700% - 4px)',
+      });
+    });
+
+    it('skips stays outside the window', () => {
+      expect(getEventLayout('2026-10-01', '2026-10-06', nights)).toBeNull();
+      expect(getEventLayout('2026-10-13', '2026-10-15', nights)).toBeNull();
+    });
+  });
+
+  it('selects free nights only, as [start, check-out)', () => {
+    const taken = new Set(['2026-10-09']);
+    const isFree = (night: string) => !taken.has(night);
+
+    expect(selectNights('2026-10-06', '2026-10-08', isFree)).toEqual({
+      startDate: '2026-10-06',
+      endDate: '2026-10-09',
+    });
+    expect(selectNights('2026-10-08', '2026-10-06', isFree)?.startDate).toBe('2026-10-06');
+    expect(selectNights('2026-10-08', '2026-10-10', isFree)).toBeNull();
+    expect(coversNight({ startDate: '2026-10-07', endDate: '2026-10-09' }, '2026-10-09')).toBe(false);
   });
 });

@@ -1,8 +1,7 @@
-import type { RevenuePoint } from '@/shared/types/hospitable';
 import {
+  type RevenuePoint,
   buildAreaPath,
   buildSmoothLinePath,
-  findHighlightIndex,
   getSeriesExtent,
   mapPointsToChart,
 } from './revenue-chart';
@@ -39,8 +38,23 @@ describe('revenue-chart utils', () => {
     expect(path.endsWith(' Z')).toBe(true);
   });
 
-  it('finds highlight index by date', () => {
-    expect(findHighlightIndex(sample, '2026-09-18')).toBe(2);
-    expect(findHighlightIndex(sample, 'missing')).toBe(3);
+
+  it('keeps the curve between neighbouring points (no dip below zero)', () => {
+    const points = mapPointsToChart(
+      [
+        { date: 'a', label: 'a', amount: 0 },
+        { date: 'b', label: 'b', amount: 0 },
+        { date: 'c', label: 'c', amount: 100 },
+        { date: 'd', label: 'd', amount: 0 },
+      ],
+      400,
+      200,
+    );
+    const baseline = Math.max(...points.map((point) => point.y));
+    const ys = buildSmoothLinePath(points)
+      .match(/-?\d+(\.\d+)?/g)!
+      .map(Number)
+      .filter((_, index) => index % 2 === 1);
+    expect(Math.max(...ys)).toBeLessThanOrEqual(baseline);
   });
 });

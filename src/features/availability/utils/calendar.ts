@@ -97,24 +97,121 @@ export function getBarLayout(
   };
 }
 
-export function groupUnitsByProperty<T extends { property_id: number; property_name: string }>(
-  units: T[],
-): Array<{ propertyId: number; propertyName: string; units: T[] }> {
-  const groups: Array<{ propertyId: number; propertyName: string; units: T[] }> = [];
+export type UnitGroup<T> = {
+  key: string;
+  propertyId: string | null;
+  propertyName: string;
+  units: T[];
+};
 
-  units.forEach((unit) => {
-    const existing = groups.find((group) => group.propertyId === unit.property_id);
-    if (existing) {
-      existing.units.push(unit);
-      return;
-    }
+/** Groups units under their property, keeping the API's order; units without one go last. */
+export function groupUnitsByProperty<
+  T extends { propertyId: string | null; propertyName: string | null },
+>(units: T[]): Array<UnitGroup<T>> {
+  const groups = new Map<string, UnitGroup<T>>();
+  for (const unit of units) {
+    const key = unit.propertyId ?? 'none';
+    const group = groups.get(key) ?? {
+      key,
+      propertyId: unit.propertyId,
+      propertyName: unit.propertyName ?? 'No property',
+      units: [],
+    };
+    group.units.push(unit);
+    groups.set(key, group);
+  }
+  return Array.from(groups.values()).sort(
+    (a, b) => Number(a.propertyId === null) - Number(b.propertyId === null),
+  );
+}
 
-    groups.push({
-      propertyId: unit.property_id,
-      propertyName: unit.property_name,
-      units: [unit],
-    });
-  });
+/** Nights shown for each range. */
+export const RANGE_NIGHTS = { week: 7, '2weeks': 14, month: 31 } as const;
 
-  return groups;
+/** `[from, to)` for a range starting at `anchor`. */
+export function calendarWindow(
+  anchor: string,
+  range: keyof typeof RANGE_NIGHTS,
+): { from: string; to: string } {
+  return { from: anchor, to: addDays(anchor, RANGE_NIGHTS[range]) };
+}
+
+/** Today's date in Lagos, where the business runs (`YYYY-MM-DD`). */
+export function todayInLagos(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Lagos',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}
+
+export type EventLayout = {
+  /** Visible night the bar is drawn from. */
+  startIndex: number;
+  leftPercent: number;
+  widthCalc: string;
+  /** The event continues before or after the visible window. */
+  clippedStart: boolean;
+  clippedEnd: boolean;
+};
+
+/**
+ * Places a `[startDate, endDate)` stay on the visible nights. Like the
+ * design, a bar runs from midday of its first night to midday of check-out
+ * day. A stay that starts before the window starts at the first cell's edge;
+ * one that ends after it runs to the last cell's edge.
+ */
+export function getEventLayout(
+  startDate: string,
+  endDate: string,
+  nights: string[],
+): EventLayout | null {
+  if (!nights.length) return null;
+  const first = nights[0];
+  const afterLast = addDays(nights[nights.length - 1], 1);
+  if (endDate <= first || startDate >= afterLast) return null;
+
+  const clippedStart = startDate < first;
+  // Check-out on the day after the window still runs past its right edge.
+  const clippedEnd = endDate >= afterLast;
+  const startIndex = clippedStart ? 0 : nights.indexOf(startDate);
+  const endIndex = clippedEnd ? nights.length : nights.indexOf(endDate);
+  if (startIndex < 0 || endIndex < 0) return null;
+
+  const startOffset = clippedStart ? 0 : 0.5;
+  const endOffset = clippedEnd ? 0 : 0.5;
+  const span = endIndex - startIndex + endOffset - startOffset;
+  return {
+    startIndex,
+    leftPercent: startOffset * 100,
+    widthCalc: `calc(${span * 100}% - 4px)`,
+    clippedStart,
+    clippedEnd,
+  };
+}
+
+/** True when a `[startDate, endDate)` stay covers this night. */
+export function coversNight(
+  event: { startDate: string; endDate: string },
+  night: string,
+): boolean {
+  return event.startDate <= night && night < event.endDate;
+}
+
+/**
+ * Extends a selection of nights from `anchor` to `night` on one unit, or
+ * returns null if any night in between is taken or in the past. Returns the
+ * selection as `[startDate, endDate)`.
+ */
+export function selectNights(
+  anchor: string,
+  night: string,
+  isFree: (night: string) => boolean,
+): { startDate: string; endDate: string } | null {
+  const [start, last] = anchor <= night ? [anchor, night] : [night, anchor];
+  for (let cursor = start; cursor <= last; cursor = addDays(cursor, 1)) {
+    if (!isFree(cursor)) return null;
+  }
+  return { startDate: start, endDate: addDays(last, 1) };
 }

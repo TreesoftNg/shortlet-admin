@@ -53,9 +53,9 @@ type NavSection = {
 const navSections: NavSection[] = [
   {
     items: [
-      { label: 'Dashboard', href: '/', icon: LuLayoutDashboard, demo: true },
+      { label: 'Dashboard', href: '/', icon: LuLayoutDashboard },
       { label: 'Bookings', href: '/bookings', icon: LuCalendarCheck },
-      { label: 'Availability', href: '/availability', icon: LuCalendarDays, demo: true },
+      { label: 'Availability', href: '/availability', icon: LuCalendarDays },
       { label: 'Properties', href: '/properties', icon: LuBuilding2 },
       { label: 'Units', href: '/units', icon: LuDoorOpen },
       { label: 'Calendar sync', href: '/calendar-sync', icon: LuRefreshCw },
@@ -72,7 +72,7 @@ const navSections: NavSection[] = [
     title: 'Finance',
     items: [
       { label: 'Payments', href: '/payments', icon: LuWallet },
-      { label: 'Reports', href: '/reports', icon: LuChartBar, demo: true },
+      { label: 'Reports', href: '/reports', icon: LuChartBar },
     ],
   },
   {
@@ -191,28 +191,45 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         borderColor="line.500"
       >
         <Flex
-          w="32px"
-          h="32px"
-          flexShrink={0}
-          borderRadius="full"
+          as={Link}
+          href="/account"
+          onClick={onNavigate}
           align="center"
-          justify="center"
-          bg="brand.500"
-          color="white"
-          fontSize="12px"
-          fontWeight={700}
-          aria-hidden
+          gap="12px"
+          minW={0}
+          flex="1"
+          borderRadius="10px"
+          px="6px"
+          py="4px"
+          mx="-6px"
+          aria-label="Your account"
+          bg={pathname === '/account' ? 'brand.50' : 'transparent'}
+          _hover={{ bg: 'bg.400' }}
         >
-          {profile ? initials(profile) : ''}
+          <Flex
+            w="32px"
+            h="32px"
+            flexShrink={0}
+            borderRadius="full"
+            align="center"
+            justify="center"
+            bg="brand.500"
+            color="white"
+            fontSize="12px"
+            fontWeight={700}
+            aria-hidden
+          >
+            {profile ? initials(profile) : ''}
+          </Flex>
+          <Box fontSize="13px" minW={0}>
+            <Text fontWeight={700} noOfLines={1}>
+              {profile ? displayName(profile) : 'Admin'}
+            </Text>
+            <Text color="ink.300" noOfLines={1}>
+              {profile?.role.name ?? ''}
+            </Text>
+          </Box>
         </Flex>
-        <Box fontSize="13px" minW={0}>
-          <Text fontWeight={700} noOfLines={1}>
-            {profile ? displayName(profile) : 'Admin'}
-          </Text>
-          <Text color="ink.300" noOfLines={1}>
-            {profile?.role.name ?? ''}
-          </Text>
-        </Box>
         <IconButton
           ml="auto"
           size="sm"
