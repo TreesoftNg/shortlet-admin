@@ -25,3 +25,4 @@ export type { ExportButtonProps } from './export-button';
 export { PasswordInput } from './password-input';
 export type { PasswordInputProps } from './password-input';
 export { FormPanel, FormPanelBody, FormRow } from './form-panel';
+export { TableDateTime, timestampColumns } from './timestamp-columns';

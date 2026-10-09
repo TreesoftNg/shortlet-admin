@@ -10,6 +10,11 @@ export function logout() {
   return apiClient<null>(adminPath('/auth/logout'), { method: 'POST' });
 }
 
+/** POST /cc/auth/password — other devices are signed out; this one stays signed in. */
+export function changePassword(input: { currentPassword: string; newPassword: string }) {
+  return apiClient<{ otherSessionsSignedOut: number }>(adminPath('/auth/password'), { method: 'POST', body: input });
+}
+
 export function fetchMe() {
   return apiClient<AdminProfile>(adminPath('/auth/me'));
 }

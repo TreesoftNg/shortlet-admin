@@ -7,8 +7,9 @@ describe('getReviewColumns', () => {
       'unit',
       'rating',
       'review',
-      'date',
       'status',
+      'created',
+      'updated',
     ]);
   });
 });

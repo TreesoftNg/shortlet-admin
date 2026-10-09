@@ -3,6 +3,7 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import { PropertyCell, StatusBadge } from '@/shared/components/ui';
 import type { Property } from '@/shared/types/hospitable';
 import {
@@ -68,6 +69,10 @@ export function getPropertyColumns(): DataTableColumn<PropertyListItem>[] {
           </StatusBadge>
         ),
     },
+    ...timestampColumns<PropertyListItem>(
+      (row) => row.created_at,
+      (row) => row.updated_at,
+    ),
   ];
 }
 

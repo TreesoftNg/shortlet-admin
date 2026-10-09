@@ -8,6 +8,8 @@ describe('getUnitColumns', () => {
       'capacity',
       'rate',
       'status',
+      'created',
+      'updated',
     ]);
   });
 });

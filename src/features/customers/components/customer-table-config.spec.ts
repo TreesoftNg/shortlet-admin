@@ -8,6 +8,8 @@ describe('getCustomerColumns', () => {
       'stays',
       'spent',
       'status',
+      'created',
+      'updated',
     ]);
   });
 });

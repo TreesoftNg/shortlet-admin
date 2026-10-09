@@ -3,6 +3,7 @@
 import { Box, Text } from '@chakra-ui/react';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
 import { StatusBadge } from '@/shared/components/ui/status-badge';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import {
   formatMoney,
   formatStayDates,
@@ -15,12 +16,6 @@ import type { BookingListItem } from '../types';
 /** Columns for the live bookings list (API BookingListItem). */
 export function getBookingListColumns(): DataTableColumn<BookingListItem>[] {
   return [
-    {
-      id: 'reference',
-      header: 'Reference',
-      meta: { fontFamily: 'mono', fontWeight: 600 },
-      cell: (row) => row.reference,
-    },
     {
       id: 'guest',
       header: 'Guest',
@@ -72,5 +67,9 @@ export function getBookingListColumns(): DataTableColumn<BookingListItem>[] {
         return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
       },
     },
+    ...timestampColumns<BookingListItem>(
+      (row) => row.createdAt,
+      (row) => row.updatedAt,
+    ),
   ];
 }

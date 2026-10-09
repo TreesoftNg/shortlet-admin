@@ -4,9 +4,10 @@ import { Flex, Text } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import { LuStar } from 'react-icons/lu';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import { StatusBadge } from '@/shared/components/ui';
 import type { Review } from '../types';
-import { formatReviewDate, getModerationDisplay } from '../utils/review-filters';
+import { getModerationDisplay } from '../utils/review-filters';
 
 export function getReviewColumns(): DataTableColumn<Review>[] {
   return [
@@ -48,11 +49,6 @@ export function getReviewColumns(): DataTableColumn<Review>[] {
       ),
     },
     {
-      id: 'date',
-      header: 'Date',
-      cell: (row) => formatReviewDate(row.createdAt),
-    },
-    {
       id: 'status',
       header: 'Status',
       cell: (row) => {
@@ -60,6 +56,10 @@ export function getReviewColumns(): DataTableColumn<Review>[] {
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
     },
+    ...timestampColumns<Review>(
+      (row) => row.createdAt,
+      (row) => row.updatedAt,
+    ),
   ];
 }
 

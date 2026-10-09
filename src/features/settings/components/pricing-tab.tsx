@@ -2,6 +2,7 @@
 
 import { Box, Flex, Input, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
+import { apiFieldErrors } from '@/shared/api/field-errors';
 import { ErrorState, FormPanel, FormRow, PageSkeleton } from '@/shared/components/ui';
 import { usePricingSettings, useUpdatePricingSettings } from '../hooks/use-business-settings';
 import {
@@ -12,7 +13,7 @@ import {
   pricingToForm,
   validatePricing,
 } from '../utils/settings-forms';
-import { apiFieldErrors, controlProps, SaveBar, UnitInput, useSettingsToasts } from './settings-form-parts';
+import { controlProps, SaveBar, UnitInput, useSettingsToasts } from './settings-form-parts';
 
 const EXAMPLE_NIGHTS_KOBO = 10_000_000;
 const EXAMPLE_CLEANING_KOBO = 1_000_000;

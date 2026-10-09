@@ -90,6 +90,8 @@ export type PaymentView = {
   id: string;
   bookingId: string;
   bookingReference: string | null;
+  guestName: string | null;
+  unitName: string | null;
   provider: string;
   reference: string;
   providerTransactionId: string | null;
@@ -102,6 +104,7 @@ export type PaymentView = {
   paidAt: string | null;
   failureReason: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type RefundView = {
@@ -140,6 +143,7 @@ export type BookingListItem = {
   depositStatus: DepositStatus;
   depositDueAt: string | null;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type AdminBooking = {

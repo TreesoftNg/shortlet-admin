@@ -2,6 +2,7 @@
 
 import { Flex, Input, Select, Textarea } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
+import { apiFieldErrors } from '@/shared/api/field-errors';
 import { ErrorState, FormPanel, FormRow, PageSkeleton } from '@/shared/components/ui';
 import { useBusinessProfile, useUpdateBusinessProfile } from '../hooks/use-business-settings';
 import {
@@ -14,7 +15,7 @@ import {
   TIMEZONE_CHOICES,
   validateProfile,
 } from '../utils/settings-forms';
-import { apiFieldErrors, controlProps, SaveBar, useSettingsToasts } from './settings-form-parts';
+import { controlProps, SaveBar, useSettingsToasts } from './settings-form-parts';
 
 const fieldId = (field: keyof ProfileFormValues) => `business-${field}`;
 

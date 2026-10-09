@@ -2,6 +2,7 @@
 
 import { Alert, AlertIcon, Flex, Switch, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
+import { apiFieldErrors } from '@/shared/api/field-errors';
 import { ErrorState, FormPanel, FormRow, PageSkeleton } from '@/shared/components/ui';
 import { useBookingSettings, useUpdateBookingSettings } from '../hooks/use-business-settings';
 import type { BookingRules } from '../types';
@@ -17,7 +18,7 @@ import {
   type RulesFormValues,
   validateRules,
 } from '../utils/settings-forms';
-import { apiFieldErrors, SaveBar, UnitInput, useSettingsToasts } from './settings-form-parts';
+import { SaveBar, UnitInput, useSettingsToasts } from './settings-form-parts';
 
 /** Base rate used for the deposit example. */
 const EXAMPLE_NIGHTLY_RATE = 50_000;

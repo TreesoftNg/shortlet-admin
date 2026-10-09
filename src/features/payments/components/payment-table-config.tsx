@@ -4,9 +4,9 @@ import { Box, Text } from '@chakra-ui/react';
 import { formatMoney } from '@/features/bookings/utils/booking-display';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
 import { StatusBadge } from '@/shared/components/ui/status-badge';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import type { PaymentView } from '../types';
 import {
-  formatPaymentDateTime,
   formatProviderLabel,
   getPaymentStatusDisplay,
 } from '../utils/payment-filters';
@@ -14,20 +14,16 @@ import {
 export function getPaymentColumns(): DataTableColumn<PaymentView>[] {
   return [
     {
-      id: 'reference',
-      header: 'Reference',
-      meta: { fontFamily: 'mono', fontWeight: 600 },
-      cell: (row) => row.reference,
-    },
-    {
-      id: 'booking',
-      header: 'Booking',
+      id: 'guest',
+      header: 'Guest',
       cell: (row) => (
         <Box>
-          <Text fontWeight={700}>{row.bookingReference ?? '—'}</Text>
-          <Text color="ink.300" fontSize="12px" fontFamily="mono">
-            {row.bookingId.slice(0, 8)}…
-          </Text>
+          <Text fontWeight={700}>{row.guestName ?? '—'}</Text>
+          {row.unitName ? (
+            <Text color="ink.300" fontSize="12px">
+              {row.unitName}
+            </Text>
+          ) : null}
         </Box>
       ),
     },
@@ -50,10 +46,9 @@ export function getPaymentColumns(): DataTableColumn<PaymentView>[] {
       header: 'Provider',
       cell: (row) => formatProviderLabel(row.provider),
     },
-    {
-      id: 'created',
-      header: 'Created',
-      cell: (row) => formatPaymentDateTime(row.createdAt),
-    },
+    ...timestampColumns<PaymentView>(
+      (row) => row.createdAt,
+      (row) => row.updatedAt,
+    ),
   ];
 }

@@ -7,9 +7,9 @@ describe('getRefundColumns', () => {
       'property',
       'amount',
       'reason',
-      'payment',
-      'date',
       'status',
+      'created',
+      'updated',
     ]);
   });
 });

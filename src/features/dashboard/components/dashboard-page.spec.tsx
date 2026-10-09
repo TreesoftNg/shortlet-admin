@@ -31,7 +31,7 @@ beforeEach(() => {
   jest.resetAllMocks();
   api.fetchDashboard.mockResolvedValue(dashboardData());
   bookings.fetchBookings.mockResolvedValue({
-    items: [bookingListItem({ reference: 'RECENT0001' })],
+    items: [bookingListItem({ guestName: 'Recent Guest' })],
     page: 1,
     limit: 5,
     total: 1,
@@ -73,7 +73,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Arriving Airbnb Guest')).toBeInTheDocument();
     expect(screen.getByText('Ikeja · Unit B')).toBeInTheDocument();
     expect(screen.getByText('No departures today.')).toBeInTheDocument();
-    expect(await screen.findByText('RECENT0001')).toBeInTheDocument();
+    expect(await screen.findByText('Recent Guest')).toBeInTheDocument();
     expect(bookings.fetchBookings).toHaveBeenCalledWith({ page: 1, limit: 5 });
   });
 
@@ -96,7 +96,7 @@ describe('DashboardPage', () => {
   it('does not load business figures for staff without reports access', async () => {
     renderAs(['booking.read']);
     expect(await screen.findByText(/available to owners, admins and managers/)).toBeInTheDocument();
-    expect(await screen.findByText('RECENT0001')).toBeInTheDocument();
+    expect(await screen.findByText('Recent Guest')).toBeInTheDocument();
     await waitFor(() => expect(api.fetchDashboard).not.toHaveBeenCalled());
   });
 });

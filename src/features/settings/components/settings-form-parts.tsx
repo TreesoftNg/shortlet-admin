@@ -2,7 +2,6 @@
 
 import { Button, Flex, Input, InputGroup, InputRightAddon, Text, useToast } from '@chakra-ui/react';
 import type { ChangeEvent } from 'react';
-import { ApiClientError } from '@/shared/api/types';
 
 /** Inputs and selects shown on the right of a settings row. */
 export const controlProps = {
@@ -124,13 +123,6 @@ export function SaveBar({
       ) : null}
     </Flex>
   );
-}
-
-/** Field errors the API returned (VALIDATION_ERROR `details.fields`), first message each. */
-export function apiFieldErrors(error: unknown): Record<string, string> {
-  if (!(error instanceof ApiClientError)) return {};
-  const fields = (error.details?.fields ?? {}) as Record<string, string[]>;
-  return Object.fromEntries(Object.entries(fields).map(([field, messages]) => [field, messages[0] ?? '']));
 }
 
 /** Toasts used by every settings tab. */

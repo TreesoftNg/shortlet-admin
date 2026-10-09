@@ -18,6 +18,7 @@ export function customer(overrides: Partial<Customer> = {}): Customer {
     upcomingStays: 0,
     status: 'new',
     createdAt: '2026-10-01T00:00:00.000Z',
+    updatedAt: '2026-10-04T12:00:00.000Z',
     ...overrides,
   };
 }

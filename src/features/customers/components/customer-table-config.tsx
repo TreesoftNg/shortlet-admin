@@ -4,6 +4,7 @@ import { Avatar, Flex, Text } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import { formatMoney } from '@/features/bookings/utils/reservation-display';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import { StatusBadge } from '@/shared/components/ui';
 import type { Customer } from '../types';
 import { isReturningGuest } from '../utils/customer-filters';
@@ -55,6 +56,10 @@ export function getCustomerColumns(): DataTableColumn<Customer>[] {
           <StatusBadge tone="mute">New</StatusBadge>
         ),
     },
+    ...timestampColumns<Customer>(
+      (row) => row.createdAt,
+      (row) => row.updatedAt,
+    ),
   ];
 }
 

@@ -3,6 +3,7 @@
 import { Avatar, Flex, Text } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
+import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
 import { StatusBadge } from '@/shared/components/ui';
 import type { StaffMember } from '@/shared/types/hospitable';
 import {
@@ -60,6 +61,10 @@ export function getStaffColumns(): DataTableColumn<StaffMember>[] {
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
     },
+    ...timestampColumns<StaffMember>(
+      (row) => row.created_at,
+      (row) => row.updated_at,
+    ),
   ];
 }
 
