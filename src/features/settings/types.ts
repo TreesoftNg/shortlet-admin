@@ -4,9 +4,9 @@ export type TenantSettingItem = {
   category: string;
   label: string;
   description: string | null;
-  valueType: 'boolean';
-  value: boolean;
-  defaultValue: boolean;
+  valueType: 'boolean' | 'string';
+  value: boolean | string;
+  defaultValue: boolean | string;
 };
 
 /** Response data from GET/PUT /cc/tenant-settings. */

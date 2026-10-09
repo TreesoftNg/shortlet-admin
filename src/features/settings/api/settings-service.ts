@@ -7,9 +7,9 @@ export async function fetchSettings(): Promise<TenantSettingsResponse> {
   return (await apiClient<TenantSettingsResponse>(adminPath('/tenant-settings'))).data;
 }
 
-/** PUT /cc/tenant-settings — upsert notification toggles. */
+/** PUT /cc/tenant-settings — upsert notification toggles and contact fields. */
 export async function updateSettings(
-  values: Record<string, boolean>,
+  values: Record<string, boolean | string>,
 ): Promise<TenantSettingsResponse> {
   return (
     await apiClient<TenantSettingsResponse>(adminPath('/tenant-settings'), {

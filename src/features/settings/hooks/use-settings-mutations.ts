@@ -7,7 +7,8 @@ import { updateSettings } from '../api/settings-service';
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (values: Record<string, boolean>) => updateSettings(values),
+    mutationFn: (values: Record<string, boolean | string>) =>
+      updateSettings(values),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.settings.detail(), data);
     },

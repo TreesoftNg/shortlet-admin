@@ -37,9 +37,11 @@ beforeEach(() => {
 });
 
 describe('SettingsPage', () => {
-  it('lists email alert toggles from the API', async () => {
+  it('lists contact fields and email alert toggles from the API', async () => {
     renderAs();
-    expect(await screen.findByText('New bookings')).toBeInTheDocument();
+    expect(await screen.findByText('Support email')).toBeInTheDocument();
+    expect(screen.getByText('How guests reach you about a booking.')).toBeInTheDocument();
+    expect(screen.getByText('New bookings')).toBeInTheDocument();
     expect(screen.getByText('Failed payments')).toBeInTheDocument();
     expect(screen.getByText('New reviews')).toBeInTheDocument();
     expect(screen.queryByText('Business')).not.toBeInTheDocument();
@@ -52,6 +54,9 @@ describe('SettingsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
     await waitFor(() => {
       expect(api.updateSettings).toHaveBeenCalledWith({
+        'contact.support_email': 'pauladesina117@gmail.com',
+        'contact.support_phone': '09037019967',
+        'contact.whatsapp': '',
         'email.booking_created': true,
         'email.payment_failed': true,
         'email.review_submitted': true,

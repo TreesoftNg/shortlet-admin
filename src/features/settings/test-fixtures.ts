@@ -20,6 +20,33 @@ export function settingsResponse(
 ): TenantSettingsResponse {
   return {
     settings: [
+      settingItem({
+        key: 'contact.support_email',
+        category: 'contact',
+        label: 'Support email',
+        description: 'Guests who reply to a booking email write to this address.',
+        valueType: 'string',
+        value: 'pauladesina117@gmail.com',
+        defaultValue: '',
+      }),
+      settingItem({
+        key: 'contact.support_phone',
+        category: 'contact',
+        label: 'Support phone',
+        description: "Shown on confirmations when a property has no manager's number.",
+        valueType: 'string',
+        value: '09037019967',
+        defaultValue: '',
+      }),
+      settingItem({
+        key: 'contact.whatsapp',
+        category: 'contact',
+        label: 'WhatsApp',
+        description: 'Used when there is no support phone.',
+        valueType: 'string',
+        value: '',
+        defaultValue: '',
+      }),
       settingItem(),
       settingItem({
         key: 'email.payment_failed',

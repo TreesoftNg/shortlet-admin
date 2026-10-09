@@ -5,6 +5,7 @@ import {
   Button,
   Flex,
   IconButton,
+  Input,
   Switch,
   Text,
   useToast,
@@ -16,7 +17,9 @@ import { hasPermission } from '@/features/auth/utils/auth-helpers';
 import { useSettings } from '@/features/settings/hooks/use-settings';
 import { useUpdateSettings } from '@/features/settings/hooks/use-settings-mutations';
 import {
+  contactSettings,
   formatSettingsUpdatedAt,
+  notificationSettings,
   settingsValuesMap,
 } from '@/features/settings/utils/settings-helpers';
 import { ErrorState, PageHeader, PageSkeleton, Panel } from '@/shared/components/ui';
@@ -53,6 +56,9 @@ export function SettingsPage() {
     );
   }
 
+  const alerts = notificationSettings(settings);
+  const contact = contactSettings(settings);
+
   async function handleSave() {
     if (!settings) return;
     try {
@@ -80,6 +86,16 @@ export function SettingsPage() {
     }
   }
 
+  function setSettingValue(key: string, value: boolean | string) {
+    setSettings((current) =>
+      current
+        ? current.map((item) =>
+            item.key === key ? { ...item, value } : item,
+          )
+        : current,
+    );
+  }
+
   return (
     <Box maxW="720px">
       <PageHeader
@@ -102,13 +118,43 @@ export function SettingsPage() {
       <Flex direction="column" gap="18px">
         <Panel>
           <Text fontSize="18px" fontWeight={700} mb="4px">
+            Contact
+          </Text>
+          <Text fontSize="13px" color="ink.300" mb="14px">
+            How guests reach you about a booking.
+          </Text>
+          <Flex direction="column" gap="14px">
+            {contact.map((option) => (
+              <Box key={option.key}>
+                <Text fontWeight={600} fontSize="14px" mb="6px">
+                  {option.label}
+                </Text>
+                <Input
+                  value={typeof option.value === 'string' ? option.value : ''}
+                  isDisabled={!canManage || updateSettings.isPending}
+                  onChange={(event) =>
+                    setSettingValue(option.key, event.target.value)
+                  }
+                />
+                {option.description ? (
+                  <Text fontSize="12px" color="ink.300" mt="6px">
+                    {option.description}
+                  </Text>
+                ) : null}
+              </Box>
+            ))}
+          </Flex>
+        </Panel>
+
+        <Panel>
+          <Text fontSize="18px" fontWeight={700} mb="4px">
             Email alerts
           </Text>
           <Text fontSize="13px" color="ink.300" mb="14px">
             Choose which events notify your staff by email.
           </Text>
           <Flex direction="column">
-            {settings.map((option) => (
+            {alerts.map((option) => (
               <Flex
                 key={option.key}
                 justify="space-between"
@@ -131,18 +177,10 @@ export function SettingsPage() {
                 </Box>
                 <Switch
                   colorScheme="green"
-                  isChecked={option.value}
+                  isChecked={option.value === true}
                   isDisabled={!canManage || updateSettings.isPending}
                   onChange={(event) =>
-                    setSettings((current) =>
-                      current
-                        ? current.map((item) =>
-                            item.key === option.key
-                              ? { ...item, value: event.target.checked }
-                              : item,
-                          )
-                        : current,
-                    )
+                    setSettingValue(option.key, event.target.checked)
                   }
                 />
               </Flex>
