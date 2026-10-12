@@ -15,6 +15,7 @@ import { LuMenu, LuSearch } from 'react-icons/lu';
 import { ConversationList } from '@/features/messages/components/conversation-list';
 import { MessageThread } from '@/features/messages/components/message-thread';
 import { useConversations } from '@/features/messages/hooks/use-messages';
+import { useMessagingSocket } from '@/features/messages/hooks/use-messaging-socket';
 import {
   countMessageTabs,
   DEFAULT_MESSAGE_FILTERS,
@@ -38,6 +39,12 @@ export function MessagesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
+  const { peerTyping, sendMessage, notifyTyping, stopTyping } =
+    useMessagingSocket({
+      conversationId: selectedId,
+      enabled: true,
+    });
+
   const conversations = data ?? [];
   const tabCounts = useMemo(() => countMessageTabs(conversations), [conversations]);
   const filtered = useMemo(
@@ -45,19 +52,17 @@ export function MessagesPage() {
     [conversations, filters],
   );
 
+  // Only pick an initial conversation. Do not jump away when marking read
+  // removes the row from the Unread filter — that was re-selecting chats
+  // and bringing unread badges back.
   useEffect(() => {
-    if (filtered.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-    const stillVisible = filtered.some((item) => item.id === selectedId);
-    if (!stillVisible) {
-      setSelectedId(filtered[0].id);
-    }
+    if (selectedId) return;
+    if (filtered.length === 0) return;
+    setSelectedId(filtered[0].id);
   }, [filtered, selectedId]);
 
   const selected =
-    conversations.find((item) => item.id === selectedId) ?? filtered[0] ?? null;
+    conversations.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<MessageFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -106,31 +111,49 @@ export function MessagesPage() {
   }
 
   return (
-    <Box>
-      <PageHeader
-        title="Messages"
-        description="Guest conversations across direct and channel bookings."
-        actions={
-          <IconButton
-            aria-label="Open navigation"
-            icon={<LuMenu size={20} />}
-            display={{ base: 'inline-flex', lg: 'none' }}
-            variant="secondary"
-            borderRadius="12px"
-            h="44px"
-            w="44px"
-            onClick={openMobileNav}
-          />
-        }
-      />
+    <Flex
+      direction="column"
+      // Keep the split pane in the viewport so each column scrolls on its own.
+      h={{ base: 'auto', xl: 'calc(100dvh - 80px)' }}
+      minH={{ xl: '560px' }}
+    >
+      <Box flexShrink={0}>
+        <PageHeader
+          title="Messages"
+          description="Guest conversations across direct and channel bookings."
+          actions={
+            <IconButton
+              aria-label="Open navigation"
+              icon={<LuMenu size={20} />}
+              display={{ base: 'inline-flex', lg: 'none' }}
+              variant="secondary"
+              borderRadius="12px"
+              h="44px"
+              w="44px"
+              onClick={openMobileNav}
+            />
+          }
+        />
+      </Box>
 
       <Grid
         templateColumns={{ base: '1fr', xl: '360px minmax(0, 1fr)' }}
         gap="18px"
         alignItems="stretch"
+        flex="1"
+        minH={0}
       >
-        <Panel p={0} overflow="hidden" minW={0}>
-          <Box px="16px" pt="16px">
+        <Panel
+          p={0}
+          overflow="hidden"
+          minW={0}
+          minH={0}
+          h={{ base: 'auto', xl: '100%' }}
+          maxH={{ base: '480px', xl: 'none' }}
+          display="flex"
+          flexDirection="column"
+        >
+          <Box px="16px" pt="16px" flexShrink={0}>
             <FilterTabs<MessageStatusTab>
               value={filters.tab}
               onChange={(tab) => updateFilters({ tab })}
@@ -160,20 +183,33 @@ export function MessagesPage() {
               />
             </InputGroup>
           </Box>
-          <ConversationList
-            conversations={filtered}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
+          <Box flex="1" overflowY="auto" minH={0}>
+            <ConversationList
+              conversations={filtered}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          </Box>
         </Panel>
 
         <Panel
           p={0}
           overflow="hidden"
           minW={0}
-          display={{ base: selected ? 'block' : 'none', xl: 'block' }}
+          minH={0}
+          h={{ base: 'auto', xl: '100%' }}
+          display={{ base: selected ? 'flex' : 'none', xl: 'flex' }}
+          flexDirection="column"
         >
-          <MessageThread conversation={selected} />
+          <Box flex="1" minH={0} display="flex" flexDirection="column">
+            <MessageThread
+              conversation={selected}
+              peerTyping={peerTyping}
+              sendMessage={sendMessage}
+              notifyTyping={notifyTyping}
+              stopTyping={stopTyping}
+            />
+          </Box>
           {selected ? (
             <Box display={{ base: 'block', xl: 'none' }} px="18px" pb="14px">
               <Button
@@ -187,6 +223,6 @@ export function MessagesPage() {
           ) : null}
         </Panel>
       </Grid>
-    </Box>
+    </Flex>
   );
 }

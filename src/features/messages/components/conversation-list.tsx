@@ -1,8 +1,8 @@
 'use client';
 
 import { Avatar, Box, Flex, Text } from '@chakra-ui/react';
-import type { ConversationListItem } from '@/mocks/data/messaging';
 import { EmptyState, StatusBadge } from '@/shared/components/ui';
+import type { ConversationListItem } from '../types';
 import { formatMessageTime } from '../utils/message-filters';
 
 type ConversationListProps = {
@@ -70,9 +70,11 @@ export function ConversationList({
                 </Text>
               </Flex>
               <Text color="ink.300" fontSize="12px" mb="4px" noOfLines={1}>
-                {conversation.reservation?.property?.name ??
-                  conversation.reservation?.platform_id ??
-                  'Inquiry'}
+                {conversation.bookingId
+                  ? 'About their stay'
+                  : conversation.propertyId || conversation.unitId
+                    ? 'Property inquiry'
+                    : conversation.guest?.email ?? 'General chat'}
               </Text>
               <Flex justify="space-between" gap="8px" align="center">
                 <Text

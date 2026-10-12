@@ -4,18 +4,59 @@ import {
   filterConversations,
   formatMessageTime,
 } from './message-filters';
-import { mockConversations } from '@/mocks/data/messaging';
+import type { ConversationListItem } from '../types';
+
+const sample: ConversationListItem[] = [
+  {
+    id: 'conv-1',
+    status: 'open',
+    unread_count: 2,
+    preview: 'Are you there?',
+    last_message_at: '2026-10-12T12:00:00.000Z',
+    guest: {
+      id: 'c1',
+      full_name: 'Ada Okafor',
+      email: 'ada@example.com',
+      picture_url: null,
+    },
+    reservation: null,
+    propertyId: null,
+    unitId: null,
+    bookingId: null,
+  },
+  {
+    id: 'conv-2',
+    status: 'closed',
+    unread_count: 0,
+    preview: 'Thanks!',
+    last_message_at: '2026-10-11T12:00:00.000Z',
+    guest: {
+      id: 'c2',
+      full_name: 'Sarah Johnson',
+      email: 'sarah@example.com',
+      picture_url: null,
+    },
+    reservation: {
+      platform_id: 'booking-1',
+      property: { name: 'Lekki Suite' },
+    },
+    propertyId: 'p1',
+    unitId: 'u1',
+    bookingId: 'booking-1',
+  },
+];
 
 describe('message-filters', () => {
   it('counts unread and open tabs', () => {
-    const counts = countMessageTabs(mockConversations);
-    expect(counts.all).toBe(mockConversations.length);
-    expect(counts.unread).toBeGreaterThan(0);
-    expect(counts.open).toBeGreaterThan(0);
+    const counts = countMessageTabs(sample);
+    expect(counts.all).toBe(2);
+    expect(counts.unread).toBe(1);
+    expect(counts.open).toBe(1);
+    expect(counts.closed).toBe(1);
   });
 
   it('filters unread conversations', () => {
-    const result = filterConversations(mockConversations, {
+    const result = filterConversations(sample, {
       ...DEFAULT_MESSAGE_FILTERS,
       tab: 'unread',
     });
@@ -23,7 +64,7 @@ describe('message-filters', () => {
   });
 
   it('filters by guest search', () => {
-    const result = filterConversations(mockConversations, {
+    const result = filterConversations(sample, {
       ...DEFAULT_MESSAGE_FILTERS,
       search: 'sarah',
     });

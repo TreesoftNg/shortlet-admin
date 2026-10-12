@@ -1,4 +1,4 @@
-import type { ConversationListItem } from '@/mocks/data/messaging';
+import type { ConversationListItem } from '../types';
 
 export type MessageStatusTab = 'all' | 'unread' | 'open' | 'closed';
 
@@ -70,7 +70,9 @@ export function filterConversations(
 }
 
 export function formatMessageTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-GB', {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('en-GB', {
     day: 'numeric',
     month: 'short',
     hour: 'numeric',

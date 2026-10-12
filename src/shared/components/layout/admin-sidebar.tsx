@@ -23,6 +23,7 @@ import {
   LuDoorOpen,
   LuLayoutDashboard,
   LuLogOut,
+  LuMessageSquare,
   LuRefreshCw,
   LuSettings,
   LuStar,
@@ -65,6 +66,7 @@ const navSections: NavSection[] = [
     title: 'Guests',
     items: [
       { label: 'Customers', href: '/customers', icon: LuUsers },
+      { label: 'Messages', href: '/messages', icon: LuMessageSquare },
       { label: 'Reviews', href: '/reviews', icon: LuStar },
     ],
   },

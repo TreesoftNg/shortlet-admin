@@ -10,19 +10,69 @@ import {
   Skeleton,
   Text,
 } from '@chakra-ui/react';
+import { useEffect, useRef, useState } from 'react';
 import { LuSend } from 'react-icons/lu';
-import type { ConversationListItem } from '@/mocks/data/messaging';
 import { EmptyState, StatusBadge } from '@/shared/components/ui';
-import type { Message } from '@/shared/types/hospitable';
 import { useConversationMessages } from '../hooks/use-messages';
+import type { ConversationListItem, ThreadMessage } from '../types';
 import { formatMessageTime } from '../utils/message-filters';
 
 type MessageThreadProps = {
   conversation: ConversationListItem | null;
+  peerTyping?: boolean;
+  sendMessage: (content: string) => Promise<unknown>;
+  notifyTyping: () => void;
+  stopTyping: () => void;
 };
 
-export function MessageThread({ conversation }: MessageThreadProps) {
-  const { data, isLoading } = useConversationMessages(conversation?.id ?? null);
+export function MessageThread({
+  conversation,
+  peerTyping = false,
+  sendMessage,
+  notifyTyping,
+  stopTyping,
+}: MessageThreadProps) {
+  const conversationId = conversation?.id ?? null;
+  const { data, isLoading } = useConversationMessages(conversationId);
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+  const messages = data ?? [];
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    // Scroll only the thread pane — never the page (that was dragging the list).
+    scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+  }, [messages.length, peerTyping]);
+
+  useEffect(() => {
+    setDraft('');
+    setSendError(null);
+  }, [conversationId]);
+
+  async function handleSend() {
+    if (!conversation || conversation.status === 'closed') return;
+    const content = draft.trim();
+    if (!content || sending) return;
+    setSending(true);
+    setSendError(null);
+    setDraft('');
+    stopTyping();
+    try {
+      await sendMessage(content);
+    } catch (err) {
+      setDraft(content);
+      setSendError(
+        err instanceof Error ? err.message : 'Could not send message.',
+      );
+    } finally {
+      setSending(false);
+    }
+  }
 
   if (!conversation) {
     return (
@@ -34,10 +84,8 @@ export function MessageThread({ conversation }: MessageThreadProps) {
     );
   }
 
-  const messages = data ?? [];
-
   return (
-    <Flex direction="column" h="100%" minH="420px">
+    <Flex direction="column" h="100%" minH={{ base: '420px', xl: 0 }}>
       <Flex
         px="18px"
         py="14px"
@@ -45,6 +93,7 @@ export function MessageThread({ conversation }: MessageThreadProps) {
         borderColor="line.500"
         align="center"
         gap="12px"
+        flexShrink={0}
       >
         <Avatar
           size="sm"
@@ -56,9 +105,9 @@ export function MessageThread({ conversation }: MessageThreadProps) {
             {conversation.guest?.full_name ?? 'Guest'}
           </Heading>
           <Text color="ink.300" fontSize="12px" noOfLines={1}>
-            {conversation.reservation
-              ? `${conversation.reservation.property?.name ?? 'Property'} · ${conversation.reservation.platform_id}`
-              : 'General inquiry'}
+            {conversation.guest?.email ??
+              conversation.reservation?.property?.name ??
+              'Guest inquiry'}
           </Text>
         </Box>
         <StatusBadge tone={conversation.status === 'open' ? 'ok' : 'mute'}>
@@ -66,7 +115,15 @@ export function MessageThread({ conversation }: MessageThreadProps) {
         </StatusBadge>
       </Flex>
 
-      <Box flex="1" overflowY="auto" px="18px" py="16px" bg="bg.400">
+      <Box
+        ref={scrollerRef}
+        flex="1"
+        overflowY="auto"
+        minH={0}
+        px="18px"
+        py="16px"
+        bg="bg.400"
+      >
         {isLoading ? (
           <Flex direction="column" gap="12px" minH="200px">
             <Skeleton
@@ -103,9 +160,21 @@ export function MessageThread({ conversation }: MessageThreadProps) {
             {messages.map((item) => (
               <MessageBubble key={item.id} message={item} />
             ))}
+            {peerTyping ? (
+              <Text fontSize="13px" color="ink.300">
+                Guest is typing…
+              </Text>
+            ) : null}
+            <Box ref={endRef} />
           </Flex>
         )}
       </Box>
+
+      {sendError ? (
+        <Text px="18px" pt="8px" color="red.500" fontSize="13px">
+          {sendError}
+        </Text>
+      ) : null}
 
       <Flex
         gap="10px"
@@ -114,6 +183,7 @@ export function MessageThread({ conversation }: MessageThreadProps) {
         borderTop="1px solid"
         borderColor="line.500"
         bg="white"
+        flexShrink={0}
       >
         <Input
           h="44px"
@@ -121,12 +191,30 @@ export function MessageThread({ conversation }: MessageThreadProps) {
           borderColor="line.500"
           borderRadius="12px"
           placeholder="Write a reply…"
-          isDisabled={conversation.status === 'closed'}
+          value={draft}
+          isDisabled={conversation.status === 'closed' || sending}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            notifyTyping();
+          }}
+          onBlur={() => stopTyping()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault();
+              void handleSend();
+            }
+          }}
         />
         <Button
           h="44px"
           leftIcon={<LuSend size={16} />}
-          isDisabled={conversation.status === 'closed'}
+          isDisabled={
+            conversation.status === 'closed' ||
+            sending ||
+            draft.trim().length === 0
+          }
+          isLoading={sending}
+          onClick={() => void handleSend()}
         >
           Send
         </Button>
@@ -135,20 +223,22 @@ export function MessageThread({ conversation }: MessageThreadProps) {
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
-  const isHost = message.sender_type === 'host';
+function MessageBubble({ message }: { message: ThreadMessage }) {
+  const isStaff = message.senderType === 'staff';
+  const pending = message.id.startsWith('temp-');
 
   return (
-    <Flex justify={isHost ? 'flex-end' : 'flex-start'}>
+    <Flex justify={isStaff ? 'flex-end' : 'flex-start'}>
       <Box
         maxW={{ base: '90%', md: '75%' }}
-        bg={isHost ? 'brand.500' : 'white'}
-        color={isHost ? 'white' : 'ink.500'}
+        bg={isStaff ? 'brand.500' : 'white'}
+        color={isStaff ? 'white' : 'ink.500'}
         border="1px solid"
-        borderColor={isHost ? 'brand.500' : 'line.500'}
+        borderColor={isStaff ? 'brand.500' : 'line.500'}
         borderRadius="16px"
         px="14px"
         py="10px"
+        opacity={pending ? 0.75 : 1}
       >
         <Text fontSize="14px" whiteSpace="pre-wrap">
           {message.body}
@@ -156,9 +246,10 @@ function MessageBubble({ message }: { message: Message }) {
         <Text
           mt="6px"
           fontSize="11px"
-          color={isHost ? 'whiteAlpha.800' : 'ink.300'}
+          color={isStaff ? 'whiteAlpha.800' : 'ink.300'}
         >
-          {message.sender.full_name} · {formatMessageTime(message.created_at)}
+          {message.senderName ?? (isStaff ? 'Staff' : 'Guest')} ·{' '}
+          {formatMessageTime(message.createdAt)}
         </Text>
       </Box>
     </Flex>
