@@ -44,7 +44,7 @@ export function ReviewsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
-  const reviews = data ?? [];
+  const reviews = useMemo(() => data ?? [], [data]);
   const tabCounts = useMemo(() => countReviewTabs(reviews), [reviews]);
   const filtered = useMemo(
     () => filterReviews(reviews, filters),

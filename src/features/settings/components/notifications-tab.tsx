@@ -66,7 +66,7 @@ export function NotificationsTab({ canManage }: { canManage: boolean }) {
             <Switch
               id={`alert-${option.key}`}
               colorScheme="green"
-              isChecked={option.value}
+              isChecked={Boolean(option.value)}
               isDisabled={!canManage || updateSettings.isPending}
               onChange={(event) =>
                 setSettings((current) =>

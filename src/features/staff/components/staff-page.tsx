@@ -55,7 +55,7 @@ export function StaffPage() {
   const openMobileNav = useUiStore((state) => state.openMobileNav);
   const canInvite = canInviteStaff(profile);
 
-  const members = data ?? [];
+  const members = useMemo(() => data ?? [], [data]);
   const tabCounts = useMemo(() => countStaffTabs(members), [members]);
   const filtered = useMemo(
     () => filterStaff(members, filters),

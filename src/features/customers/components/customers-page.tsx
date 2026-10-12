@@ -37,7 +37,7 @@ export function CustomersPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
-  const customers = data ?? [];
+  const customers = useMemo(() => data ?? [], [data]);
   const tabCounts = useMemo(() => countCustomerTabs(customers), [customers]);
   const locations = useMemo(() => getCustomerLocations(customers), [customers]);
   const filtered = useMemo(

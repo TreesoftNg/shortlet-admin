@@ -41,7 +41,7 @@ export function RefundsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const openMobileNav = useUiStore((state) => state.openMobileNav);
 
-  const refunds = data ?? [];
+  const refunds = useMemo(() => data ?? [], [data]);
   const tabCounts = useMemo(() => countRefundTabs(refunds), [refunds]);
   const filtered = useMemo(
     () => filterRefunds(refunds, filters),

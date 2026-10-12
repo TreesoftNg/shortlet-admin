@@ -45,7 +45,7 @@ export function MessagesPage() {
       enabled: true,
     });
 
-  const conversations = data ?? [];
+  const conversations = useMemo(() => data ?? [], [data]);
   const tabCounts = useMemo(() => countMessageTabs(conversations), [conversations]);
   const filtered = useMemo(
     () => filterConversations(conversations, filters),
