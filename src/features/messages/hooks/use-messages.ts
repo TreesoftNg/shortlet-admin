@@ -73,9 +73,18 @@ export function useReopenConversation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: reopenConversation,
-    onSuccess: () => {
+    onSuccess: (conversation) => {
+      queryClient.setQueryData<ConversationListItem[]>(
+        queryKeys.messages.conversations(),
+        (prev) =>
+          (prev ?? []).map((c) =>
+            c.id === conversation.id
+              ? { ...c, status: conversation.status, unread_count: conversation.unread_count }
+              : c,
+          ),
+      );
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.messages.conversations(),
+        queryKey: queryKeys.messages.thread(conversation.id),
       });
     },
   });

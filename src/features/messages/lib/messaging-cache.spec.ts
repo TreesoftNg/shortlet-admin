@@ -1,6 +1,7 @@
 import {
   applyMessageToConversationList,
   clearConversationUnread,
+  findSurvivingConversation,
   mergeMessageIntoThread,
 } from './messaging-cache';
 import type { ConversationListItem, ThreadMessage } from '../types';
@@ -21,6 +22,9 @@ const conversation = (overrides: Partial<ConversationListItem> = {}): Conversati
   propertyId: null,
   unitId: null,
   bookingId: null,
+  propertyName: null,
+  unitName: null,
+  contextLabel: null,
   ...overrides,
 });
 
@@ -78,5 +82,44 @@ describe('messaging-cache', () => {
   it('clears unread for a conversation', () => {
     const next = clearConversationUnread([conversation()], 'conv-1');
     expect(next[0].unread_count).toBe(0);
+  });
+
+  it('finds a surviving conversation after a merge removes the selected id', () => {
+    const lost = conversation({
+      id: 'conv-gone',
+      guest: {
+        id: 'c1',
+        full_name: 'Ada',
+        email: 'ada@example.com',
+        picture_url: null,
+      },
+      propertyId: 'p1',
+      unitId: 'u1',
+      bookingId: 'b1',
+    });
+    const survivor = conversation({
+      id: 'conv-kept',
+      last_message_at: '2026-10-13T10:00:00.000Z',
+      propertyId: 'p1',
+      unitId: 'u1',
+      bookingId: 'b1',
+    });
+    const other = conversation({
+      id: 'conv-other',
+      guest: {
+        id: 'c2',
+        full_name: 'Other',
+        email: 'other@example.com',
+        picture_url: null,
+      },
+      propertyId: 'p1',
+      unitId: 'u1',
+      bookingId: 'b1',
+    });
+
+    expect(findSurvivingConversation([survivor, other], lost)?.id).toBe(
+      'conv-kept',
+    );
+    expect(findSurvivingConversation([other], lost)).toBeNull();
   });
 });

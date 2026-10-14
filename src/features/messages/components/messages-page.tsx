@@ -10,12 +10,14 @@ import {
   InputGroup,
   InputLeftElement,
 } from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { LuMenu, LuSearch } from 'react-icons/lu';
 import { ConversationList } from '@/features/messages/components/conversation-list';
 import { MessageThread } from '@/features/messages/components/message-thread';
 import { useConversations } from '@/features/messages/hooks/use-messages';
 import { useMessagingSocket } from '@/features/messages/hooks/use-messaging-socket';
+import { findSurvivingConversation } from '@/features/messages/lib/messaging-cache';
+import type { ConversationListItem } from '@/features/messages/types';
 import {
   countMessageTabs,
   DEFAULT_MESSAGE_FILTERS,
@@ -51,6 +53,29 @@ export function MessagesPage() {
     () => filterConversations(conversations, filters),
     [conversations, filters],
   );
+  const selectedSnapshot = useRef<ConversationListItem | null>(null);
+
+  const selected =
+    conversations.find((item) => item.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (selected) selectedSnapshot.current = selected;
+  }, [selected]);
+
+  // Selected id vanished (e.g. duplicate merge) — jump to surviving same context.
+  useEffect(() => {
+    if (!selectedId) return;
+    if (conversations.some((item) => item.id === selectedId)) return;
+    const lost = selectedSnapshot.current;
+    if (lost && lost.id === selectedId) {
+      const survivor = findSurvivingConversation(conversations, lost);
+      if (survivor) {
+        setSelectedId(survivor.id);
+        return;
+      }
+    }
+    setSelectedId(null);
+  }, [conversations, selectedId]);
 
   // Only pick an initial conversation. Do not jump away when marking read
   // removes the row from the Unread filter — that was re-selecting chats
@@ -60,9 +85,6 @@ export function MessagesPage() {
     if (filtered.length === 0) return;
     setSelectedId(filtered[0].id);
   }, [filtered, selectedId]);
-
-  const selected =
-    conversations.find((item) => item.id === selectedId) ?? null;
 
   const updateFilters = (next: Partial<MessageFilters>) => {
     setFilters((current) => ({ ...current, ...next }));
@@ -160,7 +182,6 @@ export function MessagesPage() {
               items={[
                 { id: 'all', label: 'All', count: tabCounts.all },
                 { id: 'unread', label: 'Unread', count: tabCounts.unread },
-                { id: 'open', label: 'Open', count: tabCounts.open },
                 { id: 'closed', label: 'Closed', count: tabCounts.closed },
               ]}
             />

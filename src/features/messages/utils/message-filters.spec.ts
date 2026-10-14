@@ -23,6 +23,9 @@ const sample: ConversationListItem[] = [
     propertyId: null,
     unitId: null,
     bookingId: null,
+    propertyName: null,
+    unitName: null,
+    contextLabel: null,
   },
   {
     id: 'conv-2',
@@ -43,15 +46,17 @@ const sample: ConversationListItem[] = [
     propertyId: 'p1',
     unitId: 'u1',
     bookingId: 'booking-1',
+    propertyName: 'Lekki Suite',
+    unitName: 'Unit 1',
+    contextLabel: 'Lekki Suite · Unit 1',
   },
 ];
 
 describe('message-filters', () => {
-  it('counts unread and open tabs', () => {
+  it('counts unread and closed tabs', () => {
     const counts = countMessageTabs(sample);
     expect(counts.all).toBe(2);
     expect(counts.unread).toBe(1);
-    expect(counts.open).toBe(1);
     expect(counts.closed).toBe(1);
   });
 

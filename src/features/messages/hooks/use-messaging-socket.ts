@@ -97,11 +97,19 @@ export function useMessagingSocket(options: {
       const activeId = conversationIdRef.current;
       const isOwn = message.senderType === 'staff';
       const isActive = message.conversationId === activeId;
+      const threadKey = queryKeys.messages.thread(message.conversationId);
+      const cachedThread =
+        queryClient.getQueryData<ThreadMessage[]>(threadKey);
 
-      queryClient.setQueryData<ThreadMessage[]>(
-        queryKeys.messages.thread(message.conversationId),
-        (prev) => mergeMessageIntoThread(prev, message),
-      );
+      // Never seed a one-message thread as full history — refetch instead.
+      if (cachedThread === undefined) {
+        void queryClient.invalidateQueries({ queryKey: threadKey });
+      } else {
+        queryClient.setQueryData<ThreadMessage[]>(threadKey, (prev) =>
+          mergeMessageIntoThread(prev, message),
+        );
+      }
+
       queryClient.setQueryData<ConversationListItem[]>(
         queryKeys.messages.conversations(),
         (prev) =>
@@ -214,14 +222,25 @@ export function useMessagingSocket(options: {
     };
   }, [enabled, patchMessageCaches, persistMarkRead, queryClient, signedIn]);
 
+  // Persist mark-read as soon as staff opens a thread (REST if socket is down).
+  useEffect(() => {
+    if (!enabled || !signedIn || !conversationId) return;
+    clearUnreadCache(queryClient, conversationId);
+    void persistMarkRead(conversationId);
+  }, [
+    conversationId,
+    enabled,
+    persistMarkRead,
+    queryClient,
+    signedIn,
+  ]);
+
+  // Join/leave the conversation room only when the socket is ready.
   useEffect(() => {
     const socket = socketRef.current;
     if (!socket || !ready || !conversationId) return;
     let cancelled = false;
     const previous = joinedId.current;
-
-    clearUnreadCache(queryClient, conversationId);
-    void persistMarkRead(conversationId);
 
     void (async () => {
       try {
@@ -248,7 +267,7 @@ export function useMessagingSocket(options: {
         joinedId.current = null;
       }
     };
-  }, [conversationId, persistMarkRead, queryClient, ready]);
+  }, [conversationId, ready]);
 
   const sendMessage = useCallback(
     async (content: string) => {

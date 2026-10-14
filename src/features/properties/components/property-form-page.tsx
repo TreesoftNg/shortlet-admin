@@ -38,7 +38,6 @@ import {
 import { useBusinessProfile } from '@/features/settings/hooks/use-business-settings';
 import {
   choicesWith,
-  CURRENCY_CHOICES,
   TIMEZONE_CHOICES,
 } from '@/features/settings/utils/settings-forms';
 import { useFacilities } from '@/features/units/hooks/use-facilities';
@@ -104,7 +103,7 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
               check_in: business.defaultCheckInTime,
               check_out: business.defaultCheckOutTime,
               timezone: business.defaultTimezone,
-              currency: business.defaultCurrency,
+              currency: 'NGN',
             }
           : {},
       ),
@@ -528,20 +527,15 @@ export function PropertyFormPage({ mode, id }: PropertyFormPageProps) {
                   ))}
                 </Select>
               </Field>
-              <Field label="Currency">
-                <Select
-                  value={values.currency}
-                  onChange={(event) =>
-                    updateField('currency', event.target.value)
-                  }
+              <Field label="Currency" helper="Properties are priced in Naira only.">
+                <Input
+                  value="NGN (Naira)"
+                  isReadOnly
+                  aria-readonly="true"
                   {...inputProps}
-                >
-                  {choicesWith(CURRENCY_CHOICES, values.currency).map((currency) => (
-                    <option key={currency} value={currency}>
-                      {currency}
-                    </option>
-                  ))}
-                </Select>
+                  bg="bg.400"
+                  color="ink.400"
+                />
               </Field>
             </Grid>
           </Section>

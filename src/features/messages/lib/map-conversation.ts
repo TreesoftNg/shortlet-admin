@@ -17,6 +17,11 @@ export function mapConversation(api: ApiConversation): ConversationListItem {
         ? api.staffUnreadCount
         : 0;
 
+  const contextLabel = api.contextLabel ?? null;
+  const propertyName = api.propertyName ?? null;
+  const unitName = api.unitName ?? null;
+  const stayLabel = contextLabel ?? propertyName ?? unitName;
+
   return {
     id: api.id,
     status: api.status,
@@ -32,17 +37,20 @@ export function mapConversation(api: ApiConversation): ConversationListItem {
     reservation: api.bookingId
       ? {
           platform_id: api.bookingId,
-          property: api.propertyId ? { name: 'Linked stay' } : null,
+          property: stayLabel ? { name: stayLabel } : null,
         }
-      : api.propertyId
+      : stayLabel
         ? {
-            platform_id: api.propertyId,
-            property: { name: 'Property inquiry' },
+            platform_id: api.propertyId ?? api.unitId ?? api.id,
+            property: { name: stayLabel },
           }
         : null,
     propertyId: api.propertyId,
     unitId: api.unitId,
     bookingId: api.bookingId,
+    propertyName,
+    unitName,
+    contextLabel,
   };
 }
 
