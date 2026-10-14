@@ -65,3 +65,25 @@ export function clearConversationUnread(
     c.id === conversationId ? { ...c, unread_count: 0 } : c,
   );
 }
+
+/** After a merge deletes the selected id, pick the surviving same-context row. */
+export function findSurvivingConversation(
+  conversations: ConversationListItem[],
+  lost: Pick<
+    ConversationListItem,
+    'id' | 'guest' | 'propertyId' | 'unitId' | 'bookingId'
+  >,
+): ConversationListItem | null {
+  const sameContext = conversations.filter(
+    (c) =>
+      c.id !== lost.id &&
+      c.guest?.id === lost.guest?.id &&
+      c.propertyId === lost.propertyId &&
+      c.unitId === lost.unitId &&
+      c.bookingId === lost.bookingId,
+  );
+  if (sameContext.length === 0) return null;
+  return sameContext.sort((a, b) =>
+    b.last_message_at.localeCompare(a.last_message_at),
+  )[0]!;
+}

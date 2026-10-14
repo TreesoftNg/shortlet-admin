@@ -115,6 +115,18 @@ describe('property mappers', () => {
     });
   });
 
+  it('always sends NGN even if the form currency differs', () => {
+    const payload = toCreatePropertyPayload({
+      ...createEmptyPropertyForm(),
+      name: 'Azure Lekki',
+      line1: '12 Admiralty Way',
+      city: 'Lekki',
+      country: 'NG',
+      currency: 'USD',
+    });
+    expect(payload.currency).toBe('NGN');
+  });
+
   it('never puts data URLs in the create payload', () => {
     const file = new File(['x'], 'cover.png', { type: 'image/png' });
     const payload = toCreatePropertyPayload({

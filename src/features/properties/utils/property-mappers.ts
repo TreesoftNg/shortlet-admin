@@ -152,7 +152,7 @@ export function toCreatePropertyPayload(
     checkInTime: values.check_in || null,
     checkOutTime: values.check_out || null,
     timezone: values.timezone || null,
-    currency: values.currency || null,
+    currency: 'NGN',
     summary: values.summary.trim() || null,
     description: values.description.trim() || null,
     facilityIds: [...values.facility_ids],

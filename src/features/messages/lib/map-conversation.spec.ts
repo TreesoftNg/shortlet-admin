@@ -12,9 +12,12 @@ describe('mapConversation', () => {
         lastName: 'Okafor',
         email: 'ada@example.com',
       },
-      propertyId: null,
-      unitId: null,
-      bookingId: null,
+      propertyId: 'prop-1',
+      unitId: 'unit-1',
+      bookingId: 'booking-1',
+      propertyName: 'Azure Lekki',
+      unitName: 'Studio A',
+      contextLabel: 'Azure Lekki · Studio A',
       lastMessageAt: '2026-10-12T12:00:00.000Z',
       lastMessagePreview: 'Hello',
       lastMessageSenderType: 'customer',
@@ -28,6 +31,8 @@ describe('mapConversation', () => {
     expect(mapped.guest?.full_name).toBe('Ada Okafor');
     expect(mapped.unread_count).toBe(3);
     expect(mapped.preview).toBe('Hello');
+    expect(mapped.contextLabel).toBe('Azure Lekki · Studio A');
+    expect(mapped.reservation?.property?.name).toBe('Azure Lekki · Studio A');
   });
 });
 

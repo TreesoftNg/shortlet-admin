@@ -1,6 +1,6 @@
 import type { ConversationListItem } from '../types';
 
-export type MessageStatusTab = 'all' | 'unread' | 'open' | 'closed';
+export type MessageStatusTab = 'all' | 'unread' | 'closed';
 
 export type MessageFilters = {
   tab: MessageStatusTab;
@@ -19,7 +19,6 @@ function matchesTab(
   tab: MessageStatusTab,
 ): boolean {
   if (tab === 'unread') return conversation.unread_count > 0;
-  if (tab === 'open') return conversation.status === 'open';
   if (tab === 'closed') return conversation.status === 'closed';
   return true;
 }
@@ -51,7 +50,6 @@ export function countMessageTabs(
   return {
     all: conversations.length,
     unread: conversations.filter((item) => item.unread_count > 0).length,
-    open: conversations.filter((item) => item.status === 'open').length,
     closed: conversations.filter((item) => item.status === 'closed').length,
   };
 }

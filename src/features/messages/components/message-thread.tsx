@@ -12,8 +12,11 @@ import {
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
 import { LuSend } from 'react-icons/lu';
-import { EmptyState, StatusBadge } from '@/shared/components/ui';
-import { useConversationMessages } from '../hooks/use-messages';
+import { EmptyState, ErrorState, StatusBadge } from '@/shared/components/ui';
+import {
+  useConversationMessages,
+  useReopenConversation,
+} from '../hooks/use-messages';
 import type { ConversationListItem, ThreadMessage } from '../types';
 import { formatMessageTime } from '../utils/message-filters';
 
@@ -33,7 +36,9 @@ export function MessageThread({
   stopTyping,
 }: MessageThreadProps) {
   const conversationId = conversation?.id ?? null;
-  const { data, isLoading } = useConversationMessages(conversationId);
+  const { data, isLoading, isError, error, refetch } =
+    useConversationMessages(conversationId);
+  const reopen = useReopenConversation();
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -41,6 +46,7 @@ export function MessageThread({
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const messages = data ?? [];
+  const closed = conversation?.status === 'closed';
 
   useEffect(() => {
     const scroller = scrollerRef.current;
@@ -105,13 +111,14 @@ export function MessageThread({
             {conversation.guest?.full_name ?? 'Guest'}
           </Heading>
           <Text color="ink.300" fontSize="12px" noOfLines={1}>
-            {conversation.guest?.email ??
+            {conversation.contextLabel ??
+              conversation.guest?.email ??
               conversation.reservation?.property?.name ??
               'Guest inquiry'}
           </Text>
         </Box>
-        <StatusBadge tone={conversation.status === 'open' ? 'ok' : 'mute'}>
-          {conversation.status === 'open' ? 'Open' : 'Closed'}
+        <StatusBadge tone={closed ? 'mute' : 'ok'}>
+          {closed ? 'Closed' : 'Open'}
         </StatusBadge>
       </Flex>
 
@@ -148,6 +155,17 @@ export function MessageThread({
               borderRadius="16px"
             />
           </Flex>
+        ) : isError ? (
+          <ErrorState
+            message={
+              error instanceof Error
+                ? error.message
+                : 'Failed to load messages'
+            }
+            onRetry={() => void refetch()}
+            minH="200px"
+            py="24px"
+          />
         ) : messages.length === 0 ? (
           <EmptyState
             title="No messages yet"
@@ -176,49 +194,71 @@ export function MessageThread({
         </Text>
       ) : null}
 
-      <Flex
-        gap="10px"
-        px="18px"
-        py="14px"
-        borderTop="1px solid"
-        borderColor="line.500"
-        bg="white"
-        flexShrink={0}
-      >
-        <Input
-          h="44px"
-          bg="bg.400"
+      {closed ? (
+        <Flex
+          gap="10px"
+          px="18px"
+          py="14px"
+          borderTop="1px solid"
           borderColor="line.500"
-          borderRadius="12px"
-          placeholder="Write a reply…"
-          value={draft}
-          isDisabled={conversation.status === 'closed' || sending}
-          onChange={(event) => {
-            setDraft(event.target.value);
-            notifyTyping();
-          }}
-          onBlur={() => stopTyping()}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              void handleSend();
-            }
-          }}
-        />
-        <Button
-          h="44px"
-          leftIcon={<LuSend size={16} />}
-          isDisabled={
-            conversation.status === 'closed' ||
-            sending ||
-            draft.trim().length === 0
-          }
-          isLoading={sending}
-          onClick={() => void handleSend()}
+          bg="white"
+          flexShrink={0}
+          align="center"
+          justify="space-between"
         >
-          Send
-        </Button>
-      </Flex>
+          <Text fontSize="13px" color="ink.300">
+            This conversation is closed. Continue to reply on the same thread.
+          </Text>
+          <Button
+            h="44px"
+            flexShrink={0}
+            isLoading={reopen.isPending}
+            onClick={() => void reopen.mutateAsync(conversation.id)}
+          >
+            Continue
+          </Button>
+        </Flex>
+      ) : (
+        <Flex
+          gap="10px"
+          px="18px"
+          py="14px"
+          borderTop="1px solid"
+          borderColor="line.500"
+          bg="white"
+          flexShrink={0}
+        >
+          <Input
+            h="44px"
+            bg="bg.400"
+            borderColor="line.500"
+            borderRadius="12px"
+            placeholder="Write a reply…"
+            value={draft}
+            isDisabled={sending}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              notifyTyping();
+            }}
+            onBlur={() => stopTyping()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                void handleSend();
+              }
+            }}
+          />
+          <Button
+            h="44px"
+            leftIcon={<LuSend size={16} />}
+            isDisabled={sending || draft.trim().length === 0}
+            isLoading={sending}
+            onClick={() => void handleSend()}
+          >
+            Send
+          </Button>
+        </Flex>
+      )}
     </Flex>
   );
 }

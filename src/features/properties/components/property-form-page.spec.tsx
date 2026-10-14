@@ -35,7 +35,8 @@ describe('PropertyFormPage (create)', () => {
     expect(await screen.findByLabelText('Check-in time')).toHaveValue('16:00');
     expect(screen.getByLabelText('Checkout time')).toHaveValue('10:00');
     expect(screen.getByLabelText('Timezone')).toHaveValue('Africa/Nairobi');
-    expect(screen.getByLabelText('Currency')).toHaveValue('KES');
+    expect(screen.getByLabelText('Currency')).toHaveValue('NGN (Naira)');
+    expect(screen.getByLabelText('Currency')).toHaveAttribute('readonly');
   });
 
   it('keeps a saved default that is not in the picker list', async () => {
@@ -51,6 +52,6 @@ describe('PropertyFormPage (create)', () => {
     renderWithProviders(<PropertyFormPage mode="create" />);
     expect(await screen.findByLabelText('Check-in time')).toHaveValue('15:00');
     expect(screen.getByLabelText('Timezone')).toHaveValue('Africa/Lagos');
-    expect(screen.getByLabelText('Currency')).toHaveValue('NGN');
+    expect(screen.getByLabelText('Currency')).toHaveValue('NGN (Naira)');
   });
 });

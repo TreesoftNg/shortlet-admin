@@ -70,11 +70,12 @@ export function ConversationList({
                 </Text>
               </Flex>
               <Text color="ink.300" fontSize="12px" mb="4px" noOfLines={1}>
-                {conversation.bookingId
-                  ? 'About their stay'
-                  : conversation.propertyId || conversation.unitId
-                    ? 'Property inquiry'
-                    : conversation.guest?.email ?? 'General chat'}
+                {conversation.contextLabel ??
+                  (conversation.bookingId
+                    ? 'About their stay'
+                    : conversation.propertyId || conversation.unitId
+                      ? 'Property inquiry'
+                      : (conversation.guest?.email ?? 'General chat'))}
               </Text>
               <Flex justify="space-between" gap="8px" align="center">
                 <Text
