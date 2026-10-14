@@ -7,7 +7,12 @@ import {
   renderWithProviders,
 } from '@/test-utils/render-with-providers';
 import * as bookingsApi from '../api/bookings-service';
-import { adminBooking, bookingListItem } from '../test-fixtures';
+import {
+  adminBooking,
+  bookingListItem,
+  paymentView,
+  refundView,
+} from '../test-fixtures';
 import { BookingsPage } from './bookings-page';
 
 jest.mock('../api/bookings-service');
@@ -101,22 +106,156 @@ describe('BookingsPage', () => {
     });
   });
 
-  it('cancels with a reason', async () => {
-    renderAs();
+  const openCancel = async (permissions?: string[]) => {
+    renderAs(permissions);
     await userEvent.click(await screen.findByText('ada@example.com'));
     await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
     await userEvent.type(
       screen.getByPlaceholderText(/why is this booking/i),
       'Water outage',
     );
-    await userEvent.click(
-      screen.getByRole('button', { name: 'Cancel booking' }),
-    );
+  };
+
+  it('cancels and refunds the whole stay and deposit by default', async () => {
+    await openCancel();
+    expect(screen.getByLabelText('Refund the stay')).toHaveValue(250000);
+    expect(screen.getByLabelText(/return the deposit/i)).toBeChecked();
+    expect(
+      screen.getByText(/guest gets back ₦320,000 of ₦320,000 paid/i),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel booking' }));
     await waitFor(() => {
       expect(api.cancelBooking).toHaveBeenCalledWith(
         '11111111-1111-1111-1111-111111111111',
-        'Water outage',
+        {
+          reason: 'Water outage',
+          stayRefund: 250000,
+          refundReason: 'guest_cancellation',
+          returnDeposit: true,
+        },
       );
     });
+  });
+
+  it('refunds part of the stay with a chosen reason and keeps the deposit', async () => {
+    await openCancel();
+    const stay = screen.getByLabelText('Refund the stay');
+    await userEvent.clear(stay);
+    await userEvent.type(stay, '100000');
+    await userEvent.selectOptions(
+      screen.getByLabelText('Refund reason'),
+      'host_cancellation',
+    );
+    await userEvent.click(screen.getByLabelText(/return the deposit/i));
+    expect(
+      screen.getByText(/guest gets back ₦100,000 of ₦320,000 paid/i),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel booking' }));
+    await waitFor(() => {
+      expect(api.cancelBooking).toHaveBeenCalledWith(
+        '11111111-1111-1111-1111-111111111111',
+        {
+          reason: 'Water outage',
+          stayRefund: 100000,
+          refundReason: 'host_cancellation',
+        },
+      );
+    });
+  });
+
+  it('refuses more than the stay left and needs a reason', async () => {
+    renderAs();
+    await userEvent.click(await screen.findByText('ada@example.com'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
+    const stay = screen.getByLabelText('Refund the stay');
+    await userEvent.clear(stay);
+    await userEvent.type(stay, '250001');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel booking' }));
+
+    expect(
+      await screen.findByText('Say why this booking is being cancelled.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/enter an amount from ₦0 to ₦250,000/i)).toBeInTheDocument();
+    expect(api.cancelBooking).not.toHaveBeenCalled();
+  });
+
+  it('keeps the deposit by default for a checked-in guest', async () => {
+    api.fetchBooking.mockResolvedValue(adminBooking({ status: 'checked_in' }));
+    await openCancel();
+    expect(screen.getByLabelText(/return the deposit/i)).not.toBeChecked();
+    expect(screen.getByText(/inspect the apartment first/i)).toBeInTheDocument();
+  });
+
+  it('only cancels for someone without refund access', async () => {
+    await openCancel(['booking.read', 'booking.update', 'booking.cancel']);
+    expect(screen.queryByLabelText('Refund the stay')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/return the deposit/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/someone with refund access can refund this/i),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel booking' }));
+    await waitFor(() => {
+      expect(api.cancelBooking).toHaveBeenCalledWith(
+        '11111111-1111-1111-1111-111111111111',
+        { reason: 'Water outage' },
+      );
+    });
+  });
+
+  it('warns when a refund did not go through', async () => {
+    api.cancelBooking.mockResolvedValue(
+      adminBooking({
+        status: 'cancelled',
+        cancellationReason: 'Water outage',
+        refunds: [
+          refundView({
+            id: 'refund-failed',
+            kind: 'stay',
+            status: 'failed',
+            failureReason: 'Flutterwave declined the refund',
+          }),
+        ],
+      }),
+    );
+    await openCancel();
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel booking' }));
+
+    expect(
+      await screen.findByText('A refund did not go through'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/stay refund: flutterwave declined the refund/i),
+    ).toBeInTheDocument();
+  });
+
+  it('shows who cancelled and what was returned', async () => {
+    api.fetchBooking.mockResolvedValue(
+      adminBooking({
+        status: 'cancelled',
+        cancellationReason: 'distance',
+        cancelledBy: 'staff',
+        cancelledByUser: { id: 'u9', name: 'Temitope Aladesiun', role: 'owner' },
+        amountRefunded: '250000.00',
+        stayRefunded: '250000.00',
+        payments: [
+          paymentView({
+            amount: '320000.00',
+            amountRefunded: '250000.00',
+            status: 'partially_refunded',
+          }),
+        ],
+      }),
+    );
+    renderAs();
+    await userEvent.click(await screen.findByText('ada@example.com'));
+
+    expect(await screen.findByText('Owner · Temitope Aladesiun')).toBeInTheDocument();
+    expect(screen.getByText('Partly refunded')).toBeInTheDocument();
+    expect(screen.getByText('₦250,000 of ₦320,000 refunded')).toBeInTheDocument();
+    expect(screen.getByText('Stay ₦250,000 · Deposit ₦0')).toBeInTheDocument();
+    expect(screen.getByText('Not returned yet')).toBeInTheDocument();
   });
 });

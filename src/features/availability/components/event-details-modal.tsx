@@ -101,7 +101,7 @@ function BlockModal({
         <Flex gap="8px">
           {canManage ? (
             confirming ? (
-              <Button colorScheme="red" onClick={() => void removeBlock()} isLoading={remove.isPending}>
+              <Button variant="danger" onClick={() => void removeBlock()} isLoading={remove.isPending}>
                 Yes, remove block
               </Button>
             ) : (

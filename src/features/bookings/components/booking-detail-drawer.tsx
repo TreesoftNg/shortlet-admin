@@ -30,6 +30,8 @@ import {
   canCheckInBooking,
   canReleaseDeposit,
   confirmingPayment,
+  depositRefundedLabel,
+  formatCancelledBy,
   formatDateTimeLabel,
   formatGuestsLabel,
   formatMoney,
@@ -41,11 +43,19 @@ import {
   getPaymentStatusDisplay,
   getRefundStatusDisplay,
   guestFullName,
+  refundBreakdownLabel,
+  refundProgressLabel,
   stayRefundableBalance,
   timelineTitle,
   unitLabel,
 } from '@/features/bookings/utils/booking-display';
-import { STAFF_REFUND_REASONS, type StaffRefundReason } from '@/features/bookings/types';
+import {
+  STAFF_REFUND_REASONS,
+  type CancelBookingInput,
+  type StaffRefundReason,
+} from '@/features/bookings/types';
+import { newFailedRefunds } from '@/features/bookings/utils/cancel-booking';
+import { CancelBookingForm } from './cancel-booking-form';
 import {
   createStayRefund,
   verifyPayment,
@@ -84,7 +94,6 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
   const releaseMutation = useReleaseDeposit();
 
   const [dialog, setDialog] = useState<DialogMode>('none');
-  const [cancelReason, setCancelReason] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [deductionReason, setDeductionReason] = useState('');
   const [refundAmount, setRefundAmount] = useState('');
@@ -195,30 +204,40 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
     }
   };
 
-  const handleCancel = async () => {
-    const reason = cancelReason.trim();
-    if (!reason) {
-      toast({
-        title: 'Reason required',
-        description: 'Enter why this booking is being cancelled.',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+  const handleCancel = async (input: CancelBookingInput) => {
     try {
-      await cancelMutation.mutateAsync({ id: booking.id, reason });
+      const cancelled = await cancelMutation.mutateAsync({
+        id: booking.id,
+        input,
+      });
       setDialog('none');
-      setCancelReason('');
+      const failed = newFailedRefunds(booking, cancelled);
+      const refunded = Boolean(input.stayRefund || input.returnDeposit);
       toast({
         title: 'Booking cancelled',
-        description:
-          'No money was refunded. Refund the stay or deposit separately if needed.',
+        description: !refunded
+          ? 'No money was refunded.'
+          : failed.length
+            ? 'A refund needs your attention.'
+            : 'The refunds are on their way to the guest.',
         status: 'success',
         duration: 3500,
         isClosable: true,
       });
+      if (failed.length) {
+        toast({
+          title: 'A refund did not go through',
+          description: `${failed
+            .map(
+              (refund) =>
+                `${refund.kind === 'deposit' ? 'Deposit' : 'Stay'} refund: ${refund.failureReason ?? 'failed'}`,
+            )
+            .join(' ')} Retry it from this booking.`,
+          status: 'warning',
+          duration: 8000,
+          isClosable: true,
+        });
+      }
     } catch (err) {
       toast({
         title: 'Could not cancel booking',
@@ -346,42 +365,13 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
 
   if (dialog === 'cancel') {
     return (
-      <VStack align="stretch" spacing="14px">
-        <Heading as="h3" fontSize="18px">
-          Cancel booking
-        </Heading>
-        <Text fontSize="14px" color="ink.400">
-          No money is refunded here. Refund the stay and deposit separately if
-          needed.
-        </Text>
-        <FormControl isRequired>
-          <FormLabel>Reason</FormLabel>
-          <Textarea
-            value={cancelReason}
-            onChange={(event) => setCancelReason(event.target.value)}
-            placeholder="Why is this booking being cancelled?"
-            rows={4}
-          />
-        </FormControl>
-        <Flex gap="8px">
-          <Button
-            flex="1"
-            variant="soft"
-            onClick={() => setDialog('none')}
-            isDisabled={actionPending}
-          >
-            Back
-          </Button>
-          <Button
-            flex="1"
-            colorScheme="red"
-            onClick={() => void handleCancel()}
-            isLoading={cancelMutation.isPending}
-          >
-            Cancel booking
-          </Button>
-        </Flex>
-      </VStack>
+      <CancelBookingForm
+        booking={booking}
+        canRefund={canRefund}
+        isSubmitting={cancelMutation.isPending}
+        onBack={() => setDialog('none')}
+        onSubmit={(input) => void handleCancel(input)}
+      />
     );
   }
 
@@ -542,10 +532,7 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
           <Button
             size="sm"
             variant="soft"
-            onClick={() => {
-              setCancelReason('');
-              setDialog('cancel');
-            }}
+            onClick={() => setDialog('cancel')}
             isDisabled={actionPending}
           >
             Cancel
@@ -681,12 +668,26 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                 ),
               },
               {
-                label: 'Paid / refunded',
+                label: 'Paid',
                 value: (
                   <Text as="b">
-                    {formatMoney(booking.amountPaid, booking.currency)} /{' '}
-                    {formatMoney(booking.amountRefunded, booking.currency)}
+                    {formatMoney(booking.amountPaid, booking.currency)}
                   </Text>
+                ),
+              },
+              {
+                label: 'Refunded',
+                value: (
+                  <Box textAlign="right">
+                    <Text as="b">
+                      {formatMoney(booking.amountRefunded, booking.currency)}
+                    </Text>
+                    {Number(booking.amountRefunded) > 0 ? (
+                      <Text fontSize="12px" color="ink.300">
+                        {refundBreakdownLabel(booking)}
+                      </Text>
+                    ) : null}
+                  </Box>
                 ),
               },
             ]}
@@ -715,19 +716,15 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                 label: 'Due by',
                 value: (
                   <Text as="b">
-                    {booking.deposit.dueAt
+                    {booking.deposit.status === 'held' && booking.deposit.dueAt
                       ? formatDateTimeLabel(booking.deposit.dueAt)
                       : '—'}
                   </Text>
                 ),
               },
               {
-                label: 'Refunded',
-                value: (
-                  <Text as="b">
-                    {formatMoney(booking.deposit.refunded, booking.currency)}
-                  </Text>
-                ),
+                label: 'Returned',
+                value: <Text as="b">{depositRefundedLabel(booking)}</Text>,
               },
               {
                 label: 'Deduction reason',
@@ -755,6 +752,7 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
             <VStack align="stretch" spacing="10px">
               {booking.payments.map((payment) => {
                 const paymentStatus = getPaymentStatusDisplay(payment.status);
+                const refundProgress = refundProgressLabel(payment);
                 return (
                   <Box
                     key={payment.id}
@@ -780,6 +778,11 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                         ? ` · ${payment.providerTransactionId}`
                         : ''}
                     </Text>
+                    {refundProgress ? (
+                      <Text fontSize="13px" color="ink.500" fontWeight={600} mt="2px">
+                        {refundProgress}
+                      </Text>
+                    ) : null}
                     <Flex gap="8px" mt="8px" wrap="wrap">
                       <Button
                         size="xs"
@@ -827,7 +830,7 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                         {refundStatus.label}
                       </StatusBadge>
                     </Flex>
-                    <Text fontSize="13px" color="ink.400" textTransform="capitalize">
+                    <Text fontSize="13px" color="ink.400">
                       {formatRefundReason(refund.reason)}
                       {refund.note ? ` · ${refund.note}` : ''}
                     </Text>
@@ -851,11 +854,7 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
           items={[
             {
               label: 'By',
-              value: (
-                <Text as="b" textTransform="capitalize">
-                  {booking.cancelledBy ?? '—'}
-                </Text>
-              ),
+              value: <Text as="b">{formatCancelledBy(booking)}</Text>,
             },
             {
               label: 'Reason',

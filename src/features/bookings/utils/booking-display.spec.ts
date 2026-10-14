@@ -3,8 +3,15 @@ import {
   canCancelBooking,
   canCheckInBooking,
   canReleaseDeposit,
+  depositRefundedLabel,
+  depositReturnableBalance,
+  formatCancelledBy,
   formatMoney,
+  formatRefundReason,
   getBookingStatusDisplay,
+  getPaymentStatusDisplay,
+  refundBreakdownLabel,
+  refundProgressLabel,
   stayRefundableBalance,
 } from './booking-display';
 
@@ -45,5 +52,92 @@ describe('booking-display', () => {
         adminBooking({ stayTotal: '100.00', stayRefunded: '25.50' }),
       ),
     ).toBe(74.5);
+  });
+
+  describe('who cancelled', () => {
+    it.each([
+      [{ cancelledBy: 'guest', cancelledByUser: null }, 'Guest'],
+      [{ cancelledBy: 'system', cancelledByUser: null }, 'Automatically (payment issue)'],
+      [
+        {
+          cancelledBy: 'staff',
+          cancelledByUser: { id: 'u1', name: 'Temitope Aladesiun', role: 'owner' },
+        },
+        'Owner · Temitope Aladesiun',
+      ],
+      [
+        { cancelledBy: 'staff', cancelledByUser: { id: null, name: null, role: 'manager' } },
+        'Manager',
+      ],
+      // Cancelled before the role was recorded.
+      [{ cancelledBy: 'staff', cancelledByUser: null }, 'Staff'],
+      [{ cancelledBy: null, cancelledByUser: null }, '—'],
+    ] as const)('%j reads %s', (booking, label) => {
+      expect(formatCancelledBy(booking)).toBe(label);
+    });
+  });
+
+  describe('refunds', () => {
+    it('labels a part-refunded payment the same everywhere', () => {
+      expect(getPaymentStatusDisplay('partially_refunded')).toEqual({
+        label: 'Partly refunded',
+        tone: 'info',
+      });
+    });
+
+    it('says how much of a payment was refunded', () => {
+      expect(
+        refundProgressLabel({
+          amount: '429750.00',
+          amountRefunded: '354750.00',
+          currency: 'NGN',
+        }),
+      ).toBe('₦354,750 of ₦429,750 refunded');
+      expect(
+        refundProgressLabel({ amount: '1000.00', amountRefunded: '0.00', currency: 'NGN' }),
+      ).toBeNull();
+    });
+
+    it('splits the refunded total into stay and deposit', () => {
+      expect(
+        refundBreakdownLabel(
+          adminBooking({
+            stayRefunded: '250000.00',
+            deposit: { ...adminBooking().deposit, status: 'refunded', refunded: '70000.00' },
+          }),
+        ),
+      ).toBe('Stay ₦250,000 · Deposit ₦70,000');
+    });
+
+    it('says a held deposit is not returned yet instead of ₦0', () => {
+      expect(depositRefundedLabel(adminBooking())).toBe('Not returned yet');
+      expect(
+        depositRefundedLabel(
+          adminBooking({
+            deposit: { ...adminBooking().deposit, status: 'refunded', refunded: '70000.00' },
+          }),
+        ),
+      ).toBe('₦70,000');
+      expect(
+        depositRefundedLabel(
+          adminBooking({ deposit: { ...adminBooking().deposit, status: 'pending' } }),
+        ),
+      ).toBe('—');
+    });
+
+    it('only offers back a deposit that is still held', () => {
+      expect(depositReturnableBalance(adminBooking())).toBe(70000);
+      expect(
+        depositReturnableBalance(
+          adminBooking({ deposit: { ...adminBooking().deposit, status: 'refunded' } }),
+        ),
+      ).toBe(0);
+    });
+
+    it('uses the same words as the refund reasons list', () => {
+      expect(formatRefundReason('host_cancellation')).toBe('Host cancellation');
+      expect(formatRefundReason('deposit_release')).toBe('Deposit returned');
+      expect(formatRefundReason('other')).toBe('Other');
+    });
   });
 });

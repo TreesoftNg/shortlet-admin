@@ -40,6 +40,15 @@ export type RefundStatus = 'pending' | 'completed' | 'failed';
 
 export type BookingCancelledBy = 'guest' | 'staff' | 'system';
 
+export type StaffRoleCode = 'owner' | 'admin' | 'manager' | 'staff';
+
+/** The staff member who cancelled; id and name are null if they were removed. */
+export type CancelledByUser = {
+  id: string | null;
+  name: string | null;
+  role: StaffRoleCode | null;
+};
+
 export type BookingUnitSummary = {
   id: string;
   name: string;
@@ -174,6 +183,8 @@ export type AdminBooking = {
   createdAt: string;
   customerId: string | null;
   cancelledBy: BookingCancelledBy | null;
+  /** Staff cancellations only. */
+  cancelledByUser: CancelledByUser | null;
   houseRulesAcceptedAt: string;
   checkedInAt: string | null;
   completedAt: string | null;
@@ -202,6 +213,17 @@ export type PaginatedBookings = {
   limit: number;
   total: number;
   totalPages: number;
+};
+
+/** Body of POST /cc/bookings/:id/cancel. Refunds need payment.refund. */
+export type CancelBookingInput = {
+  reason: string;
+  /** Stay amount to refund now; 0 refunds none. */
+  stayRefund?: number;
+  /** Required when stayRefund is more than 0. */
+  refundReason?: StaffRefundReason;
+  /** Return the whole deposit still held. */
+  returnDeposit?: boolean;
 };
 
 export type ReleaseDepositInput = {

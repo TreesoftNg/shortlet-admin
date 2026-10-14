@@ -7,7 +7,7 @@ import {
   checkInBooking,
   releaseDeposit,
 } from '../api/bookings-service';
-import type { ReleaseDepositInput } from '../types';
+import type { CancelBookingInput, ReleaseDepositInput } from '../types';
 
 async function invalidateBookingQueries(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -40,8 +40,8 @@ export function useCancelBooking() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      cancelBooking(id, reason),
+    mutationFn: ({ id, input }: { id: string; input: CancelBookingInput }) =>
+      cancelBooking(id, input),
     onSuccess: async (booking) => {
       await invalidateBookingQueries(queryClient, booking.id);
     },

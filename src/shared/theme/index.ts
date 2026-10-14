@@ -95,6 +95,13 @@ export const theme = extendTheme({
           _hover: { bg: 'bg.400' },
           _active: { bg: 'line.400' },
         },
+        /** Destructive actions, e.g. cancelling a booking. */
+        danger: {
+          bg: 'status.danger',
+          color: 'white',
+          _hover: { bg: '#C23D33', _disabled: { bg: 'status.danger' } },
+          _active: { bg: '#A9352C' },
+        },
         dark: {
           bg: 'ink.500',
           color: 'white',

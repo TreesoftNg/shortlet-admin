@@ -1,7 +1,10 @@
 'use client';
 
 import { Box, Text } from '@chakra-ui/react';
-import { formatMoney } from '@/features/bookings/utils/booking-display';
+import {
+  formatMoney,
+  refundProgressLabel,
+} from '@/features/bookings/utils/booking-display';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
 import { StatusBadge } from '@/shared/components/ui/status-badge';
 import { timestampColumns } from '@/shared/components/ui/timestamp-columns';
@@ -31,7 +34,19 @@ export function getPaymentColumns(): DataTableColumn<PaymentView>[] {
       id: 'amount',
       header: 'Amount',
       meta: { fontWeight: 700 },
-      cell: (row) => formatMoney(row.amount, row.currency),
+      cell: (row) => {
+        const refunded = refundProgressLabel(row);
+        return (
+          <Box>
+            <Text fontWeight={700}>{formatMoney(row.amount, row.currency)}</Text>
+            {refunded ? (
+              <Text color="ink.300" fontSize="12px" fontWeight={500}>
+                {refunded}
+              </Text>
+            ) : null}
+          </Box>
+        );
+      },
     },
     {
       id: 'status',

@@ -8,6 +8,7 @@ import type {
   RefundKind,
   RefundReason,
   RefundStatus,
+  StaffRoleCode,
 } from '../types';
 
 export type DisplayChip = { label: string; tone: StatusTone };
@@ -104,7 +105,7 @@ export function getPaymentStatusDisplay(status: PaymentStatus): DisplayChip {
     case 'abandoned':
       return { label: 'Abandoned', tone: 'mute' };
     case 'partially_refunded':
-      return { label: 'Partial refund', tone: 'info' };
+      return { label: 'Partly refunded', tone: 'info' };
     case 'refunded':
       return { label: 'Refunded', tone: 'danger' };
     default:
@@ -138,8 +139,69 @@ export function formatRefundKind(kind: RefundKind): string {
   }
 }
 
+const REFUND_REASON_LABELS: Record<RefundReason, string> = {
+  guest_cancellation: 'Guest cancellation',
+  host_cancellation: 'Host cancellation',
+  partial_stay: 'Partial stay',
+  service_issue: 'Service issue',
+  duplicate_charge: 'Duplicate charge',
+  unavailable_after_payment: 'Dates taken before payment',
+  deposit_release: 'Deposit returned',
+  other: 'Other',
+};
+
 export function formatRefundReason(reason: RefundReason): string {
-  return reason.replace(/_/g, ' ');
+  return REFUND_REASON_LABELS[reason] ?? reason.replace(/_/g, ' ');
+}
+
+/** "₦354,750 of ₦429,750 refunded"; null when nothing was refunded. */
+export function refundProgressLabel(payment: {
+  amount: string;
+  amountRefunded: string;
+  currency: string;
+}): string | null {
+  const refunded = Number(payment.amountRefunded);
+  if (!Number.isFinite(refunded) || refunded <= 0) return null;
+  return `${formatMoney(refunded, payment.currency)} of ${formatMoney(payment.amount, payment.currency)} refunded`;
+}
+
+/** What makes up the refunded total, e.g. "Stay ₦354,750 · Deposit ₦75,000". */
+export function refundBreakdownLabel(booking: AdminBooking): string {
+  return `Stay ${formatMoney(booking.stayRefunded, booking.currency)} · Deposit ${formatMoney(booking.deposit.refunded, booking.currency)}`;
+}
+
+/** A held deposit has not been returned yet, which says more than "₦0". */
+export function depositRefundedLabel(booking: AdminBooking): string {
+  if (booking.deposit.status === 'held') return 'Not returned yet';
+  if (booking.deposit.status === 'pending' || booking.deposit.status === 'none')
+    return '—';
+  return formatMoney(booking.deposit.refunded, booking.currency);
+}
+
+const ROLE_LABELS: Record<StaffRoleCode, string> = {
+  owner: 'Owner',
+  admin: 'Admin',
+  manager: 'Manager',
+  staff: 'Staff',
+};
+
+/** Who cancelled: "Owner · Ada Obi", "Guest", or "Automatically (payment issue)". */
+export function formatCancelledBy(
+  booking: Pick<AdminBooking, 'cancelledBy' | 'cancelledByUser'>,
+): string {
+  switch (booking.cancelledBy) {
+    case 'guest':
+      return 'Guest';
+    case 'system':
+      return 'Automatically (payment issue)';
+    case 'staff': {
+      const user = booking.cancelledByUser;
+      const role = user?.role ? ROLE_LABELS[user.role] : 'Staff';
+      return user?.name ? `${role} · ${user.name}` : role;
+    }
+    default:
+      return '—';
+  }
 }
 
 export function guestFullName(booking: AdminBooking): string {
@@ -180,6 +242,15 @@ export function canCancelBooking(booking: AdminBooking): boolean {
 
 export function canReleaseDeposit(booking: AdminBooking): boolean {
   return booking.deposit.status === 'held';
+}
+
+/** Deposit still held that can be returned (0 when none is held). */
+export function depositReturnableBalance(booking: AdminBooking): number {
+  if (booking.deposit.status !== 'held') return 0;
+  const amount = Number(booking.deposit.amount);
+  const refunded = Number(booking.deposit.refunded);
+  if (!Number.isFinite(amount) || !Number.isFinite(refunded)) return 0;
+  return Math.max(0, Math.round((amount - refunded) * 100) / 100);
 }
 
 export function stayRefundableBalance(booking: AdminBooking): number {

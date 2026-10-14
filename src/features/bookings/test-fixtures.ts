@@ -152,6 +152,7 @@ export function adminBooking(overrides: Partial<AdminBooking> = {}): AdminBookin
     createdAt: list.createdAt,
     customerId: '66666666-6666-6666-6666-666666666666',
     cancelledBy: null,
+    cancelledByUser: null,
     houseRulesAcceptedAt: '2026-10-01T09:59:00.000Z',
     checkedInAt: null,
     completedAt: null,

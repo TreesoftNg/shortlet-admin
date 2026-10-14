@@ -3,6 +3,7 @@ import { adminPath } from '@/shared/api/paths';
 import type {
   AdminBooking,
   BookingListItem,
+  CancelBookingInput,
   ListBookingsParams,
   PaginatedBookings,
   ReleaseDepositInput,
@@ -53,15 +54,15 @@ export async function checkInBooking(id: string): Promise<AdminBooking> {
   ).data;
 }
 
-/** POST /cc/bookings/:id/cancel */
+/** POST /cc/bookings/:id/cancel, optionally refunding the stay and deposit. */
 export async function cancelBooking(
   id: string,
-  reason: string,
+  input: CancelBookingInput,
 ): Promise<AdminBooking> {
   return (
     await apiClient<AdminBooking>(adminPath(`/bookings/${id}/cancel`), {
       method: 'POST',
-      body: { reason },
+      body: input,
     })
   ).data;
 }

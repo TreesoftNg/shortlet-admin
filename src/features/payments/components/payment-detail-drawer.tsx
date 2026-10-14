@@ -25,6 +25,7 @@ import {
   formatRefundKind,
   formatRefundReason,
   getRefundStatusDisplay,
+  refundProgressLabel,
 } from '@/features/bookings/utils/booking-display';
 import {
   useCreateStayRefund,
@@ -277,7 +278,8 @@ export function PaymentDetailDrawer({
                 label: 'Refunded',
                 value: (
                   <Text as="b">
-                    {formatMoney(payment.amountRefunded, payment.currency)}
+                    {refundProgressLabel(payment) ??
+                      formatMoney(payment.amountRefunded, payment.currency)}
                   </Text>
                 ),
               },
@@ -348,11 +350,7 @@ export function PaymentDetailDrawer({
                       {refundStatus.label}
                     </StatusBadge>
                   </Flex>
-                  <Text
-                    fontSize="13px"
-                    color="ink.400"
-                    textTransform="capitalize"
-                  >
+                  <Text fontSize="13px" color="ink.400">
                     {formatRefundReason(refund.reason)}
                     {refund.note ? ` · ${refund.note}` : ''}
                   </Text>
