@@ -9,6 +9,13 @@ import type { ThreadMessage } from '../types';
 
 type EmitAck<T> = ({ ok: true } & T) | { ok?: false; message?: string; code?: string };
 
+/**
+ * Long-polling first, then upgrade to WebSocket when the network allows it
+ * (the Socket.IO default). Starting with WebSocket only would never connect
+ * behind a proxy that drops the Upgrade header: the client does not fall back.
+ */
+export const MESSAGING_TRANSPORTS = ['polling', 'websocket'];
+
 let shared: Socket | null = null;
 let sharedToken: string | null = null;
 let refreshReconnectInFlight = false;
@@ -44,7 +51,7 @@ export async function getMessagingSocket(): Promise<Socket | null> {
   sharedToken = auth.token;
   shared = io(`${apiOrigin()}/messaging`, {
     autoConnect: true,
-    transports: ['websocket', 'polling'],
+    transports: MESSAGING_TRANSPORTS,
     // Called again on reconnect so we don't reuse an expired access token.
     auth: (cb) => {
       void resolveStaffAuth().then((next) => {

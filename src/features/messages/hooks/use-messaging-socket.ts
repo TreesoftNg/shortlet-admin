@@ -138,7 +138,15 @@ export function useMessagingSocket(options: {
       if (!socket || cancelled) return;
       socketRef.current = socket;
 
-      const onReady = () => setReady(true);
+      const onReady = () => {
+        setReady(true);
+        // Catch up on anything sent while the socket was down. Without
+        // cancelRefetch a second subscriber joins the same request.
+        void queryClient.invalidateQueries(
+          { queryKey: queryKeys.messages.all },
+          { cancelRefetch: false },
+        );
+      };
       const onError = () => setReady(false);
       const onDisconnect = () => setReady(false);
       const onMessageNew = (raw: ApiMessage) => {
