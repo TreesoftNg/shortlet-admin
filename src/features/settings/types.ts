@@ -24,6 +24,7 @@ export type BusinessProfile = {
   whatsappPhone: string | null;
   address: string | null;
   websiteUrl: string | null;
+  adminAppUrl: string | null;
   instagramUrl: string | null;
   facebookUrl: string | null;
   tiktokUrl: string | null;

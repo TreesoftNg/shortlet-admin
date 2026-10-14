@@ -30,11 +30,25 @@ export const BOOKING_STATUS_LABELS: Record<string, string> = {
   expired: 'Expired',
 };
 
+/** True when the API refused the stay because the unit has no nightly rate. */
+export function isMissingUnitPricingError(error: unknown): boolean {
+  if (!error || typeof error !== 'object' || !('message' in error)) return false;
+  return /pricing hasn't been set up|nightly rate/i.test(
+    String((error as { message: unknown }).message),
+  );
+}
+
 /** Message for an API error from the booking endpoints. */
 export function bookingErrorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'code' in error) {
     const { code, message } = error as { code: string; message: string };
-    if (code === 'BOOKING_UNAVAILABLE') return 'Those nights are taken. Pick other dates.';
+    if (code === 'BOOKING_UNAVAILABLE') {
+      // Date conflicts only — missing pricing / closed units keep the API text.
+      if (/those dates are no longer available/i.test(message)) {
+        return 'Those nights are taken. Pick other dates.';
+      }
+      return message;
+    }
     return message;
   }
   return error instanceof Error ? error.message : 'Something went wrong. Please try again.';

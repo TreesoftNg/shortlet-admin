@@ -35,8 +35,17 @@ describe('business profile form', () => {
       supportEmail: 'hello@sunmade.ng',
       supportPhone: '+234 706 830 7978',
       websiteUrl: 'https://sunmade.ng',
+      adminAppUrl: 'https://admin.sunmade.ng',
     };
     expect(validateProfile(values)).toEqual({});
+  });  
+
+  it('flags a bad admin app URL', () => {
+    const errors = validateProfile({
+      ...profileToForm(businessProfile()),
+      adminAppUrl: 'admin.sunmade.ng',
+    });
+    expect(errors.adminAppUrl).toMatch(/https:\/\//);
   });
 
   it('flags bad fields', () => {

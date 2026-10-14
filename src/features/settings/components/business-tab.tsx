@@ -121,6 +121,9 @@ export function BusinessTab({ canManage }: { canManage: boolean }) {
 
       <FormPanel title="Website and social">
         {textRow('websiteUrl', 'Booking website', 'Links in booking emails open here.', { placeholder: 'https://' })}
+        {textRow('adminAppUrl', 'Admin app URL', 'Staff invite and admin email links open here.', {
+          placeholder: 'https://',
+        })}
         {textRow('instagramUrl', 'Instagram', 'Full link to your profile.', { placeholder: 'https://instagram.com/…' })}
         {textRow('facebookUrl', 'Facebook', 'Full link to your page.', { placeholder: 'https://facebook.com/…' })}
         {textRow('tiktokUrl', 'TikTok', 'Full link to your profile.', { placeholder: 'https://tiktok.com/@…' })}

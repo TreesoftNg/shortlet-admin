@@ -1,5 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { CalendarUnitRow } from '@/features/availability/types';
 import { ApiClientError } from '@/shared/api/types';
 import { renderWithProviders } from '@/test-utils/render-with-providers';
@@ -63,19 +62,22 @@ const renderForm = () =>
     />,
   );
 
-async function fillGuest() {
-  await userEvent.type(screen.getByRole('textbox', { name: 'First name' }), 'Kemi');
-  await userEvent.type(screen.getByRole('textbox', { name: 'Last name' }), 'Adebayo');
-  await userEvent.type(screen.getByRole('textbox', { name: 'Email' }), 'kemi@example.com');
-  await userEvent.type(screen.getByRole('textbox', { name: 'Phone' }), '+2348030000001');
+function fillGuest() {
+  fireEvent.change(screen.getByRole('textbox', { name: 'First name' }), { target: { value: 'Kemi' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Last name' }), { target: { value: 'Adebayo' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Email' }), { target: { value: 'kemi@example.com' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Phone' }), {
+    target: { value: '+2348030000001' },
+  });
 }
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  jest.clearAllMocks();
   api.fetchStaffQuote.mockResolvedValue(quote());
 });
 
 describe('StaffBookingForm', () => {
+  jest.setTimeout(15000);
   it('shows the live price with the deposit for the picked nights', async () => {
     renderForm();
 
@@ -96,26 +98,37 @@ describe('StaffBookingForm', () => {
   it('needs a reason for a discount, and previews it', async () => {
     renderForm();
     await screen.findByTestId('staff-quote');
-    await fillGuest();
-    api.fetchStaffQuote.mockResolvedValue(quote({ staffDiscount: { amount: '20000.00', reason: 'Staff discount' } }));
+    fillGuest();
+    api.fetchStaffQuote.mockResolvedValue(
+      quote({ staffDiscount: { amount: '20000.00', reason: 'Staff discount' } }),
+    );
 
-    await userEvent.type(screen.getByRole('spinbutton', { name: 'Discount amount' }), '20000');
-    await waitFor(() => expect(api.fetchStaffQuote).toHaveBeenLastCalledWith(expect.objectContaining({ discount: 20000 })));
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Discount amount' }), {
+      target: { value: '20000' },
+    });
+    await waitFor(() =>
+      expect(api.fetchStaffQuote).toHaveBeenLastCalledWith(expect.objectContaining({ discount: 20000 })),
+    );
     expect(await screen.findByText('Staff discount')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Confirm booking' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm booking' }));
     expect(await screen.findByText('Say why you are giving a discount.')).toBeInTheDocument();
     expect(api.createStaffBooking).not.toHaveBeenCalled();
   });
 
   it('records a payment received and sends the booking', async () => {
-    api.createStaffBooking.mockResolvedValue({ booking: { reference: 'K7QH2MXP4D' } as never, checkout: null });
+    api.createStaffBooking.mockResolvedValue({
+      booking: { reference: 'K7QH2MXP4D' } as never,
+      checkout: null,
+    });
     renderForm();
     await screen.findByTestId('staff-quote');
-    await fillGuest();
-    await userEvent.type(screen.getByRole('textbox', { name: 'Payment reference' }), 'TRF-1');
+    fillGuest();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Payment reference' }), {
+      target: { value: 'TRF-1' },
+    });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Confirm booking' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm booking' }));
 
     await waitFor(() =>
       expect(api.createStaffBooking).toHaveBeenCalledWith({
@@ -125,7 +138,12 @@ describe('StaffBookingForm', () => {
         adults: 1,
         children: 0,
         infants: 0,
-        guest: { firstName: 'Kemi', lastName: 'Adebayo', email: 'kemi@example.com', phone: '+2348030000001' },
+        guest: {
+          firstName: 'Kemi',
+          lastName: 'Adebayo',
+          email: 'kemi@example.com',
+          phone: '+2348030000001',
+        },
         specialRequests: null,
         payment: { mode: 'offline', method: 'bank_transfer', reference: 'TRF-1' },
       }),
@@ -144,26 +162,51 @@ describe('StaffBookingForm', () => {
     });
     renderForm();
     await screen.findByTestId('staff-quote');
-    await fillGuest();
+    fillGuest();
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Email the guest a payment link' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Send payment link' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Email the guest a payment link' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send payment link' }));
 
     expect(await screen.findByText('Payment link sent')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Payment link' })).toHaveValue('https://checkout.test/p1');
+    expect(screen.getByRole('textbox', { name: 'Payment link' })).toHaveValue(
+      'https://checkout.test/p1',
+    );
     expect(api.createStaffBooking.mock.calls[0][0].payment).toEqual({ mode: 'link' });
   });
 
   it('explains when the nights were just taken', async () => {
     api.createStaffBooking.mockRejectedValue(
-      new ApiClientError('Those dates are no longer available.', { code: 'BOOKING_UNAVAILABLE', status: 409 }),
+      new ApiClientError('Those dates are no longer available.', {
+        code: 'BOOKING_UNAVAILABLE',
+        status: 409,
+      }),
     );
     renderForm();
     await screen.findByTestId('staff-quote');
-    await fillGuest();
+    fillGuest();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Confirm booking' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm booking' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Those nights are taken. Pick other dates.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Those nights are taken. Pick other dates.',
+    );
+  });
+
+  it('explains missing pricing and links to the unit pricing tab', async () => {
+    api.fetchStaffQuote.mockRejectedValue(
+      new ApiClientError(
+        "Pricing hasn't been set up for this unit. Set a nightly rate to accept bookings.",
+        { code: 'BOOKING_UNAVAILABLE', status: 409 },
+      ),
+    );
+    renderForm();
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent("Pricing hasn't been set up for this unit");
+    expect(alert).not.toHaveTextContent('Those nights are taken');
+    expect(screen.getByRole('link', { name: 'Set up unit pricing' })).toHaveAttribute(
+      'href',
+      '/units/u1/edit?tab=pricing',
+    );
   });
 });

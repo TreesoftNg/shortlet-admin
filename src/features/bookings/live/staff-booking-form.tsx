@@ -23,7 +23,12 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type { CalendarUnitRow, NightSelection } from '@/features/availability/types';
 import { AppModal, KeyValueList } from '@/shared/components/ui';
-import { bookingErrorMessage, fieldErrors, formatMoney } from './format';
+import {
+  bookingErrorMessage,
+  fieldErrors,
+  formatMoney,
+  isMissingUnitPricingError,
+} from './format';
 import type { CheckoutLink, CreateStaffBookingInput, OfflinePaymentMethod, StaffQuote, StaffQuoteParams } from './types';
 import { useCreateStaffBooking, useStaffQuote } from './use-staff-bookings';
 
@@ -41,13 +46,36 @@ const PHONE_PATTERN = /^\+?[0-9][0-9 ()-]{6,24}$/;
 
 type FormErrors = Partial<Record<string, string>>;
 
-/** Waits until the value stops changing, so typing a discount doesn't fire a quote per key. */
-function useDebounced<T>(value: T, delayMs = 300): T {
+/**
+ * Live quote params: unit/dates/guests apply immediately; discount typing is
+ * debounced so each keystroke does not refetch.
+ */
+function useDebouncedQuoteParams(
+  value: StaffQuoteParams | null,
+  delayMs = 300,
+): StaffQuoteParams | null {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
+    if (value === null) {
+      setDebounced(null);
+      return;
+    }
+    const stayChanged =
+      debounced === null ||
+      debounced.unitId !== value.unitId ||
+      debounced.checkIn !== value.checkIn ||
+      debounced.checkOut !== value.checkOut ||
+      debounced.adults !== value.adults ||
+      debounced.children !== value.children ||
+      debounced.infants !== value.infants;
+    if (stayChanged) {
+      setDebounced(value);
+      return;
+    }
+    if (debounced.discount === value.discount) return;
     const timer = setTimeout(() => setDebounced(value), delayMs);
     return () => clearTimeout(timer);
-  }, [value, delayMs]);
+  }, [value, delayMs, debounced]);
   return debounced;
 }
 
@@ -98,7 +126,7 @@ export function StaffBookingForm({ isOpen, onClose, units, today, initial }: Sta
     isOpen && unitId && checkIn && checkOut > checkIn && adults >= 1
       ? { unitId, checkIn, checkOut, adults, children, infants, discount }
       : null;
-  const quote = useStaffQuote(useDebounced(quoteParams));
+  const quote = useStaffQuote(useDebouncedQuoteParams(quoteParams));
   const unit = units.find((item) => item.id === unitId) ?? null;
 
   const errors = useMemo(() => {
@@ -328,10 +356,26 @@ function QuoteSummary({
 }) {
   if (isLoading) return <Skeleton h="120px" borderRadius="14px" />;
   if (error) {
+    const needsPricing = isMissingUnitPricingError(error) && unit;
     return (
-      <Text color="status.danger" fontSize="14px" role="alert">
-        {bookingErrorMessage(error)}
-      </Text>
+      <Box role="alert">
+        <Text color="status.danger" fontSize="14px">
+          {bookingErrorMessage(error)}
+        </Text>
+        {needsPricing ? (
+          <Text
+            as="a"
+            href={`/units/${unit.id}/edit?tab=pricing`}
+            mt="6px"
+            display="inline-block"
+            fontSize="14px"
+            color="brand.500"
+            textDecoration="underline"
+          >
+            Set up unit pricing
+          </Text>
+        ) : null}
+      </Box>
     );
   }
   if (!quote) {

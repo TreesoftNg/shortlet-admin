@@ -81,6 +81,7 @@ export function businessProfile(overrides: Partial<BusinessProfile> = {}): Busin
     whatsappPhone: null,
     address: null,
     websiteUrl: null,
+    adminAppUrl: null,
     instagramUrl: null,
     facebookUrl: null,
     tiktokUrl: null,

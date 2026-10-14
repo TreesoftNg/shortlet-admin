@@ -41,6 +41,7 @@ export function profileToForm(profile: BusinessProfile): ProfileFormValues {
     whatsappPhone: profile.whatsappPhone ?? '',
     address: profile.address ?? '',
     websiteUrl: profile.websiteUrl ?? '',
+    adminAppUrl: profile.adminAppUrl ?? '',
     instagramUrl: profile.instagramUrl ?? '',
     facebookUrl: profile.facebookUrl ?? '',
     tiktokUrl: profile.tiktokUrl ?? '',
@@ -63,6 +64,7 @@ export function formToProfileInput(values: ProfileFormValues): BusinessProfileIn
     whatsappPhone: optional(values.whatsappPhone),
     address: optional(values.address),
     websiteUrl: optional(values.websiteUrl),
+    adminAppUrl: optional(values.adminAppUrl),
     instagramUrl: optional(values.instagramUrl),
     facebookUrl: optional(values.facebookUrl),
     tiktokUrl: optional(values.tiktokUrl),
@@ -94,7 +96,14 @@ export function validateProfile(values: ProfileFormValues): FormErrors<ProfileFo
   for (const field of ['supportPhone', 'whatsappPhone'] as const) {
     if (values[field].trim() && !PHONE_PATTERN.test(values[field].trim())) errors[field] = 'Enter a valid phone number.';
   }
-  for (const field of ['websiteUrl', 'instagramUrl', 'facebookUrl', 'tiktokUrl', 'xUrl'] as const) {
+  for (const field of [
+    'websiteUrl',
+    'adminAppUrl',
+    'instagramUrl',
+    'facebookUrl',
+    'tiktokUrl',
+    'xUrl',
+  ] as const) {
     if (values[field].trim() && !isWebAddress(values[field].trim())) {
       errors[field] = 'Enter a full web address starting with https://';
     }

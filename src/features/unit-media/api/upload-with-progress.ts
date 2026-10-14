@@ -60,13 +60,21 @@ function xhrRequest(options: XhrOptions): Promise<{ status: number; text: string
       onProgress(Math.round((event.loaded / event.total) * 100));
     };
 
+    xhr.timeout = 120_000;
     xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText });
+    xhr.ontimeout = () =>
+      reject(
+        new ApiClientError(
+          'The upload timed out. Try again, or use a smaller file (photos up to 15 MB).',
+          { code: 'NETWORK_ERROR', status: 0 },
+        ),
+      );
     xhr.onerror = () =>
       reject(
-        new ApiClientError('Cannot reach the server. Check your connection and try again.', {
-          code: 'NETWORK_ERROR',
-          status: 0,
-        }),
+        new ApiClientError(
+          'Upload failed before the server responded. Check your connection, confirm the API is reachable, and that the file is under 15 MB.',
+          { code: 'NETWORK_ERROR', status: 0 },
+        ),
       );
     xhr.onabort = () => {
       const error = new DOMException('Aborted', 'AbortError');

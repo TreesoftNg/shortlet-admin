@@ -4,6 +4,7 @@ export const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
 export const MAX_VIDEO_BYTES = 150 * 1024 * 1024;
 
 const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const PHOTO_EXTENSIONS = /\.(jpe?g|png|webp)$/i;
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -11,8 +12,10 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** Some OS/browsers leave `file.type` empty for PNG/JPEG; fall back to the name. */
 export function isPhotoFile(file: File): boolean {
-  return PHOTO_TYPES.has(file.type);
+  if (PHOTO_TYPES.has(file.type)) return true;
+  return !file.type && PHOTO_EXTENSIONS.test(file.name);
 }
 
 export function isVideoFile(file: File): boolean {

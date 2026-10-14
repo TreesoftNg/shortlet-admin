@@ -14,6 +14,16 @@ export async function fetchUnitMedia(unitId: string): Promise<UnitMedia[]> {
   return (await apiClient<UnitMedia[]>(mediaPath(unitId))).data;
 }
 
+function photoContentType(file: File): 'image/jpeg' | 'image/png' | 'image/webp' {
+  if (file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/jpeg') {
+    return file.type;
+  }
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.png')) return 'image/png';
+  if (name.endsWith('.webp')) return 'image/webp';
+  return 'image/jpeg';
+}
+
 export async function uploadPhoto(
   unitId: string,
   file: File,
@@ -21,15 +31,27 @@ export async function uploadPhoto(
   onProgress?: UploadProgressFn,
   signal?: AbortSignal,
 ): Promise<UnitMedia> {
-  const body = new FormData();
-  body.append('file', file);
-  if (fields.caption) body.append('caption', fields.caption);
-  if (fields.altText) body.append('altText', fields.altText);
-  const response = await uploadApiWithProgress<UnitMedia>(mediaPath(unitId, '/photos'), body, {
-    onProgress,
-    signal,
-  });
-  return response.data;
+  // Direct-to-storage (same pattern as videos) so large PNGs are not blocked by
+  // a reverse-proxy body limit on the API host.
+  const ticket = (
+    await apiClient<VideoUploadTicket>(mediaPath(unitId, '/photos/request'), {
+      method: 'POST',
+      body: {
+        contentType: photoContentType(file),
+        sizeBytes: file.size,
+        ...(fields.caption ? { caption: fields.caption } : {}),
+        ...(fields.altText ? { altText: fields.altText } : {}),
+      },
+      signal,
+    })
+  ).data;
+  await putToStorage(ticket.uploadUrl, file, ticket.headers, { onProgress, signal });
+  return (
+    await apiClient<UnitMedia>(
+      mediaPath(unitId, `/photos/${encodeURIComponent(ticket.mediaId)}/complete`),
+      { method: 'POST', signal },
+    )
+  ).data;
 }
 
 export async function requestVideoUpload(

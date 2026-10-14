@@ -19,6 +19,7 @@ describe('media-files', () => {
     expect(photoFileError(file('a.jpg', 'image/jpeg'))).toBeNull();
     expect(photoFileError(file('a.png', 'image/png'))).toBeNull();
     expect(photoFileError(file('a.webp', 'image/webp'))).toBeNull();
+    expect(photoFileError(file('a.png', ''))).toBeNull();
   });
 
   it('rejects oversized or unsupported photos', () => {
