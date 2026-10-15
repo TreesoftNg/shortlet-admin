@@ -5,6 +5,7 @@ import {
   Button,
   Flex,
   FormControl,
+  FormErrorMessage,
   FormHelperText,
   FormLabel,
   Heading,
@@ -19,6 +20,7 @@ import {
 import { useState } from 'react';
 import { useMe } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/utils/auth-helpers';
+import { useBooking } from '@/features/bookings/hooks/use-bookings';
 import { STAFF_REFUND_REASONS, type StaffRefundReason } from '@/features/bookings/types';
 import {
   formatMoney,
@@ -26,12 +28,14 @@ import {
   formatRefundReason,
   getRefundStatusDisplay,
   refundProgressLabel,
+  stayRefundableBalance,
 } from '@/features/bookings/utils/booking-display';
 import {
   useCreateStayRefund,
   useVerifyPayment,
 } from '@/features/payments/hooks/use-payment-mutations';
 import { usePayment } from '@/features/payments/hooks/use-payments';
+import { apiFieldErrors } from '@/shared/api/field-errors';
 import {
   EmptyState,
   KeyValueList,
@@ -60,6 +64,10 @@ export function PaymentDetailDrawer({
     paymentId,
     Boolean(paymentId),
   );
+  const {
+    data: booking,
+    isLoading: bookingLoading,
+  } = useBooking(payment?.bookingId ?? null, Boolean(payment?.bookingId));
   const verifyMutation = useVerifyPayment();
   const refundMutation = useCreateStayRefund();
 
@@ -68,6 +76,7 @@ export function PaymentDetailDrawer({
   const [refundReason, setRefundReason] =
     useState<StaffRefundReason>('guest_cancellation');
   const [refundNote, setRefundNote] = useState('');
+  const [amountError, setAmountError] = useState<string | null>(null);
 
   if (!paymentId) return null;
 
@@ -94,9 +103,16 @@ export function PaymentDetailDrawer({
   const status = getPaymentStatusDisplay(payment.status);
   const amount = Number(payment.amount);
   const refunded = Number(payment.amountRefunded);
-  const refundable = Math.max(
+  const paymentLeft = Math.max(
     0,
     Math.round((amount - refunded) * 100) / 100,
+  );
+  // Stay refunds are capped at stay remaining (deposit is released separately).
+  const stayLeft = booking ? stayRefundableBalance(booking) : paymentLeft;
+  const refundable = Math.min(paymentLeft, stayLeft);
+  const depositHeldBack = Math.max(
+    0,
+    Math.round((paymentLeft - refundable) * 100) / 100,
   );
   const canIssueRefund =
     canRefund &&
@@ -127,15 +143,12 @@ export function PaymentDetailDrawer({
   const handleRefund = async () => {
     const value = Number(refundAmount);
     if (!Number.isFinite(value) || value <= 0 || value > refundable) {
-      toast({
-        title: 'Invalid amount',
-        description: `Enter an amount up to ${formatMoney(refundable, payment.currency)}.`,
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
+      setAmountError(
+        `The maximum you can refund for this stay is ${formatMoney(refundable, payment.currency)}.`,
+      );
       return;
     }
+    setAmountError(null);
     try {
       await refundMutation.mutateAsync({
         id: payment.id,
@@ -153,6 +166,11 @@ export function PaymentDetailDrawer({
         isClosable: true,
       });
     } catch (err) {
+      const fields = apiFieldErrors(err);
+      if (fields.amount) {
+        setAmountError(fields.amount);
+        return;
+      }
       toast({
         title: 'Could not refund',
         description: err instanceof Error ? err.message : undefined,
@@ -164,16 +182,21 @@ export function PaymentDetailDrawer({
   };
 
   if (showRefund) {
+    if (bookingLoading && !booking) {
+      return <PageSkeleton variant="form" />;
+    }
     return (
       <VStack align="stretch" spacing="14px">
         <Heading as="h3" fontSize="18px">
           Refund stay
         </Heading>
         <Text fontSize="14px" color="ink.400">
-          Up to {formatMoney(refundable, payment.currency)}. Deposit releases
-          happen from the booking.
+          Up to {formatMoney(refundable, payment.currency)}.
+          {depositHeldBack > 0
+            ? ` ${formatMoney(depositHeldBack, payment.currency)} deposit is released separately from the booking.`
+            : ' Deposit releases happen from the booking.'}
         </Text>
-        <FormControl isRequired>
+        <FormControl isRequired isInvalid={Boolean(amountError)}>
           <FormLabel>Amount</FormLabel>
           <Input
             type="number"
@@ -181,11 +204,18 @@ export function PaymentDetailDrawer({
             min={0.01}
             max={refundable}
             value={refundAmount}
-            onChange={(event) => setRefundAmount(event.target.value)}
+            onChange={(event) => {
+              setRefundAmount(event.target.value);
+              setAmountError(null);
+            }}
           />
-          <FormHelperText>
-            Max {formatMoney(refundable, payment.currency)}
-          </FormHelperText>
+          {amountError ? (
+            <FormErrorMessage>{amountError}</FormErrorMessage>
+          ) : (
+            <FormHelperText>
+              Max {formatMoney(refundable, payment.currency)}
+            </FormHelperText>
+          )}
         </FormControl>
         <FormControl isRequired>
           <FormLabel>Reason</FormLabel>
@@ -214,7 +244,10 @@ export function PaymentDetailDrawer({
           <Button
             flex="1"
             variant="soft"
-            onClick={() => setShowRefund(false)}
+            onClick={() => {
+              setShowRefund(false);
+              setAmountError(null);
+            }}
             isDisabled={refundMutation.isPending}
           >
             Back
