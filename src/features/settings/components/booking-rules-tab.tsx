@@ -28,7 +28,7 @@ const naira = (amount: number) =>
 const unitWord = (count: string | number, word: string) => (Number(count) === 1 ? word : `${word}s`);
 const ruleId = (field: keyof BookingRules) => `booking-rule-${field}`;
 
-/** Payment holds and security-deposit rules. */
+/** Length of stay, payment holds and security-deposit rules. */
 export function BookingRulesTab({ canManage }: { canManage: boolean }) {
   const { data, isLoading, isError, error, refetch } = useBookingSettings();
   const update = useUpdateBookingSettings();
@@ -57,10 +57,10 @@ export function BookingRulesTab({ canManage }: { canManage: boolean }) {
     <UnitInput
       id={ruleId(field)}
       label={label}
-      unit={unitWord(values[field], unit)}
+      unit={unitWord(values[field] ?? '', unit)}
       min={RULE_LIMITS[field].min}
       max={RULE_LIMITS[field].max}
-      value={values[field]}
+      value={values[field] ?? ''}
       onChange={(event) => setValues((current) => (current ? { ...current, [field]: event.target.value } : current))}
       isReadOnly={!canManage}
       isInvalid={Boolean(errors[field])}
@@ -98,6 +98,49 @@ export function BookingRulesTab({ canManage }: { canManage: boolean }) {
         <AlertIcon />
         Changes apply to new bookings only. Existing bookings keep the deposit and hold they were made with.
       </Alert>
+
+      <FormPanel
+        title="Length of stay"
+        description="Units follow these unless a unit sets its own on its page. Staff bookings can go outside them."
+      >
+        <FormRow
+          label="Minimum nights"
+          labelFor={ruleId('minNights')}
+          description="The shortest stay guests can book on the website (1–366 nights)."
+          error={errors.minNights}
+        >
+          {ruleInput('minNights', 'Minimum stay (nights)', 'night')}
+        </FormRow>
+        <FormRow
+          label="Limit the longest stay"
+          labelFor="limit-longest-stay"
+          description="Without a limit, guests can book a stay of any length."
+          isInline
+        >
+          <Switch
+            id="limit-longest-stay"
+            colorScheme="green"
+            isChecked={values.maxNights !== null}
+            isDisabled={!canManage}
+            onChange={(event) => {
+              // Turning it back on starts from the saved limit, if there is one.
+              const maxNights = event.target.checked ? String(data.maxNights ?? '') : null;
+              setValues({ ...values, maxNights });
+            }}
+          />
+        </FormRow>
+        {values.maxNights !== null ? (
+          <FormRow
+            label="Maximum nights"
+            labelFor={ruleId('maxNights')}
+            description="The longest stay guests can book on the website (1–366 nights)."
+            error={errors.maxNights}
+            nested
+          >
+            {ruleInput('maxNights', 'Maximum stay (nights)', 'night')}
+          </FormRow>
+        ) : null}
+      </FormPanel>
 
       <FormPanel
         title="Holding dates while guests pay"

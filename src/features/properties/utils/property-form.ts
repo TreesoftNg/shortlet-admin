@@ -275,6 +275,8 @@ export function syncUnitsForProperty(
       cleaning_fee: null,
       weekly_discount_percent: null,
       monthly_discount_percent: null,
+      min_nights: null,
+      max_nights: null,
       facility_ids: [],
       amenities: [...property.amenities],
       summary: null,

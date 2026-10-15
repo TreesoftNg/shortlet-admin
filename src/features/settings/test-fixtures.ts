@@ -102,6 +102,8 @@ export function pricingSettings(overrides: Partial<PricingSettings> = {}): Prici
 
 export function bookingSettings(overrides: Partial<BookingSettings> = {}): BookingSettings {
   return {
+    minNights: 1,
+    maxNights: null,
     paymentHoldMinutes: 15,
     staffLinkHoldHours: 24,
     depositNights: 1,

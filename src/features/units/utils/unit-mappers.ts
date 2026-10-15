@@ -71,6 +71,8 @@ export function mapUnitFromApi(unit: ApiUnit): Unit {
     cleaning_fee: toNullableNumber(unit.cleaningFee),
     weekly_discount_percent: toNullableNumber(unit.weeklyDiscountPercent),
     monthly_discount_percent: toNullableNumber(unit.monthlyDiscountPercent),
+    min_nights: toNullableNumber(unit.minNights),
+    max_nights: toNullableNumber(unit.maxNights),
     facility_ids: facilityIds,
     amenities: amenityLabels,
     summary: unit.summary,
@@ -83,7 +85,7 @@ export function mapUnitFromApi(unit: ApiUnit): Unit {
   };
 }
 
-function optionalAmount(value: number | ''): number | null {
+function optionalNumber(value: number | ''): number | null {
   return value === '' ? null : Number(value);
 }
 
@@ -102,10 +104,13 @@ export function toCreateUnitPayload(values: UnitFormValues): CreateUnitPayload {
     capacityBeds: values.beds,
     capacityBathrooms: values.bathrooms,
     facilityIds: [...values.facility_ids],
-    baseNightlyRate: optionalAmount(values.base_rate),
-    cleaningFee: optionalAmount(values.cleaning_fee),
-    weeklyDiscountPercent: optionalAmount(values.weekly_discount_percent),
-    monthlyDiscountPercent: optionalAmount(values.monthly_discount_percent),
+    baseNightlyRate: optionalNumber(values.base_rate),
+    cleaningFee: optionalNumber(values.cleaning_fee),
+    weeklyDiscountPercent: optionalNumber(values.weekly_discount_percent),
+    monthlyDiscountPercent: optionalNumber(values.monthly_discount_percent),
+    // Empty follows the business booking settings.
+    minNights: optionalNumber(values.min_nights),
+    maxNights: optionalNumber(values.max_nights),
     internalNotes: values.notes.trim() || null,
     // Cover files are uploaded via /media/photos after create. Only keep
     // an existing http(s) URL if the form still has one (rare on create).

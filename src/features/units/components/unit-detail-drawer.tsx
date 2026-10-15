@@ -12,10 +12,14 @@ import {
 } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { LuPencil } from 'react-icons/lu';
+import { useBookingSettings } from '@/features/settings/hooks/use-business-settings';
 import { useUnitMedia } from '@/features/unit-media/hooks/use-unit-media';
 import type { UnitListItem } from '@/features/units/utils/unit-filters';
 import { getUnitStatusDisplay } from '@/features/units/utils/unit-filters';
-import { formatUnitSubtitle } from '@/features/units/utils/unit-form';
+import {
+  formatUnitStayLength,
+  formatUnitSubtitle,
+} from '@/features/units/utils/unit-form';
 import { StatusBadge } from '@/shared/components/ui';
 
 type UnitDetailDrawerProps = {
@@ -31,6 +35,7 @@ export function UnitDetailDrawer({
 }: UnitDetailDrawerProps) {
   const router = useRouter();
   const { data: media = [], isLoading: mediaLoading } = useUnitMedia(unit?.id);
+  const { data: bookingSettings } = useBookingSettings();
   const thumbs = media.slice(0, 5);
 
   if (!unit) {
@@ -187,6 +192,14 @@ export function UnitDetailDrawer({
               ? '—'
               : `${unit.monthly_discount_percent}%`
           }
+        />
+        <DetailCard
+          label="Minimum nights"
+          value={formatUnitStayLength(unit.min_nights, bookingSettings?.minNights)}
+        />
+        <DetailCard
+          label="Maximum nights"
+          value={formatUnitStayLength(unit.max_nights, bookingSettings?.maxNights)}
         />
         <DetailCard
           label="Updated"

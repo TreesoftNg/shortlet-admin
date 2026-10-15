@@ -165,9 +165,12 @@ export function pricingExample(
   return { serviceFee, tax, total: nightsKobo + cleaningKobo + serviceFee + tax };
 }
 
-export type RulesFormValues = Record<keyof BookingRules, string>;
+/** Each rule as typed; the longest stay is null while it has no limit. */
+export type RulesFormValues = Record<Exclude<keyof BookingRules, 'maxNights'>, string> & { maxNights: string | null };
 
 export const RULE_LIMITS: Record<keyof BookingRules, { min: number; max: number }> = {
+  minNights: { min: 1, max: 366 },
+  maxNights: { min: 1, max: 366 },
   paymentHoldMinutes: { min: 5, max: 60 },
   staffLinkHoldHours: { min: 1, max: 24 },
   depositNights: { min: 0, max: 7 },
@@ -176,25 +179,41 @@ export const RULE_LIMITS: Record<keyof BookingRules, { min: number; max: number 
   depositReleaseHours: { min: 1, max: 168 },
 };
 
+const RULE_KEYS = Object.keys(RULE_LIMITS) as Array<keyof BookingRules>;
+
 export function rulesToForm(rules: BookingRules): RulesFormValues {
   return Object.fromEntries(
-    (Object.keys(RULE_LIMITS) as Array<keyof BookingRules>).map((key) => [key, String(rules[key])]),
+    RULE_KEYS.map((key) => [key, rules[key] === null ? null : String(rules[key])]),
   ) as RulesFormValues;
 }
 
 export function validateRules(values: RulesFormValues): FormErrors<RulesFormValues> {
   const errors: FormErrors<RulesFormValues> = {};
-  for (const [key, { min, max }] of Object.entries(RULE_LIMITS) as Array<[keyof BookingRules, { min: number; max: number }]>) {
-    const value = values[key].trim();
+  for (const key of RULE_KEYS) {
+    const typed = values[key];
+    // Only the longest stay can be null, which means no limit.
+    if (typed === null) continue;
+    const value = typed.trim();
+    const { min, max } = RULE_LIMITS[key];
     if (!/^\d+$/.test(value) || Number(value) < min || Number(value) > max) {
       errors[key] = `Enter a whole number from ${min} to ${max}.`;
     }
+  }
+  if (
+    values.maxNights !== null &&
+    !errors.minNights &&
+    !errors.maxNights &&
+    Number(values.maxNights) < Number(values.minNights)
+  ) {
+    errors.maxNights = 'Must be at least the minimum nights.';
   }
   return errors;
 }
 
 export function formToRules(values: RulesFormValues): BookingRules {
-  return Object.fromEntries(Object.entries(values).map(([key, value]) => [key, Number(value)])) as BookingRules;
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [key, value === null ? null : Number(value)]),
+  ) as BookingRules;
 }
 
 /** The two switches on the deposit section, worked out from saved rules. */

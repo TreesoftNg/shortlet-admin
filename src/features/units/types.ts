@@ -56,6 +56,10 @@ export type ApiUnit = {
   cleaningFee?: number | null;
   weeklyDiscountPercent?: number | null;
   monthlyDiscountPercent?: number | null;
+  /** The unit's own shortest stay; null follows the business booking settings. */
+  minNights?: number | null;
+  /** The unit's own longest stay; null follows the business booking settings. */
+  maxNights?: number | null;
   currency?: string | null;
   status: ApiUnitStatus | string;
   createdAt: string;
@@ -79,6 +83,9 @@ export type CreateUnitPayload = {
   cleaningFee?: number | null;
   weeklyDiscountPercent?: number | null;
   monthlyDiscountPercent?: number | null;
+  /** null follows the business booking settings. */
+  minNights?: number | null;
+  maxNights?: number | null;
   internalNotes?: string | null;
   pictureUrl?: string | null;
 };

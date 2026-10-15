@@ -210,6 +210,8 @@ describe('Bookings & deposits tab', () => {
 
     await waitFor(() =>
       expect(business.updateBookingSettings).toHaveBeenCalledWith({
+        minNights: 1,
+        maxNights: null,
         paymentHoldMinutes: 30,
         staffLinkHoldHours: 24,
         depositNights: 2,
@@ -218,6 +220,83 @@ describe('Bookings & deposits tab', () => {
         depositReleaseHours: 24,
       }),
     );
+  });
+
+  it('saves the shortest and longest stay', async () => {
+    renderAs('bookings');
+    const minNights = await screen.findByLabelText('Minimum stay (nights)');
+    expect(minNights).toHaveValue(1);
+    expect(screen.getByLabelText('Limit the longest stay')).not.toBeChecked();
+    expect(screen.queryByLabelText('Maximum stay (nights)')).not.toBeInTheDocument();
+
+    await userEvent.clear(minNights);
+    await userEvent.type(minNights, '2');
+    await userEvent.click(screen.getByLabelText('Limit the longest stay'));
+    await userEvent.type(screen.getByLabelText('Maximum stay (nights)'), '30');
+    await userEvent.click(saveButton());
+
+    await waitFor(() =>
+      expect(business.updateBookingSettings).toHaveBeenCalledWith(
+        expect.objectContaining({ minNights: 2, maxNights: 30 }),
+      ),
+    );
+  });
+
+  it('opens with the longest stay limit on when one is saved', async () => {
+    business.fetchBookingSettings.mockResolvedValue(bookingSettings({ minNights: 2, maxNights: 28 }));
+    renderAs('bookings');
+    expect(await screen.findByLabelText('Limit the longest stay')).toBeChecked();
+    expect(screen.getByLabelText('Maximum stay (nights)')).toHaveValue(28);
+    expect(screen.getByLabelText('Minimum stay (nights)')).toHaveValue(2);
+  });
+
+  it('turning off the longest stay limit saves no limit', async () => {
+    business.fetchBookingSettings.mockResolvedValue(bookingSettings({ maxNights: 28 }));
+    renderAs('bookings');
+    await userEvent.click(await screen.findByLabelText('Limit the longest stay'));
+    expect(screen.queryByLabelText('Maximum stay (nights)')).not.toBeInTheDocument();
+    expect(screen.getByText('You have unsaved changes.')).toBeInTheDocument();
+    await userEvent.click(saveButton());
+    await waitFor(() =>
+      expect(business.updateBookingSettings).toHaveBeenCalledWith(expect.objectContaining({ maxNights: null })),
+    );
+  });
+
+  it('turning the longest stay limit back on restores the saved limit', async () => {
+    business.fetchBookingSettings.mockResolvedValue(bookingSettings({ maxNights: 28 }));
+    renderAs('bookings');
+    const limit = await screen.findByLabelText('Limit the longest stay');
+    await userEvent.click(limit);
+    await userEvent.click(limit);
+    expect(screen.getByLabelText('Maximum stay (nights)')).toHaveValue(28);
+    expect(screen.getByText('All changes saved.')).toBeInTheDocument();
+  });
+
+  it('rejects a longest stay shorter than the shortest stay', async () => {
+    business.fetchBookingSettings.mockResolvedValue(bookingSettings({ minNights: 3, maxNights: 10 }));
+    renderAs('bookings');
+    const maxNights = await screen.findByLabelText('Maximum stay (nights)');
+    await userEvent.clear(maxNights);
+    await userEvent.type(maxNights, '2');
+    await userEvent.click(saveButton());
+    expect(await screen.findByText('Must be at least the minimum nights.')).toBeInTheDocument();
+    expect(business.updateBookingSettings).not.toHaveBeenCalled();
+  });
+
+  it('shows a longest stay error from the API under its input', async () => {
+    business.fetchBookingSettings.mockResolvedValue(bookingSettings({ maxNights: 10 }));
+    business.updateBookingSettings.mockRejectedValue(
+      new ApiClientError('Validation failed', {
+        code: 'VALIDATION_ERROR',
+        status: 400,
+        details: { fields: { maxNights: ['maxNights must be at least minNights'] } },
+      }),
+    );
+    renderAs('bookings');
+    await screen.findByLabelText('Maximum stay (nights)');
+    await userEvent.click(saveButton());
+    expect(await screen.findByText('maxNights must be at least minNights')).toBeInTheDocument();
+    expect(screen.getByText('Could not save')).toBeInTheDocument();
   });
 
   it('turning off the long-stay deposit makes long stays pay the usual deposit', async () => {
@@ -266,6 +345,8 @@ describe('Bookings & deposits tab', () => {
   it('is read-only without settings.manage', async () => {
     renderAs('bookings', []);
     expect(await screen.findByLabelText('Deposit (nights)')).toHaveAttribute('readonly');
+    expect(screen.getByLabelText('Minimum stay (nights)')).toHaveAttribute('readonly');
+    expect(screen.getByLabelText('Limit the longest stay')).toBeDisabled();
     expect(screen.getByLabelText('Charge a security deposit')).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Save changes' })).not.toBeInTheDocument();
   });

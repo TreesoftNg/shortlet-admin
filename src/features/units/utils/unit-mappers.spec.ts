@@ -35,6 +35,8 @@ const sampleApiUnit: ApiUnit = {
   cleaningFee: 15000,
   weeklyDiscountPercent: 10,
   monthlyDiscountPercent: 20,
+  minNights: 2,
+  maxNights: null,
   internalNotes: 'Preferred for longer stays.',
   baseNightlyRate: 95000,
   currency: 'NGN',
@@ -60,6 +62,15 @@ describe('unit mappers', () => {
     expect(unit.monthly_discount_percent).toBe(20);
     expect(unit.base_rate).toBe(95000);
     expect(unit.bookable).toBe(true);
+    expect(unit.min_nights).toBe(2);
+    expect(unit.max_nights).toBeNull();
+  });
+
+  it('follows the business default when a payload has no stay lengths', () => {
+    const { minNights: _minNights, maxNights: _maxNights, ...older } = sampleApiUnit;
+    const unit = mapUnitFromApi(older);
+    expect(unit.min_nights).toBeNull();
+    expect(unit.max_nights).toBeNull();
   });
 
   it('maps closed status to inactive in the UI', () => {
@@ -83,6 +94,8 @@ describe('unit mappers', () => {
       cleaning_fee: 15000,
       weekly_discount_percent: 10,
       monthly_discount_percent: 20,
+      min_nights: 2,
+      max_nights: 30,
       facility_ids: ['fac-wifi'],
       summary: 'Bright',
       notes: 'Ops note',
@@ -105,6 +118,8 @@ describe('unit mappers', () => {
       cleaningFee: 15000,
       weeklyDiscountPercent: 10,
       monthlyDiscountPercent: 20,
+      minNights: 2,
+      maxNights: 30,
       internalNotes: 'Ops note',
       pictureUrl: 'https://images.com/a.jpg',
     });
@@ -120,6 +135,17 @@ describe('unit mappers', () => {
     });
     expect(payload.pictureUrl).toBeUndefined();
     expect(payload.code).toBe('A');
+  });
+
+  it('sends empty stay lengths as null so the unit follows the business default', () => {
+    const payload = toUpdateUnitPayload({
+      ...createEmptyUnitForm('prop-1'),
+      code: 'A',
+      name: 'Unit A',
+      max_nights: 14,
+    });
+    expect(payload.minNights).toBeNull();
+    expect(payload.maxNights).toBe(14);
   });
 
   it('does not send data URLs as pictureUrl on create', () => {

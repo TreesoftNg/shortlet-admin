@@ -54,6 +54,10 @@ export type PricingSettingsInput = {
 
 /** GET/PUT /cc/booking-settings. */
 export type BookingRules = {
+  /** Shortest stay guests can book on the website; units without their own follow it. */
+  minNights: number;
+  /** Longest stay guests can book on the website; null means no limit. */
+  maxNights: number | null;
   paymentHoldMinutes: number;
   staffLinkHoldHours: number;
   depositNights: number;

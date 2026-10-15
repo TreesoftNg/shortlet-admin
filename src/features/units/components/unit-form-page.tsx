@@ -27,6 +27,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { LuArrowLeft, LuMenu, LuTrash2, LuUpload } from 'react-icons/lu';
 import { useProperties } from '@/features/properties/hooks/use-properties';
+import { useBookingSettings } from '@/features/settings/hooks/use-business-settings';
 import { uploadPhoto } from '@/features/unit-media/api/unit-media-api';
 import { UnitGalleryTab } from '@/features/unit-media/components/unit-gallery-tab';
 import { useLeaveUploadGuard } from '@/features/unit-media/hooks/use-leave-upload-guard';
@@ -38,7 +39,9 @@ import {
 } from '@/features/units/hooks/use-unit-mutations';
 import { useUnit } from '@/features/units/hooks/use-units';
 import {
+  STAY_NIGHTS_LIMIT,
   UNIT_STATUS_OPTIONS,
+  businessDefaultPlaceholder,
   createEmptyUnitForm,
   readFileAsDataUrl,
   unitToFormValues,
@@ -98,6 +101,8 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     error: facilitiesErrorValue,
     refetch: refetchFacilities,
   } = useFacilities();
+  // Only for the stay-length placeholders, so the form does not wait for it.
+  const { data: bookingSettings } = useBookingSettings();
 
   const [values, setValues] = useState<UnitFormValues>(createEmptyUnitForm);
   const [errors, setErrors] = useState<UnitFormErrors>({});
@@ -666,6 +671,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
           )}
 
           {(!isEdit || currentTab === 'pricing') && (
+            <>
           <Section title="Rates & discounts">
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="16px">
               <Field
@@ -760,6 +766,62 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
               </Field>
             </Grid>
           </Section>
+
+          <Section title="Length of stay">
+            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="16px">
+              <Field
+                label="Minimum nights"
+                error={errors.min_nights}
+                helper="Shortest stay guests can book on the website. Leave empty to use the business default."
+              >
+                <Input
+                  type="number"
+                  min={STAY_NIGHTS_LIMIT.min}
+                  max={STAY_NIGHTS_LIMIT.max}
+                  step={1}
+                  value={values.min_nights}
+                  onChange={(event) =>
+                    updateField(
+                      'min_nights',
+                      event.target.value === ''
+                        ? ''
+                        : Number(event.target.value),
+                    )
+                  }
+                  placeholder={businessDefaultPlaceholder(
+                    bookingSettings?.minNights,
+                  )}
+                  {...inputProps}
+                />
+              </Field>
+              <Field
+                label="Maximum nights"
+                error={errors.max_nights}
+                helper="Longest stay guests can book on the website. Leave empty to use the business default."
+              >
+                <Input
+                  type="number"
+                  min={STAY_NIGHTS_LIMIT.min}
+                  max={STAY_NIGHTS_LIMIT.max}
+                  step={1}
+                  value={values.max_nights}
+                  onChange={(event) =>
+                    updateField(
+                      'max_nights',
+                      event.target.value === ''
+                        ? ''
+                        : Number(event.target.value),
+                    )
+                  }
+                  placeholder={businessDefaultPlaceholder(
+                    bookingSettings?.maxNights,
+                  )}
+                  {...inputProps}
+                />
+              </Field>
+            </Grid>
+          </Section>
+            </>
           )}
 
           {!isEdit && (

@@ -89,6 +89,8 @@ describe('booking rules form', () => {
     const values = rulesToForm(bookingSettings());
     expect(validateRules(values)).toEqual({});
     expect(formToRules(values)).toEqual({
+      minNights: 1,
+      maxNights: null,
       paymentHoldMinutes: 15,
       staffLinkHoldHours: 24,
       depositNights: 1,
@@ -100,6 +102,33 @@ describe('booking rules form', () => {
       paymentHoldMinutes: 'Enter a whole number from 5 to 60.',
       staffLinkHoldHours: 'Enter a whole number from 1 to 24.',
       depositNights: 'Enter a whole number from 0 to 7.',
+    });
+  });
+
+  it('keeps no longest stay as null and a set one as a number', () => {
+    expect(rulesToForm(bookingSettings()).maxNights).toBeNull();
+    const values = rulesToForm(bookingSettings({ minNights: 2, maxNights: 30 }));
+    expect(values).toMatchObject({ minNights: '2', maxNights: '30' });
+    expect(validateRules(values)).toEqual({});
+    expect(formToRules(values)).toMatchObject({ minNights: 2, maxNights: 30 });
+  });
+
+  it('validates the shortest and longest stay', () => {
+    const values = rulesToForm(bookingSettings());
+    expect(validateRules({ ...values, minNights: '0', maxNights: '367' })).toEqual({
+      minNights: 'Enter a whole number from 1 to 366.',
+      maxNights: 'Enter a whole number from 1 to 366.',
+    });
+    expect(validateRules({ ...values, maxNights: '' })).toEqual({
+      maxNights: 'Enter a whole number from 1 to 366.',
+    });
+    expect(validateRules({ ...values, minNights: '5', maxNights: '4' })).toEqual({
+      maxNights: 'Must be at least the minimum nights.',
+    });
+    expect(validateRules({ ...values, minNights: '5', maxNights: '5' })).toEqual({});
+    // A bad minimum is reported once, not again on the maximum.
+    expect(validateRules({ ...values, minNights: 'x', maxNights: '4' })).toEqual({
+      minNights: 'Enter a whole number from 1 to 366.',
     });
   });
 });

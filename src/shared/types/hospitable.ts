@@ -177,6 +177,10 @@ export type Unit = {
   cleaning_fee: number | null;
   weekly_discount_percent: number | null;
   monthly_discount_percent: number | null;
+  /** Shortest stay guests can book; null follows the business booking settings. */
+  min_nights: number | null;
+  /** Longest stay guests can book; null follows the business booking settings. */
+  max_nights: number | null;
   /** Facility catalog ids selected on this unit. */
   facility_ids: string[];
   /** Display labels for the selected facilities. */
