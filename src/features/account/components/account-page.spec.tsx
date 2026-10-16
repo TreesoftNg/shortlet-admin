@@ -12,7 +12,7 @@ const api = jest.mocked(authApi);
 
 const profile: AdminProfile = {
   user: { id: 'u1', email: 'ada@example.com', firstName: 'Ada', lastName: 'Okafor' },
-  tenant: { id: 't1', slug: 'sunmade', name: 'Sunmade Apartments & Suites' },
+  tenant: { id: 't1', slug: 'sunmade', name: 'Sunmade Luxury Shortlets & Suites' },
   role: { code: 'manager', name: 'Manager' },
   permissions: [],
 };
@@ -40,7 +40,7 @@ describe('AccountPage', () => {
     expect(screen.getByText('Ada Okafor')).toBeInTheDocument();
     expect(screen.getByText('ada@example.com')).toBeInTheDocument();
     expect(screen.getByText('Manager')).toBeInTheDocument();
-    expect(screen.getByText('Sunmade Apartments & Suites')).toBeInTheDocument();
+    expect(screen.getByText('Sunmade Luxury Shortlets & Suites')).toBeInTheDocument();
   });
 
   it('checks the new password before sending it', async () => {

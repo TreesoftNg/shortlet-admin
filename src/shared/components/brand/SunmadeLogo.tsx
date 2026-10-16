@@ -15,13 +15,13 @@ type SunmadeLogoProps = {
    * `onBrand`: white wordmark, white tile (teal backgrounds).
    */
   variant?: SunmadeLogoVariant;
-  /** Show the "APARTMENTS & SUITES" line under the wordmark. */
+  /** Show the "LUXURY SHORTLETS & SUITES" line under the wordmark. */
   tagline?: boolean;
   /** Responsive display for the wordmark, e.g. hide it on small screens to show only the tile. */
   wordmarkDisplay?: FlexProps['display'];
 };
 
-const TAGLINE = 'APARTMENTS & SUITES'.split('');
+const TAGLINE = 'LUXURY SHORTLETS & SUITES'.split('');
 
 /** The custom "A": no crossbar, with the gold triangle inside. Body uses currentColor. */
 function GlyphA() {
@@ -60,7 +60,7 @@ function CapText({ children }: { children: string }) {
   );
 }
 
-/** Sunmade Apartments & Suites logo: app-icon tile + wordmark. */
+/** Sunmade Luxury Shortlets & Suites logo: app-icon tile + wordmark. */
 export function SunmadeLogo({
   size = '22px',
   variant = 'color',
@@ -72,7 +72,7 @@ export function SunmadeLogo({
   return (
     <Flex
       role="img"
-      aria-label="Sunmade Apartments & Suites"
+      aria-label="Sunmade Luxury Shortlets & Suites"
       display="inline-flex"
       align="center"
       gap="0.42em"
@@ -93,7 +93,9 @@ export function SunmadeLogo({
           <Flex
             mt="0.3em"
             justify="space-between"
-            fontSize="max(8px, 0.26em)"
+            // At least 8px where that still fits under the wordmark (from ~22px logos);
+            // smaller logos shrink it just enough to keep it within the wordmark's width.
+            fontSize="max(0.26em, min(8px, 0.36em))"
             fontWeight="700"
             lineHeight="1"
           >
