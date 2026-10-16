@@ -18,7 +18,7 @@ import { useReports } from '../hooks/use-reports';
 import { propertyPerformanceExportColumns, unitPerformanceExportColumns } from '../utils/report-export';
 import { ChannelBreakdownPanel } from './channel-breakdown-panel';
 import { PropertyPerformanceTable } from './property-performance-table';
-import { ReportsSidePanel } from './reports-side-panel';
+import { FinanceSummaryPanel, LowestOccupancyPanel } from './reports-side-panel';
 import { UnitPerformanceTable } from './unit-performance-table';
 
 export function ReportsPage() {
@@ -104,13 +104,7 @@ export function ReportsPage() {
 
         <Grid templateColumns={{ base: '1fr', xl: '1.7fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="stretch">
           <RevenueOverview points={data.revenueOverview} currency={data.currency} subtitle={subtitle} />
-          <ReportsSidePanel
-            finance={data.finance}
-            currency={data.currency}
-            occupancyPercent={data.keyPerformanceIndicators.occupancyPercent.value}
-            units={data.unitPerformance}
-            propertyCount={data.propertyCount}
-          />
+          <FinanceSummaryPanel finance={data.finance} currency={data.currency} />
         </Grid>
 
         <Grid templateColumns={{ base: '1fr', xl: '1.7fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="start">
@@ -121,7 +115,14 @@ export function ReportsPage() {
             occupancyPercent={data.keyPerformanceIndicators.occupancyPercent.value}
             avgNightlyRate={data.keyPerformanceIndicators.avgNightlyRate.value}
           />
-          <ChannelBreakdownPanel rows={data.channelMix} currency={data.currency} />
+          <Flex direction="column" gap={{ base: '12px', md: '18px' }} minW={0}>
+            <LowestOccupancyPanel
+              occupancyPercent={data.keyPerformanceIndicators.occupancyPercent.value}
+              units={data.unitPerformance}
+              propertyCount={data.propertyCount}
+            />
+            <ChannelBreakdownPanel rows={data.channelMix} currency={data.currency} />
+          </Flex>
         </Grid>
 
         {hasProperties ? <PropertyPerformanceTable rows={data.propertyPerformance} currency={data.currency} /> : null}

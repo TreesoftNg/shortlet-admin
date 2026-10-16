@@ -16,7 +16,8 @@ type RevenueOverviewProps = {
 
 const MIN_CHART_WIDTH = 320;
 const MIN_CHART_HEIGHT = 260;
-const MAX_CHART_HEIGHT = 320;
+/** Tall enough to fill the card beside a full side panel (e.g. five top units). */
+const MAX_CHART_HEIGHT = 560;
 const FONT = 'Plus Jakarta Sans, system-ui, sans-serif';
 
 /** Revenue for the period as a line, with the previous period dashed behind it. */
@@ -127,10 +128,12 @@ export function RevenueOverview({ points, currency, subtitle }: RevenueOverviewP
         w="100%"
         overflow="hidden"
       >
+        {/* Absolutely placed so the chart fills the space it is given instead of sizing the card. */}
         <svg
           viewBox={`0 0 ${chartWidth} ${chartHeight}`}
           width="100%"
           height="100%"
+          style={{ position: 'absolute', inset: 0 }}
           role="img"
           aria-label="Revenue overview chart"
           onMouseMove={onPointerMove}
