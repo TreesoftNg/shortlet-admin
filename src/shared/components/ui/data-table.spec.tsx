@@ -62,4 +62,91 @@ describe('DataTable', () => {
     await user.click(screen.getByText('Alpha'));
     expect(onRowClick).toHaveBeenCalledWith(rows[0]);
   });
+
+  it('keeps plain headers when the table cannot be sorted', () => {
+    renderWithChakra(
+      <DataTable
+        columns={columns.map((column) => ({ ...column, sortable: true }))}
+        data={rows}
+        getRowId={(row) => row.id}
+      />,
+    );
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Name' })).not.toHaveAttribute('aria-sort');
+  });
+
+  it('turns sortable headers into sort buttons', async () => {
+    const user = userEvent.setup();
+    const onSortChange = jest.fn();
+    const sortableColumns: DataTableColumn<Row, 'name' | 'amount'>[] = [
+      { id: 'name', header: 'Name', cell: (row) => row.name, sortable: true },
+      { id: 'amount', header: 'Amount', cell: (row) => row.amount, isNumeric: true, sortable: true },
+    ];
+
+    renderWithChakra(
+      <DataTable
+        label="Totals"
+        columns={sortableColumns}
+        data={rows}
+        getRowId={(row) => row.id}
+        sort={{ columnId: 'name', direction: 'asc' }}
+        onSortChange={onSortChange}
+      />,
+    );
+
+    expect(screen.getByRole('table', { name: 'Totals' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute('aria-sort', 'ascending');
+    expect(screen.getByRole('columnheader', { name: 'Amount' })).toHaveAttribute('aria-sort', 'none');
+
+    await user.click(screen.getByRole('button', { name: 'Name' }));
+    expect(onSortChange).toHaveBeenLastCalledWith({ columnId: 'name', direction: 'desc' });
+
+    // A new column starts with the largest numbers first.
+    await user.click(screen.getByRole('button', { name: 'Amount' }));
+    expect(onSortChange).toHaveBeenLastCalledWith({ columnId: 'amount', direction: 'desc' });
+  });
+
+  it('starts a new text column A–Z', async () => {
+    const user = userEvent.setup();
+    const onSortChange = jest.fn();
+
+    renderWithChakra(
+      <DataTable
+        columns={columns.map((column) => ({ ...column, sortable: true }))}
+        data={rows}
+        getRowId={(row) => row.id}
+        sort={{ columnId: 'amount', direction: 'desc' }}
+        onSortChange={onSortChange}
+      />,
+    );
+
+    expect(screen.getByRole('columnheader', { name: 'Amount' })).toHaveAttribute('aria-sort', 'descending');
+    await user.click(screen.getByRole('button', { name: 'Name' }));
+    expect(onSortChange).toHaveBeenCalledWith({ columnId: 'name', direction: 'asc' });
+  });
+
+  it('adds a totals row when columns have footers', () => {
+    renderWithChakra(
+      <DataTable
+        columns={[
+          { ...columns[0], footer: 'Total' },
+          { ...columns[1], footer: 300 },
+        ]}
+        data={rows}
+        getRowId={(row) => row.id}
+      />,
+    );
+
+    const totals = screen.getAllByRole('row').at(-1)!;
+    expect(totals).toHaveTextContent('Total300');
+  });
+
+  it('has no totals row without footers', () => {
+    renderWithChakra(
+      <DataTable columns={columns} data={rows} getRowId={(row) => row.id} />,
+    );
+
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+  });
 });

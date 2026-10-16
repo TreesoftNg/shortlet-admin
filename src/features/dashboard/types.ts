@@ -43,6 +43,28 @@ export type PropertyOccupancy = {
   availableNights: number;
 };
 
+/** One unit's figures for the period. */
+export type UnitPerformance = {
+  unitId: string;
+  unitName: string;
+  unitCode: string | null;
+  propertyId: string | null;
+  propertyName: string | null;
+  /** Archived units are only listed when they had activity in the period. */
+  archived: boolean;
+  /** Business currency, net of stay refunds. */
+  revenue: number;
+  /** Arrivals in the period. */
+  bookings: number;
+  /** Occupied nights in the period, from every channel. */
+  nights: number;
+  /** Null when the unit had no open nights in the period. */
+  occupancyPercent: number | null;
+  occupiedNights: number;
+  availableNights: number;
+  avgNightlyRate: number;
+};
+
 export type OtherCurrencyRevenue = { currency: string; revenue: number; bookings: number };
 
 export type TodayMovement = {
@@ -65,6 +87,11 @@ export type DashboardData = {
   revenueOverview: RevenuePoint[];
   occupancyByUnit: UnitOccupancy[];
   occupancyByProperty: PropertyOccupancy[];
+  /** Every unit, by revenue, then occupancy, then name. */
+  unitPerformance: UnitPerformance[];
+  unitCount: number;
+  /** Distinct properties among those units. */
+  propertyCount: number;
   otherCurrencies: OtherCurrencyRevenue[];
   today: { date: string; checkIns: TodayMovement[]; checkOuts: TodayMovement[] };
 };

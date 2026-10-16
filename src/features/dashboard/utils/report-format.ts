@@ -88,6 +88,3 @@ export function axisTicks(max: number): number[] {
   const step = [1, 2, 2.5, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate >= rough) ?? rough;
   return [0, step, step * 2, step * 3];
 }
-
-/** Colours for properties in occupancy lists, in order. */
-export const PROPERTY_COLORS = ['#10695B', '#3AAF96', '#F59E0B', '#6366F1', '#EC4899', '#0EA5E9', '#84CC16', '#A855F7'];

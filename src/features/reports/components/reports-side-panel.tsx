@@ -2,7 +2,13 @@
 
 import { Box, Flex, Text } from '@chakra-ui/react';
 import { OccupancyPanel } from '@/features/dashboard/components/occupancy-panel';
-import type { PropertyOccupancy } from '@/features/dashboard/types';
+import type { UnitPerformance } from '@/features/dashboard/types';
+import {
+  lowestOccupancyUnits,
+  showProperty,
+  unitLabel,
+  unitPropertyLabel,
+} from '@/features/dashboard/utils/unit-ranking';
 import { Panel } from '@/shared/components/ui';
 import type { FinanceSummary } from '../types';
 import { getFinanceRows } from '../utils/report-formatters';
@@ -11,10 +17,22 @@ type ReportsSidePanelProps = {
   finance: FinanceSummary;
   currency: string;
   occupancyPercent: number;
-  occupancyByProperty: PropertyOccupancy[];
+  units: UnitPerformance[];
+  propertyCount: number;
 };
 
-export function ReportsSidePanel({ finance, currency, occupancyPercent, occupancyByProperty }: ReportsSidePanelProps) {
+const LOWEST_OCCUPANCY_LIMIT = 5;
+
+export function ReportsSidePanel({ finance, currency, occupancyPercent, units, propertyCount }: ReportsSidePanelProps) {
+  const lowestOccupancy = lowestOccupancyUnits(units, LOWEST_OCCUPANCY_LIMIT).map((unit) => ({
+    id: unit.unitId,
+    label: unitLabel(unit),
+    sublabel: showProperty(propertyCount) ? unitPropertyLabel(unit) : null,
+    occupancyPercent: unit.occupancyPercent,
+    occupiedNights: unit.occupiedNights,
+    availableNights: unit.availableNights,
+  }));
+
   return (
     <Flex direction="column" gap="18px" h="100%">
       <Panel>
@@ -54,7 +72,12 @@ export function ReportsSidePanel({ finance, currency, occupancyPercent, occupanc
         </Box>
       </Panel>
       <Box flex="1">
-        <OccupancyPanel overallPercent={occupancyPercent} properties={occupancyByProperty} title="Occupancy" />
+        <OccupancyPanel
+          title="Lowest occupancy"
+          description="Units with the smallest share of open nights booked"
+          overallPercent={occupancyPercent}
+          rows={lowestOccupancy}
+        />
       </Box>
     </Flex>
   );

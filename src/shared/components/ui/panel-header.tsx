@@ -1,14 +1,16 @@
 'use client';
 
-import { Flex, Heading, type FlexProps } from '@chakra-ui/react';
+import { Box, Flex, Heading, Text, type FlexProps } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 
 type PanelHeaderProps = FlexProps & {
   title: string;
+  /** Muted line under the title. */
+  description?: ReactNode;
   actions?: ReactNode;
 };
 
-export function PanelHeader({ title, actions, children, ...rest }: PanelHeaderProps) {
+export function PanelHeader({ title, description, actions, children, ...rest }: PanelHeaderProps) {
   return (
     <Flex
       justify="space-between"
@@ -18,9 +20,16 @@ export function PanelHeader({ title, actions, children, ...rest }: PanelHeaderPr
       wrap="wrap"
       {...rest}
     >
-      <Heading as="h3" fontSize={{ base: '16px', md: '18px' }} fontWeight={700}>
-        {title}
-      </Heading>
+      <Box minW={0}>
+        <Heading as="h3" fontSize={{ base: '16px', md: '18px' }} fontWeight={700}>
+          {title}
+        </Heading>
+        {description ? (
+          <Text fontSize="13px" color="ink.300" mt="2px">
+            {description}
+          </Text>
+        ) : null}
+      </Box>
       {actions ?? children}
     </Flex>
   );

@@ -8,14 +8,15 @@ import { ErrorState, PageSkeleton, Panel } from '@/shared/components/ui';
 import { useDashboard } from '../hooks/use-dashboard';
 import type { ReportPeriod } from '../types';
 import { periodTitle, rangeLabel } from '../utils/report-format';
+import { showProperty } from '../utils/unit-ranking';
 import { DashboardTopbar } from './dashboard-topbar';
 import { KpiGrid } from './kpi-grid';
-import { OccupancyPanel } from './occupancy-panel';
 import { OtherCurrenciesNote } from './other-currencies-note';
 import { PeriodSegment } from './period-segment';
 import { RecentBookingsTable } from './recent-bookings-table';
 import { RevenueOverview } from './revenue-overview';
 import { TodayPanel } from './today-panel';
+import { TopUnitsPanel } from './top-units-panel';
 
 export function DashboardPage() {
   const { data: profile } = useMe();
@@ -65,15 +66,23 @@ export function DashboardPage() {
 
         <Grid templateColumns={{ base: '1fr', xl: '1.8fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="stretch">
           <RevenueOverview points={data.revenueOverview} currency={data.currency} subtitle={subtitle} />
-          <OccupancyPanel
-            overallPercent={data.keyPerformanceIndicators.occupancyPercent.value}
-            properties={data.occupancyByProperty}
+          <TopUnitsPanel
+            units={data.unitPerformance}
+            unitCount={data.unitCount}
+            propertyCount={data.propertyCount}
+            currency={data.currency}
+            period={period}
           />
         </Grid>
 
         <Grid templateColumns={{ base: '1fr', xl: '1.8fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="stretch">
           {canViewBookings ? <RecentBookingsTable /> : <Box />}
-          <TodayPanel date={data.today.date} checkIns={data.today.checkIns} checkOuts={data.today.checkOuts} />
+          <TodayPanel
+            date={data.today.date}
+            checkIns={data.today.checkIns}
+            checkOuts={data.today.checkOuts}
+            showPropertyNames={showProperty(data.propertyCount)}
+          />
         </Grid>
       </Flex>
     </Box>

@@ -6,6 +6,7 @@ import type {
   ReportRange,
   RevenuePoint,
   UnitOccupancy,
+  UnitPerformance,
 } from '@/features/dashboard/types';
 
 export type FinanceSummary = {
@@ -48,6 +49,11 @@ export type ReportsData = {
   occupancyByUnit: UnitOccupancy[];
   occupancyByProperty: PropertyOccupancy[];
   propertyPerformance: PropertyPerformance[];
+  /** Every unit, by revenue, then occupancy, then name. */
+  unitPerformance: UnitPerformance[];
+  unitCount: number;
+  /** Distinct properties among those units. */
+  propertyCount: number;
   channelMix: ChannelMix[];
   otherCurrencies: OtherCurrencyRevenue[];
 };

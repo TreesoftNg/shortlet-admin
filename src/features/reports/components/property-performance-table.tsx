@@ -27,7 +27,7 @@ export function PropertyPerformanceTable({ rows, currency }: PropertyPerformance
         </Box>
       </Flex>
 
-      <Box as="table" w="100%" minW="720px" fontSize="14px" sx={{ borderCollapse: 'collapse' }}>
+      <Box as="table" aria-label="Property performance" w="100%" minW="720px" fontSize="14px" sx={{ borderCollapse: 'collapse' }}>
         <Box as="thead">
           <Box as="tr" borderBottom="1px solid" borderColor="line.500">
             {[

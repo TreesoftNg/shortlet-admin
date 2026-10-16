@@ -8,12 +8,14 @@ type TodayPanelProps = {
   date: string;
   checkIns: TodayMovement[];
   checkOuts: TodayMovement[];
+  /** Put the property before the unit; only useful with more than one property. */
+  showPropertyNames: boolean;
 };
 
 const todayFormat = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
 
 /** Guests arriving and leaving today. */
-export function TodayPanel({ date, checkIns, checkOuts }: TodayPanelProps) {
+export function TodayPanel({ date, checkIns, checkOuts, showPropertyNames }: TodayPanelProps) {
   return (
     <Panel h="100%">
       <Heading as="h3" fontSize={{ base: '16px', md: '18px' }} fontWeight={700}>
@@ -22,14 +24,31 @@ export function TodayPanel({ date, checkIns, checkOuts }: TodayPanelProps) {
       <Text fontSize="13px" color="ink.300" mt="2px" mb="16px">
         {todayFormat.format(new Date(`${date}T00:00:00Z`))}
       </Text>
-      <MovementList title="Check-ins" items={checkIns} empty="No arrivals today." />
+      <MovementList
+        title="Check-ins"
+        items={checkIns}
+        empty="No arrivals today."
+        showPropertyNames={showPropertyNames}
+      />
       <Box h="16px" />
-      <MovementList title="Check-outs" items={checkOuts} empty="No departures today." />
+      <MovementList
+        title="Check-outs"
+        items={checkOuts}
+        empty="No departures today."
+        showPropertyNames={showPropertyNames}
+      />
     </Panel>
   );
 }
 
-function MovementList({ title, items, empty }: { title: string; items: TodayMovement[]; empty: string }) {
+type MovementListProps = {
+  title: string;
+  items: TodayMovement[];
+  empty: string;
+  showPropertyNames: boolean;
+};
+
+function MovementList({ title, items, empty, showPropertyNames }: MovementListProps) {
   return (
     <Box>
       <Flex justify="space-between" align="center" mb="8px">
@@ -65,7 +84,7 @@ function MovementList({ title, items, empty }: { title: string; items: TodayMove
                   {item.guestName}
                 </Text>
                 <Text fontSize="12px" color="ink.300" noOfLines={1}>
-                  {item.propertyName ? `${item.propertyName} · ${item.unitName}` : item.unitName}
+                  {showPropertyNames && item.propertyName ? `${item.propertyName} · ${item.unitName}` : item.unitName}
                 </Text>
               </Box>
               {item.source === 'imported' ? <StatusBadge tone="info">Airbnb / Booking.com</StatusBadge> : null}

@@ -16,3 +16,4 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 Element.prototype.scrollTo = () => undefined;
+Element.prototype.scrollIntoView = () => undefined;

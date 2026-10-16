@@ -11,13 +11,15 @@ import { PeriodSegment } from '@/features/dashboard/components/period-segment';
 import { RevenueOverview } from '@/features/dashboard/components/revenue-overview';
 import type { ReportPeriod } from '@/features/dashboard/types';
 import { periodTitle, rangeLabel } from '@/features/dashboard/utils/report-format';
+import { showProperty } from '@/features/dashboard/utils/unit-ranking';
 import { ErrorState, ExportButton, PageHeader, PageSkeleton, Panel } from '@/shared/components/ui';
 import { useUiStore } from '@/shared/store/ui-store';
 import { useReports } from '../hooks/use-reports';
-import { propertyPerformanceExportColumns } from '../utils/report-export';
+import { propertyPerformanceExportColumns, unitPerformanceExportColumns } from '../utils/report-export';
 import { ChannelBreakdownPanel } from './channel-breakdown-panel';
 import { PropertyPerformanceTable } from './property-performance-table';
 import { ReportsSidePanel } from './reports-side-panel';
+import { UnitPerformanceTable } from './unit-performance-table';
 
 export function ReportsPage() {
   const { data: profile } = useMe();
@@ -63,6 +65,9 @@ export function ReportsPage() {
   }
 
   const subtitle = `${periodTitle(period)} · ${rangeLabel(data.range)}`;
+  const fileRange = `${data.range.startDate}-to-${data.range.endDate}`;
+  const hasProperties = showProperty(data.propertyCount);
+  const exportButtonProps = { h: '40px', borderRadius: '12px', display: { base: 'none', md: 'inline-flex' } } as const;
 
   return (
     <Box opacity={isFetching && data.period !== period ? 0.6 : 1} transition="opacity 0.2s">
@@ -73,13 +78,21 @@ export function ReportsPage() {
           <Flex gap="8px" align="center" wrap="wrap">
             <PeriodSegment value={period} onChange={setPeriod} />
             <ExportButton
-              filename={`property-performance-${data.range.startDate}-to-${data.range.endDate}`}
-              columns={propertyPerformanceExportColumns(data.currency)}
-              rows={data.propertyPerformance}
-              h="40px"
-              borderRadius="12px"
-              display={{ base: 'none', md: 'inline-flex' }}
+              filename={`unit-performance-${fileRange}`}
+              columns={unitPerformanceExportColumns(data.currency)}
+              rows={data.unitPerformance}
+              label={hasProperties ? 'Export units' : 'Export'}
+              {...exportButtonProps}
             />
+            {hasProperties ? (
+              <ExportButton
+                filename={`property-performance-${fileRange}`}
+                columns={propertyPerformanceExportColumns(data.currency)}
+                rows={data.propertyPerformance}
+                label="Export properties"
+                {...exportButtonProps}
+              />
+            ) : null}
             {navButton}
           </Flex>
         }
@@ -95,14 +108,23 @@ export function ReportsPage() {
             finance={data.finance}
             currency={data.currency}
             occupancyPercent={data.keyPerformanceIndicators.occupancyPercent.value}
-            occupancyByProperty={data.occupancyByProperty}
+            units={data.unitPerformance}
+            propertyCount={data.propertyCount}
           />
         </Grid>
 
-        <Grid templateColumns={{ base: '1fr', xl: '1.7fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="stretch">
-          <PropertyPerformanceTable rows={data.propertyPerformance} currency={data.currency} />
+        <Grid templateColumns={{ base: '1fr', xl: '1.7fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="start">
+          <UnitPerformanceTable
+            units={data.unitPerformance}
+            propertyCount={data.propertyCount}
+            currency={data.currency}
+            occupancyPercent={data.keyPerformanceIndicators.occupancyPercent.value}
+            avgNightlyRate={data.keyPerformanceIndicators.avgNightlyRate.value}
+          />
           <ChannelBreakdownPanel rows={data.channelMix} currency={data.currency} />
         </Grid>
+
+        {hasProperties ? <PropertyPerformanceTable rows={data.propertyPerformance} currency={data.currency} /> : null}
       </Flex>
     </Box>
   );

@@ -1,64 +1,90 @@
 'use client';
 
-import { Box, Flex, Heading, Text } from '@chakra-ui/react';
-import { Panel } from '@/shared/components/ui';
-import type { PropertyOccupancy } from '../types';
-import { formatPercent, PROPERTY_COLORS } from '../utils/report-format';
+import { Box, Flex, Text } from '@chakra-ui/react';
+import { Panel, PanelHeader } from '@/shared/components/ui';
+import { formatPercent } from '../utils/report-format';
 
-type OccupancyPanelProps = {
-  overallPercent: number;
-  properties: PropertyOccupancy[];
-  title?: string;
+export type OccupancyRow = {
+  id: string;
+  label: string;
+  /** Muted line under the label, e.g. the property. */
+  sublabel?: string | null;
+  occupancyPercent: number;
+  occupiedNights: number;
+  availableNights: number;
 };
 
-/** Overall occupancy and a bar per property. */
-export function OccupancyPanel({ overallPercent, properties, title = 'Occupancy by property' }: OccupancyPanelProps) {
+type OccupancyPanelProps = {
+  title: string;
+  description?: string;
+  overallPercent: number;
+  rows: OccupancyRow[];
+  emptyMessage?: string;
+};
+
+/** Overall occupancy and a bar per row. */
+export function OccupancyPanel({
+  title,
+  description,
+  overallPercent,
+  rows,
+  emptyMessage = 'No units were open in this period.',
+}: OccupancyPanelProps) {
   return (
     <Panel h="100%">
-      <Flex justify="space-between" align="baseline" mb="18px" gap="12px">
-        <Heading as="h3" fontSize={{ base: '16px', md: '18px' }} fontWeight={700}>
-          {title}
-        </Heading>
-        <Box textAlign="right">
-          <Text fontSize="22px" fontWeight={800} lineHeight="1">
-            {formatPercent(overallPercent)}
-          </Text>
-          <Text fontSize="11px" color="ink.300">
-            overall
-          </Text>
-        </Box>
-      </Flex>
+      <PanelHeader
+        title={title}
+        description={description}
+        mb="18px"
+        wrap="nowrap"
+        actions={
+          <Box textAlign="right" flexShrink={0}>
+            <Text fontSize="22px" fontWeight={800} lineHeight="1">
+              {formatPercent(overallPercent)}
+            </Text>
+            <Text fontSize="11px" color="ink.300">
+              overall
+            </Text>
+          </Box>
+        }
+      />
 
-      {properties.length === 0 ? (
+      {rows.length === 0 ? (
         <Text fontSize="14px" color="ink.300">
-          No units were open in this period.
+          {emptyMessage}
         </Text>
       ) : (
-        <Flex direction="column" gap="14px">
-          {properties.map((property, index) => (
-            <Box key={property.propertyId ?? property.propertyName}>
+        <Flex as="ul" aria-label={title} listStyleType="none" direction="column" gap="14px">
+          {rows.map((row) => (
+            <Box as="li" key={row.id}>
               <Flex align="center" gap="10px" fontSize="14px" mb="6px">
-                <Box w="10px" h="10px" borderRadius="3px" bg={PROPERTY_COLORS[index % PROPERTY_COLORS.length]} flexShrink={0} />
-                <Text flex="1" noOfLines={1}>
-                  {property.propertyName}
-                </Text>
-                <Text fontWeight={700}>{formatPercent(property.occupancyPercent)}</Text>
+                <Box flex="1" minW={0}>
+                  <Text noOfLines={1}>{row.label}</Text>
+                  {row.sublabel ? (
+                    <Text fontSize="12px" color="ink.300" noOfLines={1}>
+                      {row.sublabel}
+                    </Text>
+                  ) : null}
+                </Box>
+                <Text fontWeight={700}>{formatPercent(row.occupancyPercent)}</Text>
               </Flex>
-              <Box h="6px" bg="bg.400" borderRadius="full" overflow="hidden">
-                <Box
-                  h="100%"
-                  w={`${Math.min(100, property.occupancyPercent)}%`}
-                  bg={PROPERTY_COLORS[index % PROPERTY_COLORS.length]}
-                  borderRadius="full"
-                />
-              </Box>
+              <OccupancyBar percent={row.occupancyPercent} />
               <Text fontSize="12px" color="ink.300" mt="4px">
-                {property.occupiedNights} of {property.availableNights} nights
+                {row.occupiedNights} of {row.availableNights} nights
               </Text>
             </Box>
           ))}
         </Flex>
       )}
     </Panel>
+  );
+}
+
+/** Thin track filled to `percent`; left empty when there is no figure. */
+export function OccupancyBar({ percent }: { percent: number | null }) {
+  return (
+    <Box h="6px" bg="bg.400" borderRadius="full" overflow="hidden" aria-hidden>
+      <Box h="100%" w={`${Math.min(100, percent ?? 0)}%`} bg="brand.500" borderRadius="full" />
+    </Box>
   );
 }
