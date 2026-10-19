@@ -70,12 +70,17 @@ export type BookingSettings = BookingRules & { updatedAt: string | null };
 
 /** GET /cc/payment-settings — never includes keys. */
 export type PaymentSettings = {
-  provider: 'flutterwave';
+  provider: 'flutterwave' | 'paystack';
   configured: boolean;
   mode: 'test' | 'live' | null;
   webhookUrl: string;
   webhookSecretSet: boolean;
   lastWebhookAt: string | null;
+  /** Other online providers still available for older payments. */
+  otherProviders?: Array<{
+    provider: 'flutterwave' | 'paystack';
+    configured: boolean;
+  }>;
 };
 
 /** GET/PUT /cc/tenant-domains — hostnames for Origin + booking return URLs. */

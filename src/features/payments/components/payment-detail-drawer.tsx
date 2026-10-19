@@ -120,11 +120,13 @@ export function PaymentDetailDrawer({
     (payment.status === 'successful' ||
       payment.status === 'partially_refunded');
 
+  const providerLabel = formatProviderLabel(payment.provider);
+
   const handleVerify = async () => {
     try {
       await verifyMutation.mutateAsync(payment.id);
       toast({
-        title: 'Checked with Flutterwave',
+        title: `Checked with ${providerLabel}`,
         status: 'success',
         duration: 2500,
         isClosable: true,
@@ -292,7 +294,7 @@ export function PaymentDetailDrawer({
                 value: <Text as="b">{payment.paymentMethod ?? '—'}</Text>,
               },
               {
-                label: 'Flutterwave id',
+                label: 'Transaction id',
                 value: (
                   <Text as="b">{payment.providerTransactionId ?? '—'}</Text>
                 ),
@@ -401,7 +403,7 @@ export function PaymentDetailDrawer({
           onClick={() => void handleVerify()}
           isLoading={verifyMutation.isPending}
         >
-          Check with Flutterwave
+          Check with {providerLabel}
         </Button>
         {canIssueRefund ? (
           <Button

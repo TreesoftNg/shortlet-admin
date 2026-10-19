@@ -19,6 +19,6 @@ export function getFinanceRows(finance: FinanceSummary, currency: string) {
     { id: 'gross', label: 'Gross revenue', hint: 'Stay value of nights in the period', value: formatAmount(finance.grossRevenue, currency) },
     { id: 'refunds', label: 'Stay refunds', hint: 'Refunded on those nights', value: formatAmount(finance.stayRefunds, currency) },
     { id: 'net', label: 'Net revenue', hint: 'Gross minus stay refunds', value: formatAmount(finance.netRevenue, currency), emphasize: true },
-    { id: 'pending', label: 'Pending refunds', hint: 'Waiting at Flutterwave right now', value: formatAmount(finance.pendingRefunds, currency) },
+    { id: 'pending', label: 'Pending refunds', hint: 'Waiting at the payment provider right now', value: formatAmount(finance.pendingRefunds, currency) },
   ] as const;
 }

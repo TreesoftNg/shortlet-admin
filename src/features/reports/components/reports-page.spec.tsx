@@ -81,7 +81,9 @@ describe('ReportsPage', () => {
     expect(row('Gross revenue')).toHaveTextContent('₦950,000');
     expect(row('Stay refunds')).toHaveTextContent('₦50,000');
     expect(row('Net revenue')).toHaveTextContent('₦900,000');
-    expect(row('Pending refunds')).toHaveTextContent('Waiting at Flutterwave right now₦25,000');
+    expect(row('Pending refunds')).toHaveTextContent(
+      'Waiting at the payment provider right now₦25,000',
+    );
   });
 
   it('lists every unit with totals for the period', async () => {

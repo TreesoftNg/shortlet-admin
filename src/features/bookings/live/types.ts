@@ -41,7 +41,7 @@ export type StaffQuote = {
 
 export type AdminPayment = {
   id: string;
-  provider: 'flutterwave' | 'offline';
+  provider: 'flutterwave' | 'paystack' | 'offline';
   reference: string;
   providerTransactionId: string | null;
   amount: string;

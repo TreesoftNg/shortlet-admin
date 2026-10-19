@@ -367,7 +367,7 @@ export type PaymentStatus =
 export type Payment = {
   id: string;
   reservation_id: string;
-  provider: 'flutterwave';
+  provider: 'flutterwave' | 'paystack';
   reference: string;
   amount: number;
   currency: string;
@@ -376,7 +376,7 @@ export type Payment = {
   updated_at: string;
 };
 
-/** Internal refund record (Flutterwave-backed; used by admin finance views). */
+/** Internal refund record (provider-backed; used by admin finance views). */
 export type RefundStatus =
   | 'requested'
   | 'pending_approval'

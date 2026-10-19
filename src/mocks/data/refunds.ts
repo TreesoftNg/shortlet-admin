@@ -72,7 +72,7 @@ export const mockRefunds: Refund[] = [
     currency: 'NGN',
     status: 'processing',
     reason: 'guest_cancellation',
-    notes: 'Approved — Flutterwave refund in flight.',
+    notes: 'Approved — provider refund in flight.',
     requested_by: 'Kemi Adebayo',
     processed_at: null,
     created_at: '2026-09-28T09:00:00Z',

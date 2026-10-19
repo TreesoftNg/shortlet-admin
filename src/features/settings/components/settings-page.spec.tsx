@@ -356,23 +356,44 @@ describe('Payments tab', () => {
   it('shows status and the webhook URL, copies it, and never shows a key', async () => {
     const user = userEvent.setup();
     const { container } = renderAs('payments');
+    expect(await screen.findByText('Flutterwave')).toBeInTheDocument();
     expect(await screen.findByText('Connected')).toBeInTheDocument();
     expect(screen.getByText('Test mode')).toBeInTheDocument();
+    expect(screen.getByText('Webhook secret hash')).toBeInTheDocument();
     expect(screen.getByLabelText('Webhook URL')).toHaveValue(paymentSettings().webhookUrl);
-    expect(container).not.toHaveTextContent(/FLWSECK|FLWPUBK/);
+    expect(container).not.toHaveTextContent(/FLWSECK|FLWPUBK|sk_test_|sk_live_/);
 
     await user.click(screen.getByRole('button', { name: 'Copy' }));
     expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
     await expect(navigator.clipboard.readText()).resolves.toBe(paymentSettings().webhookUrl);
   });
 
-  it('shows when Flutterwave is not set up', async () => {
+  it('shows when the active provider is not set up', async () => {
     business.fetchPaymentSettings.mockResolvedValue(
       paymentSettings({ configured: false, mode: null, webhookSecretSet: false }),
     );
     renderAs('payments');
     expect(await screen.findByText('Not set up')).toBeInTheDocument();
     expect(screen.queryByText('Test mode')).not.toBeInTheDocument();
+  });
+
+  it('shows Paystack mode without the Flutterwave secret-hash row', async () => {
+    business.fetchPaymentSettings.mockResolvedValue(
+      paymentSettings({
+        provider: 'paystack',
+        webhookUrl: 'https://api.example.com/api/v1/webhooks/payments/paystack',
+        otherProviders: [{ provider: 'flutterwave', configured: true }],
+      }),
+    );
+    const { container } = renderAs('payments');
+    expect(await screen.findByText('Paystack')).toBeInTheDocument();
+    expect(screen.getByText('Webhook signature')).toBeInTheDocument();
+    expect(screen.queryByText('Webhook secret hash')).not.toBeInTheDocument();
+    expect(screen.getByText(/Flutterwave \(keys set\)/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Paystack dashboard under Settings → API Keys & Webhooks/),
+    ).toBeInTheDocument();
+    expect(container).not.toHaveTextContent(/sk_test_|sk_live_|FLWSECK/);
   });
 
   it('does not load payment status without settings.manage', async () => {

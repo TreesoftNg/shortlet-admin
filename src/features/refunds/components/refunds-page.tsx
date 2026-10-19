@@ -71,7 +71,7 @@ export function RefundsPage() {
     <Box>
       <PageHeader
         title="Refunds"
-        description="Review refund requests and track Flutterwave payouts."
+        description="Review refund requests and track provider payouts."
         actions={
           <IconButton
             aria-label="Open navigation"

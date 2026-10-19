@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { formatStayDate } from '@/features/calendar-sync/utils/calendar-sync-format';
+import { formatProviderLabel } from '@/features/payments/utils/payment-filters';
 import { AppModal, KeyValueList } from '@/shared/components/ui';
 import {
   BOOKING_STATUS_LABELS,
@@ -105,7 +106,7 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
                   { label: 'Total', value: formatMoney(booking.totalAmount, booking.currency), emphasize: true },
                   { label: 'Paid', value: formatMoney(booking.amountPaid, booking.currency) },
                   ...booking.payments.map((payment) => ({
-                    label: `${payment.provider === 'offline' ? 'Offline' : 'Flutterwave'} · ${payment.status}`,
+                    label: `${formatProviderLabel(payment.provider)} · ${payment.status}`,
                     value: `${paymentMethodLabel(payment.paymentMethod)}${payment.offlineReference ? ` · ${payment.offlineReference}` : ''}`,
                   })),
                 ]}

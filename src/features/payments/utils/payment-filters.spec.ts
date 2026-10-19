@@ -1,7 +1,16 @@
 import {
   DEFAULT_PAYMENT_FILTERS,
+  formatProviderLabel,
   toListPaymentsParams,
 } from './payment-filters';
+
+describe('formatProviderLabel', () => {
+  it('labels known providers', () => {
+    expect(formatProviderLabel('flutterwave')).toBe('Flutterwave');
+    expect(formatProviderLabel('paystack')).toBe('Paystack');
+    expect(formatProviderLabel('offline')).toBe('Offline');
+  });
+});
 
 describe('toListPaymentsParams', () => {
   it('maps status tabs', () => {

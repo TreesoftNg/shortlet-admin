@@ -64,5 +64,7 @@ export function formatPaymentDateTime(iso: string): string {
 
 export function formatProviderLabel(provider: string): string {
   if (provider === 'flutterwave') return 'Flutterwave';
+  if (provider === 'paystack') return 'Paystack';
+  if (provider === 'offline') return 'Offline';
   return provider;
 }

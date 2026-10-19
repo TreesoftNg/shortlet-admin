@@ -76,7 +76,7 @@ describe('PaymentsPage', () => {
     expect(api.fetchPayments).not.toHaveBeenCalled();
   });
 
-  it('verifies a payment with Flutterwave', async () => {
+  it('verifies a payment with its provider', async () => {
     renderAs();
     await userEvent.click(await screen.findByText('Ada Okafor'));
     await userEvent.click(

@@ -60,6 +60,7 @@ import {
   createStayRefund,
   verifyPayment,
 } from '@/features/payments/api/payments-service';
+import { formatProviderLabel } from '@/features/payments/utils/payment-filters';
 import {
   ActivityTimeline,
   EmptyState,
@@ -337,11 +338,14 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
     }
   };
 
-  const handleVerify = async (paymentId: string) => {
+  const handleVerify = async (
+    paymentId: string,
+    provider: string,
+  ) => {
     try {
       await verifyMutation.mutateAsync(paymentId);
       toast({
-        title: 'Checked with Flutterwave',
+        title: `Checked with ${formatProviderLabel(provider)}`,
         status: 'success',
         duration: 2500,
         isClosable: true,
@@ -787,11 +791,13 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                       <Button
                         size="xs"
                         variant="soft"
-                        onClick={() => void handleVerify(payment.id)}
+                        onClick={() =>
+                          void handleVerify(payment.id, payment.provider)
+                        }
                         isLoading={verifyMutation.isPending}
                         isDisabled={actionPending}
                       >
-                        Check with Flutterwave
+                        Check with {formatProviderLabel(payment.provider)}
                       </Button>
                     </Flex>
                   </Box>

@@ -7,6 +7,7 @@ import {
 } from '@/features/bookings/utils/reservation-display';
 import type { RefundListItem } from '@/mocks/data/refunds';
 import { KeyValueList, StatusBadge } from '@/shared/components/ui';
+import { formatProviderLabel } from '@/features/payments/utils/payment-filters';
 import {
   formatRefundDateTime,
   getRefundReasonLabel,
@@ -81,7 +82,13 @@ export function RefundDetailDrawer({ refund }: RefundDetailDrawerProps) {
               },
               {
                 label: 'Provider',
-                value: <Text as="b">Flutterwave</Text>,
+                value: (
+                  <Text as="b">
+                    {formatProviderLabel(
+                      refund.payment?.provider ?? 'flutterwave',
+                    )}
+                  </Text>
+                ),
               },
             ]}
           />
@@ -141,7 +148,8 @@ export function RefundDetailDrawer({ refund }: RefundDetailDrawerProps) {
         ) : null}
         {refund.status === 'processing' ? (
           <Button size="sm" variant="soft" flex="1">
-            Check Flutterwave
+            Check{' '}
+            {formatProviderLabel(refund.payment?.provider ?? 'flutterwave')}
           </Button>
         ) : null}
         <Button size="sm" variant="soft">

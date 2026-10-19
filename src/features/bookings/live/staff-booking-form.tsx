@@ -298,7 +298,7 @@ export function StaffBookingForm({ isOpen, onClose, units, today, initial }: Sta
         </SimpleGrid>
       ) : (
         <Text mt="10px" fontSize="14px" color="ink.400">
-          The guest gets an email with a Flutterwave link and has 24 hours to pay. The dates are held until then.
+          The guest gets an email with a payment link and has 24 hours to pay. The dates are held until then.
         </Text>
       )}
 

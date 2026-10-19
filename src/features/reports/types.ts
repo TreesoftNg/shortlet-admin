@@ -13,7 +13,7 @@ export type FinanceSummary = {
   grossRevenue: number;
   stayRefunds: number;
   netRevenue: number;
-  /** Waiting at Flutterwave right now, not limited to the period. */
+  /** Waiting at the payment provider right now, not limited to the period. */
   pendingRefunds: number;
 };
 

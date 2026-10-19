@@ -60,7 +60,7 @@ export function PaymentsPage() {
   const header = (
     <PageHeader
       title="Payments"
-      description="Track charges, verify Flutterwave, and refund stays."
+      description="Track charges, verify payments, and refund stays."
       actions={
         <IconButton
           aria-label="Open navigation"
@@ -134,7 +134,7 @@ export function PaymentsPage() {
               borderColor="line.500"
               borderRadius="12px"
               fontSize="14px"
-              placeholder="Search reference, Flutterwave id, booking…"
+              placeholder="Search reference, transaction id, booking…"
               value={filters.search}
               onChange={(event) =>
                 updateFilters({ search: event.target.value, page: 1 })

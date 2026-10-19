@@ -123,6 +123,7 @@ export function paymentSettings(overrides: Partial<PaymentSettings> = {}): Payme
     webhookUrl: 'https://api.example.com/api/v1/webhooks/payments/flutterwave',
     webhookSecretSet: true,
     lastWebhookAt: null,
+    otherProviders: [{ provider: 'paystack', configured: false }],
     ...overrides,
   };
 }
