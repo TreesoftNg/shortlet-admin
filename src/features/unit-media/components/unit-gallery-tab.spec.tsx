@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { queryKeys } from '@/shared/api/query-keys';
 import { ApiClientError } from '@/shared/api/types';
@@ -106,7 +106,6 @@ describe('UnitGalleryTab', () => {
 
   it('sets cover and deletes after confirm', async () => {
     api.fetchUnitMedia.mockResolvedValue([mediaItem({ isCover: false })]);
-    const confirm = jest.spyOn(window, 'confirm').mockReturnValue(true);
     renderGallery();
 
     await screen.findByText('Living room');
@@ -118,12 +117,13 @@ describe('UnitGalleryTab', () => {
 
     await userEvent.click(screen.getByLabelText('Media actions'));
     await userEvent.click(await screen.findByText('Delete'));
-    expect(confirm).toHaveBeenCalled();
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Remove from gallery?');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
     await waitFor(() => {
       expect(api.deleteMedia).toHaveBeenCalledWith('unit-1', 'media-1');
     });
-    confirm.mockRestore();
-  });
+  }, 10000);
 
   it('hides upload controls without unit.update', async () => {
     api.fetchUnitMedia.mockResolvedValue([mediaItem()]);

@@ -16,6 +16,8 @@ export type { FilterTabItem } from './filter-controls';
 export { KeyValueList, ActivityTimeline } from './detail-sections';
 export { AppModal } from './app-modal';
 export type { AppModalProps } from './app-modal';
+export { ConfirmModal } from './confirm-modal';
+export type { ConfirmModalProps } from './confirm-modal';
 export { EmptyState, EmptyStateActionButton } from './empty-state';
 export type { EmptyStateProps } from './empty-state';
 export { ErrorState } from './error-state';

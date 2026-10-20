@@ -89,6 +89,10 @@ function optionalNumber(value: number | ''): number | null {
   return value === '' ? null : Number(value);
 }
 
+function requiredNumber(value: number | ''): number {
+  return Number(value);
+}
+
 /** Build POST /units body from the unit form. */
 export function toCreateUnitPayload(values: UnitFormValues): CreateUnitPayload {
   return {
@@ -99,12 +103,12 @@ export function toCreateUnitPayload(values: UnitFormValues): CreateUnitPayload {
     floor: values.floor.trim() || null,
     summary: values.summary.trim() || null,
     openForBooking: values.bookable,
-    guests: values.capacity,
-    capacityBedrooms: values.bedrooms,
-    capacityBeds: values.beds,
-    capacityBathrooms: values.bathrooms,
+    guests: requiredNumber(values.capacity),
+    capacityBedrooms: requiredNumber(values.bedrooms),
+    capacityBeds: requiredNumber(values.beds),
+    capacityBathrooms: requiredNumber(values.bathrooms),
     facilityIds: [...values.facility_ids],
-    baseNightlyRate: optionalNumber(values.base_rate),
+    baseNightlyRate: requiredNumber(values.base_rate),
     cleaningFee: optionalNumber(values.cleaning_fee),
     weeklyDiscountPercent: optionalNumber(values.weekly_discount_percent),
     monthlyDiscountPercent: optionalNumber(values.monthly_discount_percent),

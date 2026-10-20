@@ -148,12 +148,16 @@ export function RevenueOverview({ points, currency, subtitle }: RevenueOverviewP
 
           {chart.ticks.map((tick, row) => {
             const y = plotBottom - (row / 3) * plotHeight;
+            // Empty charts used to label ₦0 four times; keep grid lines but one axis label.
+            const showLabel = !chart.isEmpty || row === 0;
             return (
               <g key={row}>
                 <line x1={chartPadding.left} x2={chartWidth} y1={y} y2={y} stroke="#F0F0EC" strokeWidth="1" />
-                <text x="0" y={y + 4} fontSize="11" fill="#80868C" fontFamily={FONT}>
-                  {formatCompactAmount(tick, currency)}
-                </text>
+                {showLabel ? (
+                  <text x="0" y={y + 4} fontSize="11" fill="#80868C" fontFamily={FONT}>
+                    {formatCompactAmount(tick, currency)}
+                  </text>
+                ) : null}
               </g>
             );
           })}

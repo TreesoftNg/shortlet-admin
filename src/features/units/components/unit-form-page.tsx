@@ -39,10 +39,12 @@ import {
 } from '@/features/units/hooks/use-unit-mutations';
 import { useUnit } from '@/features/units/hooks/use-units';
 import {
+  MAX_GUESTS_LIMIT,
   STAY_NIGHTS_LIMIT,
   UNIT_STATUS_OPTIONS,
   businessDefaultPlaceholder,
   createEmptyUnitForm,
+  parseNumberInput,
   readFileAsDataUrl,
   unitToFormValues,
   validateUnitForm,
@@ -571,45 +573,54 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
               <Field label="Max guests" isRequired error={errors.capacity}>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   min={1}
+                  max={MAX_GUESTS_LIMIT}
                   value={values.capacity}
                   onChange={(event) =>
-                    updateField('capacity', Number(event.target.value))
+                    updateField('capacity', parseNumberInput(event.target.value))
                   }
+                  placeholder="e.g. 2"
                   {...inputProps}
                 />
               </Field>
-              <Field label="Bedrooms" error={errors.bedrooms}>
+              <Field label="Bedrooms" isRequired error={errors.bedrooms}>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   min={0}
                   value={values.bedrooms}
                   onChange={(event) =>
-                    updateField('bedrooms', Number(event.target.value))
+                    updateField('bedrooms', parseNumberInput(event.target.value))
                   }
+                  placeholder="e.g. 1"
                   {...inputProps}
                 />
               </Field>
-              <Field label="Beds" error={errors.beds}>
+              <Field label="Beds" isRequired error={errors.beds}>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   min={0}
                   value={values.beds}
                   onChange={(event) =>
-                    updateField('beds', Number(event.target.value))
+                    updateField('beds', parseNumberInput(event.target.value))
                   }
+                  placeholder="e.g. 1"
                   {...inputProps}
                 />
               </Field>
-              <Field label="Bathrooms" error={errors.bathrooms}>
+              <Field label="Bathrooms" isRequired error={errors.bathrooms}>
                 <Input
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   step={0.5}
                   value={values.bathrooms}
                   onChange={(event) =>
-                    updateField('bathrooms', Number(event.target.value))
+                    updateField('bathrooms', parseNumberInput(event.target.value))
                   }
+                  placeholder="e.g. 1"
                   {...inputProps}
                 />
               </Field>
@@ -676,26 +687,23 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="16px">
               <Field
                 label="Base nightly rate"
+                isRequired
                 error={errors.base_rate}
                 helper={
                   property
-                    ? `Leave empty to inherit ${property.name} pricing (${property.currency}).`
-                    : 'Leave empty to inherit property pricing.'
+                    ? `Nightly rate for this unit in ${property.currency}.`
+                    : 'Nightly rate for this unit.'
                 }
               >
                 <Input
                   type="number"
-                  min={0}
+                  inputMode="decimal"
+                  min={1}
                   value={values.base_rate}
                   onChange={(event) =>
-                    updateField(
-                      'base_rate',
-                      event.target.value === ''
-                        ? ''
-                        : Number(event.target.value),
-                    )
+                    updateField('base_rate', parseNumberInput(event.target.value))
                   }
-                  placeholder="Optional"
+                  placeholder="e.g. 90000"
                   {...inputProps}
                 />
               </Field>
@@ -711,9 +719,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                   onChange={(event) =>
                     updateField(
                       'cleaning_fee',
-                      event.target.value === ''
-                        ? ''
-                        : Number(event.target.value),
+                      parseNumberInput(event.target.value),
                     )
                   }
                   placeholder="Optional"
@@ -733,9 +739,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                   onChange={(event) =>
                     updateField(
                       'weekly_discount_percent',
-                      event.target.value === ''
-                        ? ''
-                        : Number(event.target.value),
+                      parseNumberInput(event.target.value),
                     )
                   }
                   placeholder="Optional"
@@ -755,9 +759,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                   onChange={(event) =>
                     updateField(
                       'monthly_discount_percent',
-                      event.target.value === ''
-                        ? ''
-                        : Number(event.target.value),
+                      parseNumberInput(event.target.value),
                     )
                   }
                   placeholder="Optional"
@@ -783,9 +785,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                   onChange={(event) =>
                     updateField(
                       'min_nights',
-                      event.target.value === ''
-                        ? ''
-                        : Number(event.target.value),
+                      parseNumberInput(event.target.value),
                     )
                   }
                   placeholder={businessDefaultPlaceholder(
@@ -808,9 +808,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
                   onChange={(event) =>
                     updateField(
                       'max_nights',
-                      event.target.value === ''
-                        ? ''
-                        : Number(event.target.value),
+                      parseNumberInput(event.target.value),
                     )
                   }
                   placeholder={businessDefaultPlaceholder(

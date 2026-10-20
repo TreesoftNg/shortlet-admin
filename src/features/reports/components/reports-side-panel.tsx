@@ -23,7 +23,8 @@ export function FinanceSummaryPanel({ finance, currency }: { finance: FinanceSum
         Finance summary
       </Text>
       <Text color="ink.300" fontSize="13px" mt="2px" mb="12px">
-        Stay money only; deposits are not revenue
+        Stay money only; deposits are not revenue. Imported channel stays with no
+        shared price do not add to these totals.
       </Text>
       <Box border="1px solid" borderColor="line.500" borderRadius="12px" overflow="hidden">
         {getFinanceRows(finance, currency).map((row) => (
@@ -77,7 +78,7 @@ export function LowestOccupancyPanel({ occupancyPercent, units, propertyCount }:
   return (
     <OccupancyPanel
       title="Lowest occupancy"
-      description="Units with the smallest share of open nights booked"
+      description="Smallest share of each unit’s open nights booked (live nights minus blocks)"
       overallPercent={occupancyPercent}
       rows={rows}
     />

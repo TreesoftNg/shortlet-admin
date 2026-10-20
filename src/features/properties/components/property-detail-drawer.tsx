@@ -11,6 +11,7 @@ import {
   WrapItem,
   useToast,
 } from '@chakra-ui/react';
+import { useState } from 'react';
 import { LuPencil } from 'react-icons/lu';
 import type { PropertyListItem } from '@/features/properties/components/property-table-config';
 import {
@@ -21,7 +22,7 @@ import {
   formatCapacity,
   formatPropertyType,
 } from '@/features/properties/utils/property-filters';
-import { StatusBadge } from '@/shared/components/ui';
+import { ConfirmModal, StatusBadge } from '@/shared/components/ui';
 
 type PropertyDetailDrawerProps = {
   property: PropertyListItem | null;
@@ -39,22 +40,17 @@ export function PropertyDetailDrawer({
   const toast = useToast();
   const archive = useArchiveProperty();
   const restore = useRestoreProperty();
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
 
   if (!property) {
     return null;
   }
 
   const handleArchive = async () => {
-    if (
-      !window.confirm(
-        `Archive ${property.name}? Active units must be archived first.`,
-      )
-    ) {
-      return;
-    }
     try {
       await archive.mutateAsync(property.id);
       toast({ title: 'Property archived', status: 'success', duration: 2500 });
+      setConfirmArchiveOpen(false);
       onArchivedOrRestored?.();
     } catch (error) {
       toast({
@@ -241,13 +237,23 @@ export function PropertyDetailDrawer({
           <Button
             variant="secondary"
             minW="140px"
-            onClick={() => void handleArchive()}
+            onClick={() => setConfirmArchiveOpen(true)}
             isLoading={archive.isPending}
           >
             Archive
           </Button>
         )}
       </Flex>
+
+      <ConfirmModal
+        isOpen={confirmArchiveOpen}
+        onClose={() => setConfirmArchiveOpen(false)}
+        onConfirm={handleArchive}
+        title="Archive property?"
+        description={`Archive ${property.name}? Active units must be archived first.`}
+        confirmLabel="Archive"
+        isLoading={archive.isPending}
+      />
     </Box>
   );
 }
