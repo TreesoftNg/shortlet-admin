@@ -46,7 +46,7 @@ export type AdminPayment = {
   providerTransactionId: string | null;
   amount: string;
   currency: string;
-  status: 'initialized' | 'successful' | 'failed' | 'abandoned' | 'partially_refunded' | 'refunded';
+  status: 'initialized' | 'successful' | 'failed' | 'abandoned' | 'needs_review' | 'partially_refunded' | 'refunded';
   paymentMethod: string | null;
   offlineReference: string | null;
   checkoutUrl: string | null;

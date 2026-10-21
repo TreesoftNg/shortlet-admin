@@ -8,6 +8,7 @@ export type PaymentStatusTab =
   | 'all'
   | 'successful'
   | 'pending'
+  | 'needs_review'
   | 'failed'
   | 'refunds';
 
@@ -28,6 +29,7 @@ export const DEFAULT_PAYMENT_FILTERS: PaymentFilters = {
 const TAB_STATUS: Partial<Record<PaymentStatusTab, PaymentStatus>> = {
   successful: 'successful',
   pending: 'initialized',
+  needs_review: 'needs_review',
   failed: 'failed',
   refunds: 'refunded',
 };

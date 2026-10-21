@@ -117,6 +117,7 @@ export function PaymentsPage() {
             { id: 'all', label: 'All' },
             { id: 'successful', label: 'Successful' },
             { id: 'pending', label: 'Pending' },
+            { id: 'needs_review', label: 'Needs review' },
             { id: 'failed', label: 'Failed' },
             { id: 'refunds', label: 'Refunded' },
           ]}

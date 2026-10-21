@@ -104,6 +104,8 @@ export function getPaymentStatusDisplay(status: PaymentStatus): DisplayChip {
       return { label: 'Failed', tone: 'danger' };
     case 'abandoned':
       return { label: 'Abandoned', tone: 'mute' };
+    case 'needs_review':
+      return { label: 'Needs review', tone: 'warn' };
     case 'partially_refunded':
       return { label: 'Partly refunded', tone: 'info' };
     case 'refunded':
@@ -113,10 +115,16 @@ export function getPaymentStatusDisplay(status: PaymentStatus): DisplayChip {
   }
 }
 
-export function getRefundStatusDisplay(status: RefundStatus): DisplayChip {
+export function getRefundStatusDisplay(
+  status: RefundStatus,
+  awaitingProvider = false,
+): DisplayChip {
   switch (status) {
     case 'pending':
-      return { label: 'Pending', tone: 'warn' };
+      return {
+        label: awaitingProvider ? 'Checking with provider' : 'Pending',
+        tone: 'warn',
+      };
     case 'completed':
       return { label: 'Completed', tone: 'ok' };
     case 'failed':
@@ -268,6 +276,29 @@ export function confirmingPayment(booking: AdminBooking) {
         payment.status === 'partially_refunded',
     ) ?? null
   );
+}
+
+/** Payment staff can refund (confirming stay, or needs_review mismatch). */
+export function refundablePayment(booking: AdminBooking) {
+  return (
+    booking.payments.find(
+      (payment) =>
+        payment.status === 'successful' ||
+        payment.status === 'partially_refunded' ||
+        payment.status === 'needs_review',
+    ) ?? null
+  );
+}
+
+/** Balance left on a payment row (used for needs_review full refunds). */
+export function paymentRefundableBalance(payment: {
+  amount: string;
+  amountRefunded: string;
+}): number {
+  const amount = Number(payment.amount);
+  const refunded = Number(payment.amountRefunded);
+  if (!Number.isFinite(amount) || !Number.isFinite(refunded)) return 0;
+  return Math.max(0, Math.round((amount - refunded) * 100) / 100);
 }
 
 export function timelineTitle(event: string): string {

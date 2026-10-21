@@ -10,6 +10,7 @@ import {
   formatRefundReason,
   getBookingStatusDisplay,
   getPaymentStatusDisplay,
+  getRefundStatusDisplay,
   refundBreakdownLabel,
   refundProgressLabel,
   stayRefundableBalance,
@@ -82,6 +83,17 @@ describe('booking-display', () => {
       expect(getPaymentStatusDisplay('partially_refunded')).toEqual({
         label: 'Partly refunded',
         tone: 'info',
+      });
+    });
+
+    it('labels needs_review and pending refunds checking with the provider', () => {
+      expect(getPaymentStatusDisplay('needs_review')).toEqual({
+        label: 'Needs review',
+        tone: 'warn',
+      });
+      expect(getRefundStatusDisplay('pending', true)).toEqual({
+        label: 'Checking with provider',
+        tone: 'warn',
       });
     });
 

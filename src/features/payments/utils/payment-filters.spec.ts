@@ -21,6 +21,9 @@ describe('toListPaymentsParams', () => {
       toListPaymentsParams({ ...DEFAULT_PAYMENT_FILTERS, tab: 'pending' }),
     ).toMatchObject({ status: 'initialized' });
     expect(
+      toListPaymentsParams({ ...DEFAULT_PAYMENT_FILTERS, tab: 'needs_review' }),
+    ).toMatchObject({ status: 'needs_review' });
+    expect(
       toListPaymentsParams({ ...DEFAULT_PAYMENT_FILTERS, tab: 'refunds' }),
     ).toMatchObject({ status: 'refunded' });
   });

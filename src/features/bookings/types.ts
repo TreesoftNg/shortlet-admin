@@ -21,6 +21,7 @@ export type PaymentStatus =
   | 'successful'
   | 'failed'
   | 'abandoned'
+  | 'needs_review'
   | 'partially_refunded'
   | 'refunded';
 
@@ -110,6 +111,7 @@ export type PaymentView = {
   paymentMethod: string | null;
   providerFee: string | null;
   amountRefunded: string;
+  amountReceived: string | null;
   paidAt: string | null;
   failureReason: string | null;
   createdAt: string;
@@ -126,6 +128,7 @@ export type RefundView = {
   note: string | null;
   status: RefundStatus;
   failureReason: string | null;
+  awaitingProvider: boolean;
   requestedBy: { id: string; name: string } | null;
   processedAt: string | null;
   createdAt: string;

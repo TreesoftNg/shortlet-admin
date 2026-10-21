@@ -29,7 +29,6 @@ import {
   canCancelBooking,
   canCheckInBooking,
   canReleaseDeposit,
-  confirmingPayment,
   depositRefundedLabel,
   formatCancelledBy,
   formatDateTimeLabel,
@@ -43,6 +42,8 @@ import {
   getPaymentStatusDisplay,
   getRefundStatusDisplay,
   guestFullName,
+  paymentRefundableBalance,
+  refundablePayment,
   refundBreakdownLabel,
   refundProgressLabel,
   stayRefundableBalance,
@@ -161,8 +162,12 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
   const checkInEnabled = canUpdate && canCheckInBooking(booking);
   const cancelEnabled = canCancel && canCancelBooking(booking);
   const depositEnabled = canRefund && canReleaseDeposit(booking);
-  const refundBalance = stayRefundableBalance(booking);
-  const paidPayment = confirmingPayment(booking);
+  const paidPayment = refundablePayment(booking);
+  const refundBalance = paidPayment
+    ? paidPayment.status === 'needs_review'
+      ? paymentRefundableBalance(paidPayment)
+      : stayRefundableBalance(booking)
+    : 0;
   const refundEnabled = canRefund && Boolean(paidPayment) && refundBalance > 0;
   const actionPending =
     checkInMutation.isPending ||
@@ -782,6 +787,12 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                         ? ` · ${payment.providerTransactionId}`
                         : ''}
                     </Text>
+                    {payment.status === 'needs_review' &&
+                    payment.amountReceived ? (
+                      <Text fontSize="13px" color="ink.500" fontWeight={600} mt="2px">
+                        Received {formatMoney(payment.amountReceived, payment.currency)}
+                      </Text>
+                    ) : null}
                     {refundProgress ? (
                       <Text fontSize="13px" color="ink.500" fontWeight={600} mt="2px">
                         {refundProgress}
@@ -818,7 +829,10 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
           ) : (
             <VStack align="stretch" spacing="10px">
               {booking.refunds.map((refund) => {
-                const refundStatus = getRefundStatusDisplay(refund.status);
+                const refundStatus = getRefundStatusDisplay(
+                  refund.status,
+                  refund.awaitingProvider,
+                );
                 return (
                   <Box
                     key={refund.id}

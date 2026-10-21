@@ -107,9 +107,12 @@ export function PaymentDetailDrawer({
     0,
     Math.round((amount - refunded) * 100) / 100,
   );
-  // Stay refunds are capped at stay remaining (deposit is released separately).
+  // Stay refunds are capped at stay remaining; needs_review refunds the charge.
   const stayLeft = booking ? stayRefundableBalance(booking) : paymentLeft;
-  const refundable = Math.min(paymentLeft, stayLeft);
+  const refundable =
+    payment.status === 'needs_review'
+      ? paymentLeft
+      : Math.min(paymentLeft, stayLeft);
   const depositHeldBack = Math.max(
     0,
     Math.round((paymentLeft - refundable) * 100) / 100,
@@ -118,7 +121,8 @@ export function PaymentDetailDrawer({
     canRefund &&
     refundable > 0 &&
     (payment.status === 'successful' ||
-      payment.status === 'partially_refunded');
+      payment.status === 'partially_refunded' ||
+      payment.status === 'needs_review');
 
   const providerLabel = formatProviderLabel(payment.provider);
 
@@ -367,7 +371,10 @@ export function PaymentDetailDrawer({
         ) : (
           <VStack align="stretch" spacing="10px">
             {payment.refunds.map((refund) => {
-              const refundStatus = getRefundStatusDisplay(refund.status);
+              const refundStatus = getRefundStatusDisplay(
+                refund.status,
+                refund.awaitingProvider,
+              );
               return (
                 <Box
                   key={refund.id}
