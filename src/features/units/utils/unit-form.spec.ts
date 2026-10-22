@@ -5,17 +5,44 @@ import {
   formatNights,
   formatUnitStayLength,
   formatUnitSubtitle,
+  parseNumberInput,
   unitToFormValues,
   validateUnitForm,
 } from './unit-form';
 import type { Unit } from '@/shared/types/hospitable';
 
 describe('unit-form utils', () => {
-  it('requires property, code, and name', () => {
+  it('requires property, code, name, layout and base rate', () => {
     const errors = validateUnitForm(createEmptyUnitForm());
     expect(errors.property_id).toBeTruthy();
     expect(errors.code).toBeTruthy();
     expect(errors.name).toBeTruthy();
+    expect(errors.capacity).toBeTruthy();
+    expect(errors.bedrooms).toBeTruthy();
+    expect(errors.beds).toBeTruthy();
+    expect(errors.bathrooms).toBeTruthy();
+    expect(errors.base_rate).toBeTruthy();
+  });
+
+  it('rejects zero capacity and zero base rate', () => {
+    const errors = validateUnitForm({
+      ...createEmptyUnitForm('1'),
+      code: 'A',
+      name: 'Unit A',
+      capacity: 0,
+      bedrooms: 1,
+      beds: 1,
+      bathrooms: 1,
+      base_rate: 0,
+    });
+    expect(errors.capacity).toBe('Guest capacity must be at least 1');
+    expect(errors.base_rate).toBe('Base nightly rate must be greater than 0');
+  });
+
+  it('parses number inputs without gluing a leading zero', () => {
+    expect(parseNumberInput('')).toBe('');
+    expect(parseNumberInput('011111')).toBe(11111);
+    expect(parseNumberInput('2.5')).toBe(2.5);
   });
 
   it('builds unit payload with facility ids', () => {
@@ -83,6 +110,11 @@ describe('unit stay lengths', () => {
     ...createEmptyUnitForm('1'),
     code: 'A',
     name: 'Unit A',
+    capacity: 2,
+    bedrooms: 1,
+    beds: 1,
+    bathrooms: 1,
+    base_rate: 90000,
   };
 
   it('starts empty, following the business default', () => {

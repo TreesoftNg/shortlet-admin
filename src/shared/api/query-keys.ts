@@ -54,6 +54,7 @@ export const queryKeys = {
   facilities: {
     all: ['facilities'] as const,
     list: () => ['facilities', 'list'] as const,
+    catalog: () => ['facilities', 'catalog'] as const,
   },
   customers: {
     all: ['customers'] as const,

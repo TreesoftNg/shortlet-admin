@@ -5,7 +5,12 @@ import { useState } from 'react';
 import { LuLink } from 'react-icons/lu';
 import { useMe } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/utils/auth-helpers';
-import { EmptyState, ErrorState, PageSkeleton } from '@/shared/components/ui';
+import {
+  ConfirmModal,
+  EmptyState,
+  ErrorState,
+  PageSkeleton,
+} from '@/shared/components/ui';
 import { ApiClientError } from '@/shared/api/types';
 import { useAddVideoLink, useDeleteMedia, useReorderMedia, useUpdateMedia } from '../hooks/use-unit-media-mutations';
 import { useUnitMedia } from '../hooks/use-unit-media';
@@ -39,6 +44,7 @@ export function UnitGalleryTab({ unitId }: UnitGalleryTabProps) {
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [editing, setEditing] = useState<UnitMedia | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<UnitMedia | null>(null);
 
   const photos = items.filter((item) => item.kind === 'photo').length;
   const videos = items.filter((item) => item.kind !== 'photo').length;
@@ -118,10 +124,7 @@ export function UnitGalleryTab({ unitId }: UnitGalleryTabProps) {
               .catch((err) => showError('Could not set cover', err));
           }}
           onEdit={setEditing}
-          onDelete={(item) => {
-            if (!window.confirm('Remove this item from the gallery?')) return;
-            void remove.mutateAsync(item.id).catch((err) => showError('Could not delete', err));
-          }}
+          onDelete={setPendingDelete}
         />
       )}
 
@@ -147,6 +150,23 @@ export function UnitGalleryTab({ unitId }: UnitGalleryTabProps) {
             showError('Could not update media', err);
           }
         }}
+      />
+      <ConfirmModal
+        isOpen={Boolean(pendingDelete)}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={async () => {
+          if (!pendingDelete) return;
+          try {
+            await remove.mutateAsync(pendingDelete.id);
+            setPendingDelete(null);
+          } catch (err) {
+            showError('Could not delete', err);
+          }
+        }}
+        title="Remove from gallery?"
+        description="This media item will be removed from the unit gallery."
+        confirmLabel="Delete"
+        isLoading={remove.isPending}
       />
       <AddVideoLinkModal
         isOpen={linkOpen}

@@ -289,7 +289,8 @@ describe('ReportsPage', () => {
     api.fetchReports.mockResolvedValue(reportsData({ period: '12m' }));
     await userEvent.click(screen.getByRole('radio', { name: '12M' }));
     await waitFor(() => expect(api.fetchReports).toHaveBeenLastCalledWith('12m'));
-    expect(await screen.findAllByText('vs previous 12 months')).toHaveLength(4);
+    // Bookings has no prior value, so that card shows “No earlier data” instead.
+    expect(await screen.findAllByText('vs previous 12 months')).toHaveLength(3);
   });
 
   it('tells staff without reports access instead of loading', async () => {

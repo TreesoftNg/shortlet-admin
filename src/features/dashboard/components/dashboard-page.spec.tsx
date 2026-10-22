@@ -59,7 +59,8 @@ describe('DashboardPage', () => {
     expect(screen.getByText('+350%')).toBeInTheDocument();
     expect(screen.getByText('−8%')).toBeInTheDocument();
     expect(screen.getByText('No earlier data')).toBeInTheDocument();
-    expect(screen.getAllByText('vs previous 30 days')).toHaveLength(4);
+    // Bookings has no prior value, so only three cards show the period caption.
+    expect(screen.getAllByText('vs previous 30 days')).toHaveLength(3);
     expect(screen.getAllByText('27.6%')).toHaveLength(1); // overall occupancy is on the KPI card only
     expect(screen.getByText('₦81,818')).toBeInTheDocument();
   });

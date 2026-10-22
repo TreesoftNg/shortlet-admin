@@ -11,6 +11,7 @@ import { periodTitle, rangeLabel } from '../utils/report-format';
 import { showProperty } from '../utils/unit-ranking';
 import { DashboardTopbar } from './dashboard-topbar';
 import { KpiGrid } from './kpi-grid';
+import { MetricsBasisNote } from './metrics-basis-note';
 import { OtherCurrenciesNote } from './other-currencies-note';
 import { PeriodSegment } from './period-segment';
 import { RecentBookingsTable } from './recent-bookings-table';
@@ -62,6 +63,10 @@ export function DashboardPage() {
 
       <Flex direction="column" gap={{ base: '12px', md: '18px' }}>
         <KpiGrid kpis={data.keyPerformanceIndicators} currency={data.currency} period={period} />
+        <MetricsBasisNote
+          bookings={data.keyPerformanceIndicators.bookings.value}
+          revenue={data.keyPerformanceIndicators.revenue.value}
+        />
         <OtherCurrenciesNote entries={data.otherCurrencies} currency={data.currency} />
 
         <Grid templateColumns={{ base: '1fr', xl: '1.8fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="stretch">

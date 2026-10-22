@@ -11,10 +11,11 @@ export type UnitFormValues = {
   status: Unit['status'];
   bookable: boolean;
   floor: string;
-  capacity: number;
-  bedrooms: number;
-  beds: number;
-  bathrooms: number;
+  /** Empty while typing; required (≥ 1) on save. */
+  capacity: number | '';
+  bedrooms: number | '';
+  beds: number | '';
+  bathrooms: number | '';
   base_rate: number | '';
   cleaning_fee: number | '';
   weekly_discount_percent: number | '';
@@ -27,6 +28,16 @@ export type UnitFormValues = {
   notes: string;
   picture: string | null;
 };
+
+/** Keep an empty field while editing; otherwise parse the typed number (no leading-zero glue). */
+export function parseNumberInput(raw: string): number | '' {
+  const trimmed = raw.trim();
+  if (trimmed === '') return '';
+  const value = Number(trimmed);
+  return Number.isFinite(value) ? value : '';
+}
+
+export const MAX_GUESTS_LIMIT = 50;
 
 export type UnitFormErrors = Partial<Record<keyof UnitFormValues, string>>;
 
@@ -52,10 +63,10 @@ export function createEmptyUnitForm(
     status: 'active',
     bookable: true,
     floor: '',
-    capacity: 2,
-    bedrooms: 1,
-    beds: 1,
-    bathrooms: 1,
+    capacity: '',
+    bedrooms: '',
+    beds: '',
+    bathrooms: '',
     base_rate: '',
     cleaning_fee: '',
     weekly_discount_percent: '',
@@ -102,23 +113,32 @@ export function validateUnitForm(values: UnitFormValues): UnitFormErrors {
   }
   if (!values.code.trim()) errors.code = 'Unit code is required';
   if (!values.name.trim()) errors.name = 'Unit name is required';
-  if (!Number.isFinite(values.capacity) || values.capacity < 1) {
+  if (values.capacity === '' || !Number.isFinite(Number(values.capacity))) {
+    errors.capacity = 'Max guests is required';
+  } else if (Number(values.capacity) < 1) {
     errors.capacity = 'Guest capacity must be at least 1';
+  } else if (Number(values.capacity) > MAX_GUESTS_LIMIT) {
+    errors.capacity = `Guest capacity cannot exceed ${MAX_GUESTS_LIMIT}`;
   }
-  if (!Number.isFinite(values.bedrooms) || values.bedrooms < 0) {
+  if (values.bedrooms === '' || !Number.isFinite(Number(values.bedrooms))) {
+    errors.bedrooms = 'Bedrooms is required';
+  } else if (Number(values.bedrooms) < 0) {
     errors.bedrooms = 'Bedrooms cannot be negative';
   }
-  if (!Number.isFinite(values.beds) || values.beds < 0) {
+  if (values.beds === '' || !Number.isFinite(Number(values.beds))) {
+    errors.beds = 'Beds is required';
+  } else if (Number(values.beds) < 0) {
     errors.beds = 'Beds cannot be negative';
   }
-  if (!Number.isFinite(values.bathrooms) || values.bathrooms < 0) {
+  if (values.bathrooms === '' || !Number.isFinite(Number(values.bathrooms))) {
+    errors.bathrooms = 'Bathrooms is required';
+  } else if (Number(values.bathrooms) < 0) {
     errors.bathrooms = 'Bathrooms cannot be negative';
   }
-  if (
-    values.base_rate !== '' &&
-    (!Number.isFinite(Number(values.base_rate)) || Number(values.base_rate) < 0)
-  ) {
-    errors.base_rate = 'Base rate must be a valid amount';
+  if (values.base_rate === '' || !Number.isFinite(Number(values.base_rate))) {
+    errors.base_rate = 'Base nightly rate is required';
+  } else if (Number(values.base_rate) <= 0) {
+    errors.base_rate = 'Base nightly rate must be greater than 0';
   }
   if (
     values.cleaning_fee !== '' &&
@@ -229,10 +249,10 @@ export function buildUnitFromForm(
     status: values.status,
     bookable: values.bookable,
     floor: values.floor.trim() || null,
-    capacity: values.capacity,
-    bedrooms: values.bedrooms,
-    beds: values.beds,
-    bathrooms: values.bathrooms,
+    capacity: Number(values.capacity),
+    bedrooms: Number(values.bedrooms),
+    beds: Number(values.beds),
+    bathrooms: Number(values.bathrooms),
     base_rate: values.base_rate === '' ? null : Number(values.base_rate),
     cleaning_fee:
       values.cleaning_fee === '' ? null : Number(values.cleaning_fee),

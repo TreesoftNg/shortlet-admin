@@ -6,6 +6,7 @@ import { LuMenu } from 'react-icons/lu';
 import { useMe } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/utils/auth-helpers';
 import { KpiGrid } from '@/features/dashboard/components/kpi-grid';
+import { MetricsBasisNote } from '@/features/dashboard/components/metrics-basis-note';
 import { OtherCurrenciesNote } from '@/features/dashboard/components/other-currencies-note';
 import { PeriodSegment } from '@/features/dashboard/components/period-segment';
 import { RevenueOverview } from '@/features/dashboard/components/revenue-overview';
@@ -100,6 +101,10 @@ export function ReportsPage() {
 
       <Flex direction="column" gap={{ base: '12px', md: '18px' }}>
         <KpiGrid kpis={data.keyPerformanceIndicators} currency={data.currency} period={period} />
+        <MetricsBasisNote
+          bookings={data.keyPerformanceIndicators.bookings.value}
+          revenue={data.keyPerformanceIndicators.revenue.value}
+        />
         <OtherCurrenciesNote entries={data.otherCurrencies} currency={data.currency} />
 
         <Grid templateColumns={{ base: '1fr', xl: '1.7fr 1fr' }} gap={{ base: '12px', md: '18px' }} alignItems="stretch">

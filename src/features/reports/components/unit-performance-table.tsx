@@ -171,7 +171,7 @@ export function UnitPerformanceTable({
     <Panel id={SECTION_ID} minW={0}>
       <PanelHeader
         title="Unit performance"
-        description="Revenue, bookings and occupancy by unit for this period"
+        description="Revenue, bookings and occupancy by unit. Occupancy is open nights in the period, not always the full calendar range."
         actions={
           <InputGroup w={{ base: '100%', md: '260px' }}>
             <InputLeftElement pointerEvents="none" h="40px" color="ink.300">
@@ -201,7 +201,7 @@ export function UnitPerformanceTable({
         data={pageRows}
         getRowId={(row) => row.unitId}
         label="Unit performance"
-        minWidth="720px"
+        minWidth="960px"
         sort={sort}
         onSortChange={(next) => {
           setSort(next);

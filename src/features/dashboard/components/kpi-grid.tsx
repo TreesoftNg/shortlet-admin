@@ -41,17 +41,23 @@ export function KpiGrid({
 
   return (
     <Grid templateColumns={{ base: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' }} gap={{ base: '12px', md: '18px' }}>
-      {cards.map((card) => (
-        <KpiCard
-          key={card.key}
-          label={card.label}
-          value={card.value}
-          icon={card.icon}
-          change={formatChange(card.kpi.changePercent)}
-          trend={trendOf(card.kpi)}
-          caption={caption}
-        />
-      ))}
+      {cards.map((card) => {
+        const change = formatChange(card.kpi.changePercent);
+        // When there is no previous value, skip the period caption so it does not
+        // look like a flat 0% comparison.
+        const showCaption = change !== null;
+        return (
+          <KpiCard
+            key={card.key}
+            label={card.label}
+            value={card.value}
+            icon={card.icon}
+            change={change}
+            trend={trendOf(card.kpi)}
+            caption={showCaption ? caption : undefined}
+          />
+        );
+      })}
     </Grid>
   );
 }
