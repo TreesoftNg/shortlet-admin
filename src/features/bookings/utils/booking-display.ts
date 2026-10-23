@@ -290,15 +290,23 @@ export function refundablePayment(booking: AdminBooking) {
   );
 }
 
-/** Balance left on a payment row (used for needs_review full refunds). */
+/**
+ * Balance left on a payment row. For needs_review, use amountReceived
+ * (what the provider charged) when present so overpay can be returned.
+ */
 export function paymentRefundableBalance(payment: {
   amount: string;
   amountRefunded: string;
+  amountReceived?: string | null;
+  status?: string;
 }): number {
-  const amount = Number(payment.amount);
+  const charged =
+    payment.status === 'needs_review' && payment.amountReceived
+      ? Number(payment.amountReceived)
+      : Number(payment.amount);
   const refunded = Number(payment.amountRefunded);
-  if (!Number.isFinite(amount) || !Number.isFinite(refunded)) return 0;
-  return Math.max(0, Math.round((amount - refunded) * 100) / 100);
+  if (!Number.isFinite(charged) || !Number.isFinite(refunded)) return 0;
+  return Math.max(0, Math.round((charged - refunded) * 100) / 100);
 }
 
 export function timelineTitle(event: string): string {

@@ -11,6 +11,7 @@ import {
   getBookingStatusDisplay,
   getPaymentStatusDisplay,
   getRefundStatusDisplay,
+  paymentRefundableBalance,
   refundBreakdownLabel,
   refundProgressLabel,
   stayRefundableBalance,
@@ -95,6 +96,25 @@ describe('booking-display', () => {
         label: 'Checking with provider',
         tone: 'warn',
       });
+    });
+
+    it('uses amountReceived for needs_review refundable balance', () => {
+      expect(
+        paymentRefundableBalance({
+          amount: '222000.00',
+          amountReceived: '300000.00',
+          amountRefunded: '0.00',
+          status: 'needs_review',
+        }),
+      ).toBe(300000);
+      expect(
+        paymentRefundableBalance({
+          amount: '222000.00',
+          amountReceived: null,
+          amountRefunded: '0.00',
+          status: 'successful',
+        }),
+      ).toBe(222000);
     });
 
     it('says how much of a payment was refunded', () => {

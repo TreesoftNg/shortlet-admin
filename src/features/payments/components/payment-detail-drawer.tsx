@@ -103,9 +103,13 @@ export function PaymentDetailDrawer({
   const status = getPaymentStatusDisplay(payment.status);
   const amount = Number(payment.amount);
   const refunded = Number(payment.amountRefunded);
+  const charged =
+    payment.status === 'needs_review' && payment.amountReceived
+      ? Number(payment.amountReceived)
+      : amount;
   const paymentLeft = Math.max(
     0,
-    Math.round((amount - refunded) * 100) / 100,
+    Math.round((charged - refunded) * 100) / 100,
   );
   // Stay refunds are capped at stay remaining; needs_review refunds the charge.
   const stayLeft = booking ? stayRefundableBalance(booking) : paymentLeft;
