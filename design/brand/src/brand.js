@@ -34,7 +34,7 @@ function wordmark({ color = C.teal, accent = C.gold, sub = null, size = 48, font
   const span = t => `<span style="font-family:${font},sans-serif;font-weight:${weight};font-size:${size}px;line-height:${cap}px;height:${cap}px;letter-spacing:${track}px;color:${color};display:block">${t}</span>`;
   const id = 'w' + Math.random().toString(36).slice(2, 8);
   const tag = tagline
-    ? `<div data-fit="${id}" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:${size * 0.26}px;color:${sub || color};white-space:nowrap;width:max-content;align-self:flex-start;line-height:1;margin-top:${size * 0.3}px">LUXURY SHORTLETS &amp; SUITES</div>`
+    ? `<div data-fit="${id}" style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:${size * 0.26}px;color:${sub || color};white-space:nowrap;width:max-content;align-self:flex-start;line-height:1;margin-top:${size * 0.3}px">APARTMENTS &amp; SUITES</div>`
     : '';
   return `<div style="display:inline-flex;flex-direction:column">
     <div id="${id}" style="display:flex;align-items:flex-end;gap:${track}px">${span('SUNM')}${glyphA({ color, accent, height: cap })}${span('DE')}</div>${tag}
