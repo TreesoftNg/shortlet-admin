@@ -18,6 +18,7 @@ export type StaffListItem = {
   avatarUrl: string | null;
   lastActiveAt: string | null;
   invitedAt: string | null;
+  inviteExpiresAt?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -41,4 +42,16 @@ export type SentStaffInvite = {
   email: string;
   role: ApiStaffRole | string;
   expiresAt: string;
+};
+
+export type StaffRoleDefinition = {
+  id: string;
+  code: ApiStaffRole;
+  name: string;
+  permissions: { code: string; name: string }[];
+};
+export type UpdateStaffPayload = {
+  roleCode?: ApiStaffRole;
+  firstName?: string;
+  lastName?: string;
 };

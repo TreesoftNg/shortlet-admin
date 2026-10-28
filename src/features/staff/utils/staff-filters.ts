@@ -127,46 +127,6 @@ export function formatStaffDateTime(iso: string | null): string {
   });
 }
 
-export function formatPermissionCode(code: string): string {
-  return code
-    .split(/[._]/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-export function getRolePermissions(role: StaffRole): string[] {
-  switch (role) {
-    case 'owner':
-      return [
-        'Full account access',
-        'Invite staff (owner only)',
-        'All property, unit, and finance actions',
-      ];
-    case 'admin':
-      return [
-        'Manage properties, units, and bookings',
-        'View reports and payments',
-        'Moderate reviews and messages',
-      ];
-    case 'manager':
-      return [
-        'Manage availability and units',
-        'Handle bookings and guest messages',
-        'View reports',
-      ];
-    case 'staff':
-      return [
-        'Day-to-day operations',
-        'View bookings and customers',
-        'Respond to guest messages',
-      ];
-    default:
-      return [];
-  }
-}
-
-/** Docs: only an owner can call POST /cc/staff-invites. */
 export function canInviteStaff(profile: AdminProfile | undefined): boolean {
-  return profile?.role.code === 'owner';
+  return profile?.permissions.includes('staff.manage') ?? false;
 }

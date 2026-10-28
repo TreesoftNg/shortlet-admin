@@ -140,7 +140,9 @@ export function StaffPage() {
   if (isError) {
     return (
       <ErrorState
-        message={error instanceof Error ? error.message : 'Failed to load staff'}
+        message={
+          error instanceof Error ? error.message : 'Failed to load staff'
+        }
         onRetry={() => void refetch()}
       />
     );
@@ -153,8 +155,7 @@ export function StaffPage() {
       <Panel pt="18px" minW={0}>
         {!canInvite ? (
           <Text fontSize="13px" color="ink.300" mb="12px">
-            Only an owner can invite staff. Sign in as an owner to send a
-            password link.
+            You need permission to manage staff to send a password link.
           </Text>
         ) : null}
 

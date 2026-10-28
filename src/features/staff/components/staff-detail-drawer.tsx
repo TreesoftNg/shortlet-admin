@@ -1,24 +1,34 @@
 'use client';
 
+import { useState } from 'react';
+import { useRoles } from '../hooks/use-staff';
+import { RolePermissionsList } from './role-permissions-list';
+import { StaffEditModal } from './staff-edit-modal';
 import {
   Avatar,
   Box,
   Button,
   Flex,
   Heading,
-  List,
-  ListItem,
   Text,
   useToast,
 } from '@chakra-ui/react';
 import type { StaffMember } from '@/shared/types/hospitable';
-import { KeyValueList, StatusBadge } from '@/shared/components/ui';
-import { useInviteStaff } from '../hooks/use-staff-mutations';
 import {
-  formatPermissionCode,
+  ConfirmModal,
+  KeyValueList,
+  StatusBadge,
+} from '@/shared/components/ui';
+import {
+  useInviteStaff,
+  useSuspendMember,
+  useReactivateMember,
+  useRemoveMember,
+  useRevokeInvite,
+} from '../hooks/use-staff-mutations';
+import {
   formatStaffDate,
   formatStaffDateTime,
-  getRolePermissions,
   getStaffRoleLabel,
   getStaffStatusDisplay,
 } from '../utils/staff-filters';
@@ -34,17 +44,38 @@ export function StaffDetailDrawer({
 }: StaffDetailDrawerProps) {
   const toast = useToast();
   const invite = useInviteStaff();
+  const roles = useRoles();
+  const suspend = useSuspendMember();
+  const reactivate = useReactivateMember();
+  const remove = useRemoveMember();
+  const revoke = useRevokeInvite();
+  const [editing, setEditing] = useState(false);
+  const [action, setAction] = useState<
+    'Suspend' | 'Remove' | 'Revoke invite' | null
+  >(null);
+  const busy =
+    suspend.isPending ||
+    reactivate.isPending ||
+    remove.isPending ||
+    revoke.isPending;
+  const run = async (operation: () => Promise<void>) => {
+    try {
+      await operation();
+      setAction(null);
+      toast({ title: 'Team updated', status: 'success' });
+    } catch (err) {
+      toast({
+        title: err instanceof Error ? err.message : 'Could not update team',
+        status: 'error',
+      });
+    }
+  };
 
   if (!member) {
     return null;
   }
 
   const status = getStaffStatusDisplay(member.status);
-  const permissionLabels =
-    member.permissions.length > 0
-      ? member.permissions.map(formatPermissionCode)
-      : getRolePermissions(member.role);
-
   const handleResend = async () => {
     try {
       const sent = await invite.mutateAsync({
@@ -136,22 +167,12 @@ export function StaffDetailDrawer({
         >
           Permissions
         </Text>
-        {permissionLabels.length > 0 ? (
-          <List spacing="8px">
-            {permissionLabels.map((permission) => (
-              <ListItem key={permission} fontSize="14px" color="ink.500">
-                · {permission}
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <Text fontSize="14px" color="ink.300">
-            No permissions listed
-          </Text>
-        )}
+        <RolePermissionsList
+          role={roles.data?.find((role) => role.code === member.role)}
+        />
       </Box>
 
-      {member.status === 'invited' && canInvite ? (
+      {member.status === 'invited' && canInvite && !member.is_you ? (
         <Flex gap="8px" mt="4px" wrap="wrap">
           <Button
             size="sm"
@@ -163,12 +184,81 @@ export function StaffDetailDrawer({
           >
             Resend invite
           </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setAction('Revoke invite')}
+          >
+            Revoke invite
+          </Button>
         </Flex>
       ) : null}
 
+      {canInvite && !member.is_you && member.status !== 'invited' && (
+        <Flex gap="8px" wrap="wrap">
+          {member.status === 'active' && (
+            <>
+              <Button size="sm" onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setAction('Suspend')}
+              >
+                Suspend
+              </Button>
+            </>
+          )}
+          {member.status === 'suspended' && (
+            <Button
+              size="sm"
+              isLoading={reactivate.isPending}
+              onClick={() => void run(() => reactivate.mutateAsync(member.id))}
+            >
+              Reactivate
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setAction('Remove')}
+          >
+            Remove
+          </Button>
+        </Flex>
+      )}
+      {editing && (
+        <StaffEditModal
+          key={member.id}
+          member={member}
+          onClose={() => setEditing(false)}
+        />
+      )}
+      <ConfirmModal
+        isOpen={Boolean(action)}
+        title={`${action ?? ''} ${member.full_name}?`}
+        description={
+          action === 'Revoke invite'
+            ? 'Their invitation link will stop working.'
+            : 'Their current sessions for this business will be signed out.'
+        }
+        confirmLabel={action ?? 'Confirm'}
+        isLoading={busy}
+        onClose={() => setAction(null)}
+        onConfirm={() =>
+          run(() =>
+            action === 'Suspend'
+              ? suspend.mutateAsync(member.id)
+              : action === 'Remove'
+                ? remove.mutateAsync(member.id)
+                : revoke.mutateAsync(member.id),
+          )
+        }
+      />
       {member.status === 'invited' && !canInvite ? (
         <Text fontSize="13px" color="ink.300" mt="8px">
-          Only an owner can resend a password link.
+          You need permission to manage staff to resend a password link.
         </Text>
       ) : null}
     </Box>

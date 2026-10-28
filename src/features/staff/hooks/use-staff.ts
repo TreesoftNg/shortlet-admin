@@ -5,7 +5,7 @@ import { useMe } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/utils/auth-helpers';
 import type { StaffMember } from '@/shared/types/hospitable';
 import { queryKeys } from '@/shared/api/query-keys';
-import { fetchStaff } from '../api/staff-service';
+import { fetchStaff, fetchRoles } from '../api/staff-service';
 import type { StaffListItem } from '../types';
 import { mapStaffListItemToMember } from '../utils/staff-mappers';
 
@@ -24,5 +24,14 @@ export function useStaff(options: UseStaffOptions = {}) {
     enabled,
     select: (rows) =>
       rows.map((row) => mapStaffListItemToMember(row, profile?.user.id)),
+  });
+}
+
+export function useRoles() {
+  const { data: profile } = useMe();
+  return useQuery({
+    queryKey: [...queryKeys.staff.all, 'roles'],
+    queryFn: fetchRoles,
+    enabled: hasPermission(profile, 'staff.read'),
   });
 }

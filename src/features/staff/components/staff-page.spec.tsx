@@ -35,7 +35,10 @@ function listItem(overrides: Partial<StaffListItem> = {}): StaffListItem {
   };
 }
 
-function renderAs(permissions = ['staff.read'], roleCode = 'owner') {
+function renderAs(
+  permissions = ['staff.read', 'staff.manage'],
+  roleCode = 'owner',
+) {
   const queryClient = createTestQueryClient();
   const profile: AdminProfile = {
     user: {
@@ -48,7 +51,10 @@ function renderAs(permissions = ['staff.read'], roleCode = 'owner') {
     role: { code: roleCode, name: roleCode },
     permissions,
   };
-  queryClient.setQueryData(queryKeys.auth.me(), { success: true, data: profile });
+  queryClient.setQueryData(queryKeys.auth.me(), {
+    success: true,
+    data: profile,
+  });
   return { ...renderWithProviders(<StaffPage />, queryClient), queryClient };
 }
 
@@ -66,6 +72,14 @@ beforeEach(() => {
       role: 'manager',
       roleName: 'Manager',
     }),
+  ]);
+  api.fetchRoles.mockResolvedValue([
+    {
+      id: 'staff',
+      code: 'staff',
+      name: 'Staff',
+      permissions: [{ code: 'booking.read', name: 'View bookings' }],
+    },
   ]);
   api.inviteStaff.mockResolvedValue({
     email: 'funmi@example.com',
@@ -107,12 +121,10 @@ describe('StaffPage', () => {
     await userEvent.click(
       await screen.findByRole('button', { name: /Invite member/i }),
     );
+    expect(await screen.findByText('View bookings')).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText(/First name/i), 'Funmi');
     await userEvent.type(screen.getByLabelText(/Last name/i), 'Ade');
-    await userEvent.type(
-      screen.getByLabelText(/Email/i),
-      'funmi@example.com',
-    );
+    await userEvent.type(screen.getByLabelText(/Email/i), 'funmi@example.com');
     await userEvent.click(screen.getByRole('button', { name: /Send invite/i }));
 
     await waitFor(() => {

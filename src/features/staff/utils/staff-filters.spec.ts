@@ -2,7 +2,6 @@ import {
   countStaffTabs,
   DEFAULT_STAFF_FILTERS,
   filterStaff,
-  getRolePermissions,
   getStaffRoleLabel,
   getStaffStatusDisplay,
 } from './staff-filters';
@@ -56,6 +55,5 @@ describe('staff-filters', () => {
       label: 'Active',
       tone: 'ok',
     });
-    expect(getRolePermissions('staff').length).toBeGreaterThan(0);
   });
 });

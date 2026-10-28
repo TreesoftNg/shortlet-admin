@@ -32,7 +32,7 @@ export function mapStaffListItemToMember(
     avatar_url: item.avatarUrl,
     last_active_at: item.lastActiveAt,
     invited_at: item.invitedAt,
-    invite_expires_at: null,
+    invite_expires_at: item.inviteExpiresAt ?? null,
     permissions: [],
     is_you: Boolean(currentUserId && item.userId === currentUserId),
     created_at: item.createdAt,

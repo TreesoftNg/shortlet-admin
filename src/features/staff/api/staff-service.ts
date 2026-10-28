@@ -45,9 +45,40 @@ export async function fetchStaff(
 export async function inviteStaff(
   payload: InviteStaffPayload,
 ): Promise<SentStaffInvite> {
-  const response = await apiClient<SentStaffInvite>(adminPath('/staff-invites'), {
-    method: 'POST',
-    body: payload,
-  });
+  const response = await apiClient<SentStaffInvite>(
+    adminPath('/staff-invites'),
+    {
+      method: 'POST',
+      body: payload,
+    },
+  );
   return response.data;
+}
+
+export async function fetchRoles(): Promise<
+  import('../types').StaffRoleDefinition[]
+> {
+  return (
+    await apiClient<import('../types').StaffRoleDefinition[]>(
+      adminPath('/staff/roles'),
+    )
+  ).data;
+}
+export async function updateMember(
+  id: string,
+  body: import('../types').UpdateStaffPayload,
+) {
+  await apiClient(adminPath(`/staff/${id}`), { method: 'PATCH', body });
+}
+export async function revokeInvite(id: string) {
+  await apiClient(adminPath(`/staff-invites/${id}`), { method: 'DELETE' });
+}
+export async function suspendMember(id: string) {
+  await apiClient(adminPath(`/staff/${id}/suspend`), { method: 'POST' });
+}
+export async function reactivateMember(id: string) {
+  await apiClient(adminPath(`/staff/${id}/reactivate`), { method: 'POST' });
+}
+export async function removeMember(id: string) {
+  await apiClient(adminPath(`/staff/${id}`), { method: 'DELETE' });
 }

@@ -10,6 +10,8 @@ import {
   Select,
   Text,
 } from '@chakra-ui/react';
+import { useRoles } from '../hooks/use-staff';
+import { RolePermissionsList } from './role-permissions-list';
 import { useState } from 'react';
 import type { StaffMember } from '@/shared/types/hospitable';
 import { AppModal } from '@/shared/components/ui';
@@ -41,6 +43,7 @@ export function StaffInviteModal({
   onInvited,
 }: StaffInviteModalProps) {
   const invite = useInviteStaff();
+  const roles = useRoles();
   const [values, setValues] = useState<StaffInviteFormValues>(
     createEmptyStaffInviteForm,
   );
@@ -107,8 +110,8 @@ export function StaffInviteModal({
       }
     >
       <Text fontSize="14px" color="ink.400" mb="16px">
-        The API emails a password link. Only an owner can invite. Sending again
-        to the same email replaces the previous link.
+        We email a password link. Sending again to the same email replaces the
+        previous link.
       </Text>
 
       <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="14px">
@@ -150,7 +153,10 @@ export function StaffInviteModal({
           <Select
             value={values.role}
             onChange={(event) =>
-              updateField('role', event.target.value as StaffInviteFormValues['role'])
+              updateField(
+                'role',
+                event.target.value as StaffInviteFormValues['role'],
+              )
             }
             {...inputProps}
           >
@@ -163,6 +169,9 @@ export function StaffInviteModal({
         </FormControl>
       </Grid>
 
+      <RolePermissionsList
+        role={roles.data?.find((role) => role.code === values.role)}
+      />
       {submitError ? (
         <Text color="red.500" fontSize="13px" mt="12px">
           {submitError}
