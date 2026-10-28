@@ -15,9 +15,18 @@ export type StayPrice = {
   checkIn: string;
   checkOut: string;
   nights: number;
-  nightly: Array<{ date: string; rate: string; ruleId: string | null; ruleName: string | null }>;
+  nightly: Array<{
+    date: string;
+    rate: string;
+    ruleId: string | null;
+    ruleName: string | null;
+  }>;
   nightsSubtotal: string;
-  discount: { kind: 'weekly' | 'monthly'; percent: string; amount: string } | null;
+  discount: {
+    kind: 'weekly' | 'monthly';
+    percent: string;
+    amount: string;
+  } | null;
   staffDiscount?: { amount: string; reason: string } | null;
   cleaningFee: string;
   serviceFee: { percent: string; amount: string };
@@ -46,7 +55,14 @@ export type AdminPayment = {
   providerTransactionId: string | null;
   amount: string;
   currency: string;
-  status: 'initialized' | 'successful' | 'failed' | 'abandoned' | 'needs_review' | 'partially_refunded' | 'refunded';
+  status:
+    | 'initialized'
+    | 'successful'
+    | 'failed'
+    | 'abandoned'
+    | 'needs_review'
+    | 'partially_refunded'
+    | 'refunded';
   paymentMethod: string | null;
   offlineReference: string | null;
   checkoutUrl: string | null;
@@ -56,11 +72,17 @@ export type AdminPayment = {
 };
 
 export type AdminBooking = {
+  hospitableCalendarUrl?: string | null;
   id: string;
   reference: string;
   status: BookingStatus;
   source: 'website' | 'staff';
-  unit: { id: string; name: string; publicName: string | null; propertyName: string | null };
+  unit: {
+    id: string;
+    name: string;
+    publicName: string | null;
+    propertyName: string | null;
+  };
   checkIn: string;
   checkOut: string;
   checkInTime: string;
@@ -72,7 +94,13 @@ export type AdminBooking = {
   currency: string;
   price: StayPrice;
   stayTotal: string;
-  deposit: { amount: string; nights: number; status: string; refunded: string; dueAt: string | null };
+  deposit: {
+    amount: string;
+    nights: number;
+    status: string;
+    refunded: string;
+    dueAt: string | null;
+  };
   totalAmount: string;
   amountPaid: string;
   amountRefunded: string;
@@ -102,7 +130,12 @@ export type CreateStaffBookingInput = {
   specialRequests?: string | null;
   discount?: { amount: number; reason: string };
   payment:
-    | { mode: 'offline'; method: OfflinePaymentMethod; reference?: string | null; receivedAt?: string }
+    | {
+        mode: 'offline';
+        method: OfflinePaymentMethod;
+        reference?: string | null;
+        receivedAt?: string;
+      }
     | { mode: 'link' };
 };
 

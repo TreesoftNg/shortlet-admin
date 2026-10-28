@@ -132,6 +132,7 @@ export type RefundView = {
 export type BookingTimelineEntry = { event: string; at: string };
 
 export type BookingListItem = {
+  hospitableCalendarUrl?: string | null;
   id: string;
   reference: string;
   status: BookingStatus;
@@ -155,6 +156,7 @@ export type BookingListItem = {
 
 export type AdminBooking = {
   idDocument?: { type: string; contentType: string; uploadedAt: string } | null;
+  hospitableCalendarUrl?: string | null;
   id: string;
   reference: string;
   status: BookingStatus;

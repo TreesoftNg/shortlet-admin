@@ -1,5 +1,6 @@
 'use client';
 
+import { HospitableButton } from '@/shared/components/ui/hospitable-button';
 
 import {
   Box,
@@ -567,6 +568,10 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
             Refund stay
           </Button>
         ) : null}
+        <HospitableButton
+          url={booking.hospitableCalendarUrl}
+          status={booking.status}
+        />
       </Flex>
       <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px">
         <Box minW={0}>

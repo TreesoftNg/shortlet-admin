@@ -8,6 +8,7 @@ describe('getUnitColumns', () => {
       'capacity',
       'rate',
       'status',
+      'actions',
       'created',
       'updated',
     ]);

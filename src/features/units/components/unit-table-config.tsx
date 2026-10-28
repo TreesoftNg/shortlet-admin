@@ -1,5 +1,7 @@
 'use client';
 
+import { HospitableButton } from '@/shared/components/ui/hospitable-button';
+
 import { Flex, Text } from '@chakra-ui/react';
 import type { ReactNode } from 'react';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
@@ -66,6 +68,11 @@ export function getUnitColumns(): DataTableColumn<UnitListItem>[] {
           </Flex>
         );
       },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: (row) => <HospitableButton url={row.hospitable_calendar_url} />,
     },
     ...timestampColumns<UnitListItem>(
       (row) => row.created_at,

@@ -1,5 +1,7 @@
 'use client';
 
+import { HospitableButton } from '@/shared/components/ui/hospitable-button';
+
 import {
   Box,
   Button,
@@ -174,7 +176,11 @@ export function UnitDetailDrawer({
         <DetailCard label="Floor" value={unit.floor ?? '—'} />
         <DetailCard
           label="Base rate"
-          value={unit.base_rate === null ? 'Inherits property' : money(unit.base_rate)}
+          value={
+            unit.base_rate === null
+              ? 'Inherits property'
+              : money(unit.base_rate)
+          }
         />
         <DetailCard label="Cleaning fee" value={money(unit.cleaning_fee)} />
         <DetailCard
@@ -195,11 +201,17 @@ export function UnitDetailDrawer({
         />
         <DetailCard
           label="Minimum nights"
-          value={formatUnitStayLength(unit.min_nights, bookingSettings?.minNights)}
+          value={formatUnitStayLength(
+            unit.min_nights,
+            bookingSettings?.minNights,
+          )}
         />
         <DetailCard
           label="Maximum nights"
-          value={formatUnitStayLength(unit.max_nights, bookingSettings?.maxNights)}
+          value={formatUnitStayLength(
+            unit.max_nights,
+            bookingSettings?.maxNights,
+          )}
         />
         <DetailCard
           label="Updated"
@@ -230,7 +242,9 @@ export function UnitDetailDrawer({
           <Wrap spacing="8px">
             {unit.property_amenities.map((amenity) => (
               <WrapItem key={amenity}>
-                <StatusBadge tone="mute">{amenity.replace(/_/g, ' ')}</StatusBadge>
+                <StatusBadge tone="mute">
+                  {amenity.replace(/_/g, ' ')}
+                </StatusBadge>
               </WrapItem>
             ))}
           </Wrap>
@@ -257,7 +271,13 @@ export function UnitDetailDrawer({
         >
           Edit unit
         </Button>
-        <Button variant="soft" minW="140px" onClick={onAvailability} isDisabled={!onAvailability}>
+        <HospitableButton url={unit.hospitable_calendar_url} />
+        <Button
+          variant="soft"
+          minW="140px"
+          onClick={onAvailability}
+          isDisabled={!onAvailability}
+        >
           Availability
         </Button>
       </Flex>
@@ -283,7 +303,12 @@ function SectionLabel({ children }: { children: string }) {
 function DetailCard({ label, value }: { label: string; value: string }) {
   return (
     <Box bg="bg.400" borderRadius="14px" px="16px" py="14px">
-      <Text fontSize="11px" color="ink.300" fontWeight={700} textTransform="uppercase">
+      <Text
+        fontSize="11px"
+        color="ink.300"
+        fontWeight={700}
+        textTransform="uppercase"
+      >
         {label}
       </Text>
       <Text fontSize="16px" fontWeight={700} mt="4px">
@@ -296,7 +321,12 @@ function DetailCard({ label, value }: { label: string; value: string }) {
 function StatChip({ label, value }: { label: string; value: string }) {
   return (
     <Box bg="bg.400" borderRadius="14px" px="16px" py="14px">
-      <Text fontSize="11px" color="ink.300" fontWeight={700} textTransform="uppercase">
+      <Text
+        fontSize="11px"
+        color="ink.300"
+        fontWeight={700}
+        textTransform="uppercase"
+      >
         {label}
       </Text>
       <Text fontSize="22px" fontWeight={800} mt="4px">

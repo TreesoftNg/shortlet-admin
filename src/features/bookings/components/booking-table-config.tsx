@@ -1,5 +1,7 @@
 'use client';
 
+import { HospitableButton } from '@/shared/components/ui/hospitable-button';
+
 import { Box, Text } from '@chakra-ui/react';
 import type { DataTableColumn } from '@/shared/components/ui/data-table';
 import { StatusBadge } from '@/shared/components/ui/status-badge';
@@ -66,6 +68,13 @@ export function getBookingListColumns(): DataTableColumn<BookingListItem>[] {
         const display = getDepositStatusDisplay(row.depositStatus);
         return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
       },
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: (row) => (
+        <HospitableButton url={row.hospitableCalendarUrl} status={row.status} />
+      ),
     },
     ...timestampColumns<BookingListItem>(
       (row) => row.createdAt,

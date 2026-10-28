@@ -1,3 +1,4 @@
+import { isHospitableUrl } from '@/shared/utils/hospitable-url';
 import type { Unit } from '@/shared/types/hospitable';
 
 /**
@@ -5,6 +6,7 @@ import type { Unit } from '@/shared/types/hospitable';
  * Address, long description, and currency inherit from Property.
  */
 export type UnitFormValues = {
+  hospitable_calendar_url?: string;
   property_id: string | '';
   code: string;
   name: string;
@@ -61,6 +63,7 @@ export function createEmptyUnitForm(
     code: '',
     name: '',
     status: 'active',
+    hospitable_calendar_url: '',
     bookable: true,
     floor: '',
     capacity: '',
@@ -86,6 +89,7 @@ export function unitToFormValues(unit: Unit): UnitFormValues {
     code: unit.code,
     name: unit.name,
     status: unit.status,
+    hospitable_calendar_url: unit.hospitable_calendar_url ?? '',
     bookable: unit.bookable,
     floor: unit.floor ?? '',
     capacity: unit.capacity,
@@ -153,7 +157,8 @@ export function validateUnitForm(values: UnitFormValues): UnitFormErrors {
       Number(values.weekly_discount_percent) < 0 ||
       Number(values.weekly_discount_percent) > 100)
   ) {
-    errors.weekly_discount_percent = 'Weekly discount must be between 0 and 100';
+    errors.weekly_discount_percent =
+      'Weekly discount must be between 0 and 100';
   }
   if (
     values.monthly_discount_percent !== '' &&
@@ -184,6 +189,12 @@ export function validateUnitForm(values: UnitFormValues): UnitFormErrors {
     errors.max_nights = 'Maximum nights must be at least the minimum nights';
   }
 
+  if (
+    values.hospitable_calendar_url?.trim() &&
+    !isHospitableUrl(values.hospitable_calendar_url.trim())
+  )
+    errors.hospitable_calendar_url =
+      'Use an HTTPS Hospitable calendar URL (up to 500 characters)';
   return errors;
 }
 
@@ -223,7 +234,9 @@ export function formatUnitStayLength(
     : `Business default (${formatBusinessNights(businessNights)})`;
 }
 
-export function formatUnitSubtitle(unit: Pick<Unit, 'bedrooms' | 'floor'>): string {
+export function formatUnitSubtitle(
+  unit: Pick<Unit, 'bedrooms' | 'floor'>,
+): string {
   const bedsLabel =
     unit.bedrooms === 0
       ? 'Studio'
@@ -247,6 +260,7 @@ export function buildUnitFromForm(
     code: values.code.trim().toUpperCase(),
     name: values.name.trim(),
     status: values.status,
+    hospitable_calendar_url: values.hospitable_calendar_url?.trim() || null,
     bookable: values.bookable,
     floor: values.floor.trim() || null,
     capacity: Number(values.capacity),
@@ -269,7 +283,7 @@ export function buildUnitFromForm(
     facility_ids: [...values.facility_ids],
     amenities: facilityNames.length
       ? facilityNames
-      : existing?.amenities ?? [],
+      : (existing?.amenities ?? []),
     summary: values.summary.trim() || null,
     notes: values.notes.trim() || null,
     picture: values.picture,

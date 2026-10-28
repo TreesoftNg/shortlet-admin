@@ -67,7 +67,11 @@ describe('unit mappers', () => {
   });
 
   it('follows the business default when a payload has no stay lengths', () => {
-    const { minNights: _minNights, maxNights: _maxNights, ...older } = sampleApiUnit;
+    const {
+      minNights: _minNights,
+      maxNights: _maxNights,
+      ...older
+    } = sampleApiUnit;
     const unit = mapUnitFromApi(older);
     expect(unit.min_nights).toBeNull();
     expect(unit.max_nights).toBeNull();
@@ -102,6 +106,7 @@ describe('unit mappers', () => {
       picture: 'https://images.com/a.jpg',
     });
     expect(payload).toEqual({
+      hospitableCalendarUrl: null,
       propertyId: 'prop-1',
       status: 'closed',
       code: 'A',

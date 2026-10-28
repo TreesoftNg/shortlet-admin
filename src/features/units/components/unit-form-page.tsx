@@ -286,9 +286,7 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
     return (
       <ErrorState
         message={
-          (unitErrorValue instanceof Error
-            ? unitErrorValue.message
-            : null) ??
+          (unitErrorValue instanceof Error ? unitErrorValue.message : null) ??
           (propertiesErrorValue instanceof Error
             ? propertiesErrorValue.message
             : null) ??
@@ -433,491 +431,559 @@ export function UnitFormPage({ mode, id }: UnitFormPageProps) {
 
           {(!isEdit || currentTab === 'details') && (
             <>
-          <Section title="Basics">
-            <Grid
-              templateColumns={{ base: '1fr', md: '1fr 1fr', xl: 'repeat(3, 1fr)' }}
-              gap="16px"
-            >
-              <Field label="Property" isRequired error={errors.property_id}>
-                <Select
-                  value={
-                    values.property_id === '' ? '' : String(values.property_id)
-                  }
-                  onChange={(event) => {
-                    const nextId = event.target.value;
-                    const nextProperty = nextId
-                      ? properties.find((item) => String(item.id) === nextId)
-                      : null;
-                    setValues((current) => ({
-                      ...current,
-                      property_id: nextId,
-                      ...(nextProperty && !isEdit
-                        ? {
-                            capacity: nextProperty.capacity.max,
-                            bedrooms: nextProperty.capacity.bedrooms,
-                            beds: nextProperty.capacity.beds,
-                            bathrooms: nextProperty.capacity.bathrooms,
-                          }
-                        : {}),
-                    }));
-                    setErrors((current) => {
-                      if (!current.property_id) return current;
-                      const next = { ...current };
-                      delete next.property_id;
-                      return next;
-                    });
+              <Section title="Basics">
+                <Grid
+                  templateColumns={{
+                    base: '1fr',
+                    md: '1fr 1fr',
+                    xl: 'repeat(3, 1fr)',
                   }}
-                  {...inputProps}
+                  gap="16px"
                 >
-                  <option value="" disabled>
-                    Select property
-                  </option>
-                  {properties.map((item) => (
-                    <option key={item.id} value={String(item.id)}>
-                      {item.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Status" isRequired>
-                <Select
-                  value={values.status}
-                  onChange={(event) =>
-                    updateField(
-                      'status',
-                      event.target.value as UnitFormValues['status'],
-                    )
-                  }
-                  {...inputProps}
+                  <Field label="Property" isRequired error={errors.property_id}>
+                    <Select
+                      value={
+                        values.property_id === ''
+                          ? ''
+                          : String(values.property_id)
+                      }
+                      onChange={(event) => {
+                        const nextId = event.target.value;
+                        const nextProperty = nextId
+                          ? properties.find(
+                              (item) => String(item.id) === nextId,
+                            )
+                          : null;
+                        setValues((current) => ({
+                          ...current,
+                          property_id: nextId,
+                          ...(nextProperty && !isEdit
+                            ? {
+                                capacity: nextProperty.capacity.max,
+                                bedrooms: nextProperty.capacity.bedrooms,
+                                beds: nextProperty.capacity.beds,
+                                bathrooms: nextProperty.capacity.bathrooms,
+                              }
+                            : {}),
+                        }));
+                        setErrors((current) => {
+                          if (!current.property_id) return current;
+                          const next = { ...current };
+                          delete next.property_id;
+                          return next;
+                        });
+                      }}
+                      {...inputProps}
+                    >
+                      <option value="" disabled>
+                        Select property
+                      </option>
+                      {properties.map((item) => (
+                        <option key={item.id} value={String(item.id)}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Status" isRequired>
+                    <Select
+                      value={values.status}
+                      onChange={(event) =>
+                        updateField(
+                          'status',
+                          event.target.value as UnitFormValues['status'],
+                        )
+                      }
+                      {...inputProps}
+                    >
+                      {UNIT_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Field label="Code" isRequired error={errors.code}>
+                    <Input
+                      value={values.code}
+                      onChange={(event) =>
+                        updateField('code', event.target.value)
+                      }
+                      placeholder="e.g. A, S1, PH-1"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field label="Name" isRequired error={errors.name}>
+                    <Input
+                      value={values.name}
+                      onChange={(event) =>
+                        updateField('name', event.target.value)
+                      }
+                      placeholder="e.g. Unit A"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field label="Floor / location">
+                    <Input
+                      value={values.floor}
+                      onChange={(event) =>
+                        updateField('floor', event.target.value)
+                      }
+                      placeholder="e.g. 3rd floor, Garden, Penthouse"
+                      {...inputProps}
+                    />
+                  </Field>
+                </Grid>
+                <Box mt="16px">
+                  <Field label="Short summary">
+                    <Textarea
+                      value={values.summary}
+                      onChange={(event) =>
+                        updateField('summary', event.target.value)
+                      }
+                      placeholder="Optional calendar/list label"
+                      minH="100px"
+                      borderColor="line.500"
+                      borderRadius="12px"
+                    />
+                  </Field>
+                </Box>
+
+                <Flex
+                  mt="14px"
+                  align="center"
+                  justify="space-between"
+                  gap="12px"
+                  bg="bg.400"
+                  borderRadius="14px"
+                  px="14px"
+                  py="12px"
                 >
-                  {UNIT_STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Code" isRequired error={errors.code}>
-                <Input
-                  value={values.code}
-                  onChange={(event) => updateField('code', event.target.value)}
-                  placeholder="e.g. A, S1, PH-1"
-                  {...inputProps}
-                />
-              </Field>
-              <Field label="Name" isRequired error={errors.name}>
-                <Input
-                  value={values.name}
-                  onChange={(event) => updateField('name', event.target.value)}
-                  placeholder="e.g. Unit A"
-                  {...inputProps}
-                />
-              </Field>
-              <Field label="Floor / location">
-                <Input
-                  value={values.floor}
-                  onChange={(event) => updateField('floor', event.target.value)}
-                  placeholder="e.g. 3rd floor, Garden, Penthouse"
-                  {...inputProps}
-                />
-              </Field>
-            </Grid>
-            <Box mt="16px">
-              <Field label="Short summary">
-                <Textarea
-                  value={values.summary}
-                  onChange={(event) =>
-                    updateField('summary', event.target.value)
-                  }
-                  placeholder="Optional calendar/list label"
-                  minH="100px"
-                  borderColor="line.500"
-                  borderRadius="12px"
-                />
-              </Field>
-            </Box>
+                  <Box>
+                    <Text fontWeight={700} fontSize="14px">
+                      Open for booking
+                    </Text>
+                    <Text fontSize="13px" color="ink.300">
+                      Close inventory without archiving the unit.
+                    </Text>
+                  </Box>
+                  <Switch
+                    isChecked={values.bookable}
+                    onChange={(event) =>
+                      updateField('bookable', event.target.checked)
+                    }
+                    colorScheme="green"
+                  />
+                </Flex>
+              </Section>
 
-            <Flex
-              mt="14px"
-              align="center"
-              justify="space-between"
-              gap="12px"
-              bg="bg.400"
-              borderRadius="14px"
-              px="14px"
-              py="12px"
-            >
-              <Box>
-                <Text fontWeight={700} fontSize="14px">
-                  Open for booking
-                </Text>
-                <Text fontSize="13px" color="ink.300">
-                  Close inventory without archiving the unit.
-                </Text>
-              </Box>
-              <Switch
-                isChecked={values.bookable}
-                onChange={(event) =>
-                  updateField('bookable', event.target.checked)
-                }
-                colorScheme="green"
-              />
-            </Flex>
-          </Section>
-
-          <Section title="Layout">
-            <Grid
-              templateColumns={{ base: '1fr 1fr', md: 'repeat(4, 1fr)' }}
-              gap="16px"
-            >
-              <Field label="Max guests" isRequired error={errors.capacity}>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={MAX_GUESTS_LIMIT}
-                  value={values.capacity}
-                  onChange={(event) =>
-                    updateField('capacity', parseNumberInput(event.target.value))
-                  }
-                  placeholder="e.g. 2"
-                  {...inputProps}
-                />
-              </Field>
-              <Field label="Bedrooms" isRequired error={errors.bedrooms}>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={values.bedrooms}
-                  onChange={(event) =>
-                    updateField('bedrooms', parseNumberInput(event.target.value))
-                  }
-                  placeholder="e.g. 1"
-                  {...inputProps}
-                />
-              </Field>
-              <Field label="Beds" isRequired error={errors.beds}>
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={values.beds}
-                  onChange={(event) =>
-                    updateField('beds', parseNumberInput(event.target.value))
-                  }
-                  placeholder="e.g. 1"
-                  {...inputProps}
-                />
-              </Field>
-              <Field label="Bathrooms" isRequired error={errors.bathrooms}>
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step={0.5}
-                  value={values.bathrooms}
-                  onChange={(event) =>
-                    updateField('bathrooms', parseNumberInput(event.target.value))
-                  }
-                  placeholder="e.g. 1"
-                  {...inputProps}
-                />
-              </Field>
-            </Grid>
-          </Section>
-
-          <Section title="Facilities">
-            <Text fontSize="13px" color="ink.300" mb="12px">
-              Pick from your facility catalog. Sending a save replaces the full
-              list on this unit.
-            </Text>
-            {facilities.length === 0 ? (
-              <Text fontSize="14px" color="ink.300">
-                No facilities in the catalog yet.
-              </Text>
-            ) : (
-              <Grid
-                templateColumns={{
-                  base: '1fr',
-                  sm: '1fr 1fr',
-                  lg: 'repeat(3, 1fr)',
-                  xl: 'repeat(4, 1fr)',
-                }}
-                gap="12px"
-              >
-                {facilities.map((facility) => (
-                  <Checkbox
-                    key={facility.id}
-                    isChecked={values.facility_ids.includes(facility.id)}
-                    onChange={() => toggleFacility(facility.id)}
-                    borderColor="line.500"
+              <Section title="Hospitable calendar">
+                <Flex
+                  gap="16px"
+                  justify="space-between"
+                  align="center"
+                  direction={{ base: 'column', md: 'row' }}
+                >
+                  <Box>
+                    <Text fontWeight={700}>Hospitable calendar</Text>
+                    <Text fontSize="13px" color="ink.300">
+                      Open this unit’s calendar to block dates in Hospitable.
+                    </Text>
+                  </Box>
+                  <Field
+                    label="Calendar URL"
+                    error={errors.hospitable_calendar_url}
                   >
-                    {facility.name}
-                    {facility.category ? (
-                      <Text as="span" color="ink.300" fontSize="12px">
-                        {` · ${facility.category}`}
-                      </Text>
-                    ) : null}
-                  </Checkbox>
-                ))}
-              </Grid>
-            )}
-          </Section>
+                    <Input
+                      type="url"
+                      maxLength={500}
+                      placeholder="https://my.hospitable.com/…"
+                      value={values.hospitable_calendar_url ?? ''}
+                      onChange={(event) =>
+                        updateField(
+                          'hospitable_calendar_url',
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </Field>
+                </Flex>
+              </Section>
+              <Section title="Layout">
+                <Grid
+                  templateColumns={{ base: '1fr 1fr', md: 'repeat(4, 1fr)' }}
+                  gap="16px"
+                >
+                  <Field label="Max guests" isRequired error={errors.capacity}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={MAX_GUESTS_LIMIT}
+                      value={values.capacity}
+                      onChange={(event) =>
+                        updateField(
+                          'capacity',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="e.g. 2"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field label="Bedrooms" isRequired error={errors.bedrooms}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={values.bedrooms}
+                      onChange={(event) =>
+                        updateField(
+                          'bedrooms',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="e.g. 1"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field label="Beds" isRequired error={errors.beds}>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={values.beds}
+                      onChange={(event) =>
+                        updateField(
+                          'beds',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="e.g. 1"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field label="Bathrooms" isRequired error={errors.bathrooms}>
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step={0.5}
+                      value={values.bathrooms}
+                      onChange={(event) =>
+                        updateField(
+                          'bathrooms',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="e.g. 1"
+                      {...inputProps}
+                    />
+                  </Field>
+                </Grid>
+              </Section>
 
-          <Section title="Ops notes">
-            <Field label="Internal notes">
-              <Textarea
-                value={values.notes}
-                onChange={(event) => updateField('notes', event.target.value)}
-                placeholder="Maintenance, owner holds, access quirks…"
-                minH="120px"
-                borderColor="line.500"
-                borderRadius="12px"
-              />
-            </Field>
-          </Section>
+              <Section title="Facilities">
+                <Text fontSize="13px" color="ink.300" mb="12px">
+                  Pick from your facility catalog. Sending a save replaces the
+                  full list on this unit.
+                </Text>
+                {facilities.length === 0 ? (
+                  <Text fontSize="14px" color="ink.300">
+                    No facilities in the catalog yet.
+                  </Text>
+                ) : (
+                  <Grid
+                    templateColumns={{
+                      base: '1fr',
+                      sm: '1fr 1fr',
+                      lg: 'repeat(3, 1fr)',
+                      xl: 'repeat(4, 1fr)',
+                    }}
+                    gap="12px"
+                  >
+                    {facilities.map((facility) => (
+                      <Checkbox
+                        key={facility.id}
+                        isChecked={values.facility_ids.includes(facility.id)}
+                        onChange={() => toggleFacility(facility.id)}
+                        borderColor="line.500"
+                      >
+                        {facility.name}
+                        {facility.category ? (
+                          <Text as="span" color="ink.300" fontSize="12px">
+                            {` · ${facility.category}`}
+                          </Text>
+                        ) : null}
+                      </Checkbox>
+                    ))}
+                  </Grid>
+                )}
+              </Section>
 
+              <Section title="Ops notes">
+                <Field label="Internal notes">
+                  <Textarea
+                    value={values.notes}
+                    onChange={(event) =>
+                      updateField('notes', event.target.value)
+                    }
+                    placeholder="Maintenance, owner holds, access quirks…"
+                    minH="120px"
+                    borderColor="line.500"
+                    borderRadius="12px"
+                  />
+                </Field>
+              </Section>
             </>
           )}
 
           {(!isEdit || currentTab === 'pricing') && (
             <>
-          <Section title="Rates & discounts">
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="16px">
-              <Field
-                label="Base nightly rate"
-                isRequired
-                error={errors.base_rate}
-                helper={
-                  property
-                    ? `Nightly rate for this unit in ${property.currency}.`
-                    : 'Nightly rate for this unit.'
-                }
-              >
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  min={1}
-                  value={values.base_rate}
-                  onChange={(event) =>
-                    updateField('base_rate', parseNumberInput(event.target.value))
-                  }
-                  placeholder="e.g. 90000"
-                  {...inputProps}
-                />
-              </Field>
-              <Field
-                label="Cleaning fee"
-                error={errors.cleaning_fee}
-                helper="Charged once per stay."
-              >
-                <Input
-                  type="number"
-                  min={0}
-                  value={values.cleaning_fee}
-                  onChange={(event) =>
-                    updateField(
-                      'cleaning_fee',
-                      parseNumberInput(event.target.value),
-                    )
-                  }
-                  placeholder="Optional"
-                  {...inputProps}
-                />
-              </Field>
-              <Field
-                label="Weekly discount %"
-                error={errors.weekly_discount_percent}
-                helper="Off nights for stays of 7+ nights."
-              >
-                <Input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={values.weekly_discount_percent}
-                  onChange={(event) =>
-                    updateField(
-                      'weekly_discount_percent',
-                      parseNumberInput(event.target.value),
-                    )
-                  }
-                  placeholder="Optional"
-                  {...inputProps}
-                />
-              </Field>
-              <Field
-                label="Monthly discount %"
-                error={errors.monthly_discount_percent}
-                helper="Off nights for stays of 28+ nights."
-              >
-                <Input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={values.monthly_discount_percent}
-                  onChange={(event) =>
-                    updateField(
-                      'monthly_discount_percent',
-                      parseNumberInput(event.target.value),
-                    )
-                  }
-                  placeholder="Optional"
-                  {...inputProps}
-                />
-              </Field>
-            </Grid>
-          </Section>
+              <Section title="Rates & discounts">
+                <Grid
+                  templateColumns={{ base: '1fr', md: '1fr 1fr' }}
+                  gap="16px"
+                >
+                  <Field
+                    label="Base nightly rate"
+                    isRequired
+                    error={errors.base_rate}
+                    helper={
+                      property
+                        ? `Nightly rate for this unit in ${property.currency}.`
+                        : 'Nightly rate for this unit.'
+                    }
+                  >
+                    <Input
+                      type="number"
+                      inputMode="decimal"
+                      min={1}
+                      value={values.base_rate}
+                      onChange={(event) =>
+                        updateField(
+                          'base_rate',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="e.g. 90000"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field
+                    label="Cleaning fee"
+                    error={errors.cleaning_fee}
+                    helper="Charged once per stay."
+                  >
+                    <Input
+                      type="number"
+                      min={0}
+                      value={values.cleaning_fee}
+                      onChange={(event) =>
+                        updateField(
+                          'cleaning_fee',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="Optional"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field
+                    label="Weekly discount %"
+                    error={errors.weekly_discount_percent}
+                    helper="Off nights for stays of 7+ nights."
+                  >
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={values.weekly_discount_percent}
+                      onChange={(event) =>
+                        updateField(
+                          'weekly_discount_percent',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="Optional"
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field
+                    label="Monthly discount %"
+                    error={errors.monthly_discount_percent}
+                    helper="Off nights for stays of 28+ nights."
+                  >
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={values.monthly_discount_percent}
+                      onChange={(event) =>
+                        updateField(
+                          'monthly_discount_percent',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder="Optional"
+                      {...inputProps}
+                    />
+                  </Field>
+                </Grid>
+              </Section>
 
-          <Section title="Length of stay">
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap="16px">
-              <Field
-                label="Minimum nights"
-                error={errors.min_nights}
-                helper="Shortest stay guests can book on the website. Leave empty to use the business default."
-              >
-                <Input
-                  type="number"
-                  min={STAY_NIGHTS_LIMIT.min}
-                  max={STAY_NIGHTS_LIMIT.max}
-                  step={1}
-                  value={values.min_nights}
-                  onChange={(event) =>
-                    updateField(
-                      'min_nights',
-                      parseNumberInput(event.target.value),
-                    )
-                  }
-                  placeholder={businessDefaultPlaceholder(
-                    bookingSettings?.minNights,
-                  )}
-                  {...inputProps}
-                />
-              </Field>
-              <Field
-                label="Maximum nights"
-                error={errors.max_nights}
-                helper="Longest stay guests can book on the website. Leave empty to use the business default."
-              >
-                <Input
-                  type="number"
-                  min={STAY_NIGHTS_LIMIT.min}
-                  max={STAY_NIGHTS_LIMIT.max}
-                  step={1}
-                  value={values.max_nights}
-                  onChange={(event) =>
-                    updateField(
-                      'max_nights',
-                      parseNumberInput(event.target.value),
-                    )
-                  }
-                  placeholder={businessDefaultPlaceholder(
-                    bookingSettings?.maxNights,
-                  )}
-                  {...inputProps}
-                />
-              </Field>
-            </Grid>
-          </Section>
+              <Section title="Length of stay">
+                <Grid
+                  templateColumns={{ base: '1fr', md: '1fr 1fr' }}
+                  gap="16px"
+                >
+                  <Field
+                    label="Minimum nights"
+                    error={errors.min_nights}
+                    helper="Shortest stay guests can book on the website. Leave empty to use the business default."
+                  >
+                    <Input
+                      type="number"
+                      min={STAY_NIGHTS_LIMIT.min}
+                      max={STAY_NIGHTS_LIMIT.max}
+                      step={1}
+                      value={values.min_nights}
+                      onChange={(event) =>
+                        updateField(
+                          'min_nights',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder={businessDefaultPlaceholder(
+                        bookingSettings?.minNights,
+                      )}
+                      {...inputProps}
+                    />
+                  </Field>
+                  <Field
+                    label="Maximum nights"
+                    error={errors.max_nights}
+                    helper="Longest stay guests can book on the website. Leave empty to use the business default."
+                  >
+                    <Input
+                      type="number"
+                      min={STAY_NIGHTS_LIMIT.min}
+                      max={STAY_NIGHTS_LIMIT.max}
+                      step={1}
+                      value={values.max_nights}
+                      onChange={(event) =>
+                        updateField(
+                          'max_nights',
+                          parseNumberInput(event.target.value),
+                        )
+                      }
+                      placeholder={businessDefaultPlaceholder(
+                        bookingSettings?.maxNights,
+                      )}
+                      {...inputProps}
+                    />
+                  </Field>
+                </Grid>
+              </Section>
             </>
           )}
 
           {!isEdit && (
-          <Section title="Cover photo">
-            <FormControl>
-              <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
-                Unit image
-              </FormLabel>
-              <Input
-                id={fileInputId}
-                type="file"
-                accept="image/*"
-                display="none"
-                onChange={(event) => {
-                  void handleFile(event.target.files);
-                  event.target.value = '';
-                }}
-              />
-              <Flex gap="10px" wrap="wrap" align="center">
-                <Button
-                  as="label"
-                  htmlFor={fileInputId}
-                  variant="secondary"
-                  leftIcon={<LuUpload size={16} />}
-                  borderRadius="12px"
-                  h="40px"
-                  cursor="pointer"
-                >
-                  Choose file
-                </Button>
-                {values.picture ? (
+            <Section title="Cover photo">
+              <FormControl>
+                <FormLabel fontSize="12px" fontWeight={700} color="ink.300">
+                  Unit image
+                </FormLabel>
+                <Input
+                  id={fileInputId}
+                  type="file"
+                  accept="image/*"
+                  display="none"
+                  onChange={(event) => {
+                    void handleFile(event.target.files);
+                    event.target.value = '';
+                  }}
+                />
+                <Flex gap="10px" wrap="wrap" align="center">
                   <Button
+                    as="label"
+                    htmlFor={fileInputId}
                     variant="secondary"
-                    leftIcon={<LuTrash2 size={16} />}
+                    leftIcon={<LuUpload size={16} />}
                     borderRadius="12px"
                     h="40px"
-                    onClick={() => {
-                      setCoverFile(null);
-                      updateField('picture', null);
-                    }}
+                    cursor="pointer"
                   >
-                    Remove
+                    Choose file
                   </Button>
-                ) : null}
-              </Flex>
-              <FormHelperText color="ink.300">
-                Optional unit cover. Property galleries stay on the property.
-              </FormHelperText>
-            </FormControl>
+                  {values.picture ? (
+                    <Button
+                      variant="secondary"
+                      leftIcon={<LuTrash2 size={16} />}
+                      borderRadius="12px"
+                      h="40px"
+                      onClick={() => {
+                        setCoverFile(null);
+                        updateField('picture', null);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  ) : null}
+                </Flex>
+                <FormHelperText color="ink.300">
+                  Optional unit cover. Property galleries stay on the property.
+                </FormHelperText>
+              </FormControl>
 
-            {values.picture ? (
-              <Box
-                mt="14px"
-                border="1px solid"
-                borderColor="line.500"
-                borderRadius="14px"
-                overflow="hidden"
-                maxW="520px"
-              >
+              {values.picture ? (
                 <Box
-                  as="img"
-                  src={values.picture}
-                  alt="Unit preview"
-                  w="100%"
-                  h="240px"
-                  objectFit="cover"
-                />
-              </Box>
-            ) : null}
-          </Section>
+                  mt="14px"
+                  border="1px solid"
+                  borderColor="line.500"
+                  borderRadius="14px"
+                  overflow="hidden"
+                  maxW="520px"
+                >
+                  <Box
+                    as="img"
+                    src={values.picture}
+                    alt="Unit preview"
+                    w="100%"
+                    h="240px"
+                    objectFit="cover"
+                  />
+                </Box>
+              ) : null}
+            </Section>
           )}
 
           {!(isEdit && currentTab === 'gallery') && (
-          <Flex
-            gap="10px"
-            justify="flex-end"
-            wrap="wrap"
-            pt="8px"
-            borderTop="1px solid"
-            borderColor="line.500"
-          >
-            <Button
-              variant="secondary"
-              borderRadius="12px"
-              onClick={goBack}
-              isDisabled={isSaving}
+            <Flex
+              gap="10px"
+              justify="flex-end"
+              wrap="wrap"
+              pt="8px"
+              borderTop="1px solid"
+              borderColor="line.500"
             >
-              Cancel
-            </Button>
-            <Button
-              borderRadius="12px"
-              onClick={() => void handleSubmit()}
-              isLoading={isSaving}
-              loadingText={isEdit ? 'Saving' : 'Creating'}
-            >
-              {isEdit ? 'Save changes' : 'Create unit'}
-            </Button>
-          </Flex>
+              <Button
+                variant="secondary"
+                borderRadius="12px"
+                onClick={goBack}
+                isDisabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                borderRadius="12px"
+                onClick={() => void handleSubmit()}
+                isLoading={isSaving}
+                loadingText={isEdit ? 'Saving' : 'Creating'}
+              >
+                {isEdit ? 'Save changes' : 'Create unit'}
+              </Button>
+            </Flex>
           )}
         </Flex>
       </Panel>
@@ -932,13 +998,7 @@ const inputProps = {
   bg: 'white',
 } as const;
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Box>
       <Text

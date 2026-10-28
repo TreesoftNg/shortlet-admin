@@ -29,6 +29,7 @@ export type ApiUnitProperty = {
 };
 
 export type ApiUnit = {
+  hospitableCalendarUrl?: string | null;
   id: string;
   tenantId?: string;
   propertyId: string | null;
@@ -67,6 +68,7 @@ export type ApiUnit = {
 };
 
 export type CreateUnitPayload = {
+  hospitableCalendarUrl?: string | null;
   propertyId: string;
   status: ApiUnitStatus;
   code: string;

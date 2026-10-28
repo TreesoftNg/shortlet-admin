@@ -9,9 +9,9 @@ describe('getBookingListColumns', () => {
       'amount',
       'status',
       'deposit',
+      'actions',
       'created',
       'updated',
     ]);
   });
 });
-

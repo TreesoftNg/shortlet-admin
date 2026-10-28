@@ -1,5 +1,7 @@
 'use client';
 
+import { HospitableButton } from '@/shared/components/ui/hospitable-button';
+
 import {
   Badge,
   Box,
@@ -35,9 +37,14 @@ type BookingQuickViewProps = {
 };
 
 /** A booking at a glance from the calendar, with payment actions while it waits for payment. */
-export function BookingQuickView({ bookingId, onClose, canRecordPayments }: BookingQuickViewProps) {
+export function BookingQuickView({
+  bookingId,
+  onClose,
+  canRecordPayments,
+}: BookingQuickViewProps) {
   const { data: booking, isLoading, error } = useAdminBooking(bookingId);
-  const openLink = booking?.payments.find((payment) => payment.checkoutUrl)?.checkoutUrl ?? '';
+  const openLink =
+    booking?.payments.find((payment) => payment.checkoutUrl)?.checkoutUrl ?? '';
   const { onCopy, hasCopied } = useClipboard(openLink);
   const [recording, setRecording] = useState(false);
   const waiting = booking?.status === 'pending_payment';
@@ -48,7 +55,15 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
       onClose={onClose}
       title={booking ? `Booking ${booking.reference}` : 'Booking'}
       size="3xl"
-      footer={<Button onClick={onClose}>Close</Button>}
+      footer={
+        <Flex gap="8px">
+          <HospitableButton
+            url={booking?.hospitableCalendarUrl}
+            status={booking?.status}
+          />
+          <Button onClick={onClose}>Close</Button>
+        </Flex>
+      }
     >
       {isLoading ? <Skeleton h="240px" borderRadius="14px" /> : null}
       {error ? (
@@ -59,7 +74,15 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
       {booking ? (
         <>
           <Flex gap="8px" align="center" mb="8px" wrap="wrap">
-            <Badge colorScheme={waiting ? 'orange' : booking.status === 'cancelled' ? 'red' : 'green'}>
+            <Badge
+              colorScheme={
+                waiting
+                  ? 'orange'
+                  : booking.status === 'cancelled'
+                    ? 'red'
+                    : 'green'
+              }
+            >
               {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
             </Badge>
             {booking.source === 'staff' ? <Badge>Booked by staff</Badge> : null}
@@ -69,23 +92,41 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
               <KeyValueList
                 title="Stay"
                 items={[
-                  { label: 'Guest', value: `${booking.guest.firstName} ${booking.guest.lastName}` },
+                  {
+                    label: 'Guest',
+                    value: `${booking.guest.firstName} ${booking.guest.lastName}`,
+                  },
                   { label: 'Email', value: booking.guest.email },
                   { label: 'Phone', value: booking.guest.phone },
-                  { label: 'Unit', value: booking.unit.publicName ?? booking.unit.name },
-                  { label: 'Check-in', value: `${formatStayDate(booking.checkIn)}, from ${booking.checkInTime}` },
-                  { label: 'Check-out', value: `${formatStayDate(booking.checkOut)}, by ${booking.checkOutTime}` },
+                  {
+                    label: 'Unit',
+                    value: booking.unit.publicName ?? booking.unit.name,
+                  },
+                  {
+                    label: 'Check-in',
+                    value: `${formatStayDate(booking.checkIn)}, from ${booking.checkInTime}`,
+                  },
+                  {
+                    label: 'Check-out',
+                    value: `${formatStayDate(booking.checkOut)}, by ${booking.checkOutTime}`,
+                  },
                   {
                     label: 'Guests',
                     value: [
                       plural(booking.guests.adults, 'adult', 'adults'),
-                      booking.guests.children ? plural(booking.guests.children, 'child', 'children') : null,
-                      booking.guests.infants ? plural(booking.guests.infants, 'infant', 'infants') : null,
+                      booking.guests.children
+                        ? plural(booking.guests.children, 'child', 'children')
+                        : null,
+                      booking.guests.infants
+                        ? plural(booking.guests.infants, 'infant', 'infants')
+                        : null,
                     ]
                       .filter(Boolean)
                       .join(', '),
                   },
-                  ...(booking.specialRequests ? [{ label: 'Requests', value: booking.specialRequests }] : []),
+                  ...(booking.specialRequests
+                    ? [{ label: 'Requests', value: booking.specialRequests }]
+                    : []),
                 ]}
               />
             </Box>
@@ -101,10 +142,23 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
                         },
                       ]
                     : []),
-                  { label: 'Stay', value: formatMoney(booking.stayTotal, booking.currency) },
-                  { label: 'Deposit', value: `${formatMoney(booking.deposit.amount, booking.currency)} (${booking.deposit.status})` },
-                  { label: 'Total', value: formatMoney(booking.totalAmount, booking.currency), emphasize: true },
-                  { label: 'Paid', value: formatMoney(booking.amountPaid, booking.currency) },
+                  {
+                    label: 'Stay',
+                    value: formatMoney(booking.stayTotal, booking.currency),
+                  },
+                  {
+                    label: 'Deposit',
+                    value: `${formatMoney(booking.deposit.amount, booking.currency)} (${booking.deposit.status})`,
+                  },
+                  {
+                    label: 'Total',
+                    value: formatMoney(booking.totalAmount, booking.currency),
+                    emphasize: true,
+                  },
+                  {
+                    label: 'Paid',
+                    value: formatMoney(booking.amountPaid, booking.currency),
+                  },
                   ...booking.payments.map((payment) => ({
                     label: `${formatProviderLabel(payment.provider)} · ${payment.status}`,
                     value: `${paymentMethodLabel(payment.paymentMethod)}${payment.offlineReference ? ` · ${payment.offlineReference}` : ''}`,
@@ -117,7 +171,11 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
             <Flex direction="column" gap="10px" mt="8px">
               {booking.holdExpiresAt ? (
                 <Text fontSize="14px" color="ink.400">
-                  Dates held until {new Date(booking.holdExpiresAt).toLocaleString('en-GB', { timeZone: 'Africa/Lagos' })}.
+                  Dates held until{' '}
+                  {new Date(booking.holdExpiresAt).toLocaleString('en-GB', {
+                    timeZone: 'Africa/Lagos',
+                  })}
+                  .
                 </Text>
               ) : null}
               <Flex gap="8px" wrap="wrap">
@@ -127,10 +185,17 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
                   </Button>
                 ) : null}
                 {canRecordPayments && !recording ? (
-                  <Button onClick={() => setRecording(true)}>Record payment received</Button>
+                  <Button onClick={() => setRecording(true)}>
+                    Record payment received
+                  </Button>
                 ) : null}
               </Flex>
-              {recording ? <RecordPaymentForm bookingId={booking.id} onDone={() => setRecording(false)} /> : null}
+              {recording ? (
+                <RecordPaymentForm
+                  bookingId={booking.id}
+                  onDone={() => setRecording(false)}
+                />
+              ) : null}
             </Flex>
           ) : null}
         </>
@@ -139,7 +204,13 @@ export function BookingQuickView({ bookingId, onClose, canRecordPayments }: Book
   );
 }
 
-function RecordPaymentForm({ bookingId, onDone }: { bookingId: string; onDone: () => void }) {
+function RecordPaymentForm({
+  bookingId,
+  onDone,
+}: {
+  bookingId: string;
+  onDone: () => void;
+}) {
   const toast = useToast();
   const record = useRecordOfflinePayment(bookingId);
   const [method, setMethod] = useState<OfflinePaymentMethod>('bank_transfer');
@@ -148,7 +219,10 @@ function RecordPaymentForm({ bookingId, onDone }: { bookingId: string; onDone: (
   const submit = async () => {
     try {
       await record.mutateAsync({ method, reference: reference.trim() || null });
-      toast({ status: 'success', title: 'Payment recorded. The booking is confirmed.' });
+      toast({
+        status: 'success',
+        title: 'Payment recorded. The booking is confirmed.',
+      });
       onDone();
     } catch {
       // Shown below.
@@ -156,10 +230,22 @@ function RecordPaymentForm({ bookingId, onDone }: { bookingId: string; onDone: (
   };
 
   return (
-    <Flex direction="column" gap="10px" p="14px" borderRadius="14px" bg="bg.400">
+    <Flex
+      direction="column"
+      gap="10px"
+      p="14px"
+      borderRadius="14px"
+      bg="bg.400"
+    >
       <FormControl>
         <FormLabel>How the guest paid</FormLabel>
-        <Select aria-label="Payment method" value={method} onChange={(event) => setMethod(event.target.value as OfflinePaymentMethod)}>
+        <Select
+          aria-label="Payment method"
+          value={method}
+          onChange={(event) =>
+            setMethod(event.target.value as OfflinePaymentMethod)
+          }
+        >
           <option value="bank_transfer">Bank transfer</option>
           <option value="cash">Cash</option>
           <option value="pos">Card (POS)</option>
@@ -167,7 +253,12 @@ function RecordPaymentForm({ bookingId, onDone }: { bookingId: string; onDone: (
       </FormControl>
       <FormControl>
         <FormLabel>Reference (optional)</FormLabel>
-        <Input aria-label="Payment reference" maxLength={100} value={reference} onChange={(event) => setReference(event.target.value)} />
+        <Input
+          aria-label="Payment reference"
+          maxLength={100}
+          value={reference}
+          onChange={(event) => setReference(event.target.value)}
+        />
       </FormControl>
       {record.error ? (
         <Text color="status.danger" fontSize="14px" role="alert">
@@ -186,4 +277,5 @@ function RecordPaymentForm({ bookingId, onDone }: { bookingId: string; onDone: (
   );
 }
 
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+const plural = (count: number, one: string, many: string) =>
+  `${count} ${count === 1 ? one : many}`;

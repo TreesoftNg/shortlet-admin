@@ -7,7 +7,10 @@ import type {
 } from '../types';
 import type { UnitFormValues } from './unit-form';
 
-function toNumber(value: number | string | null | undefined, fallback = 0): number {
+function toNumber(
+  value: number | string | null | undefined,
+  fallback = 0,
+): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string' && value.trim() !== '') {
     const parsed = Number(value);
@@ -56,6 +59,7 @@ export function mapUnitFromApi(unit: ApiUnit): Unit {
 
   return {
     id: unit.id,
+    hospitable_calendar_url: unit.hospitableCalendarUrl ?? null,
     property_id: unit.propertyId ?? nestedProperty?.id ?? null,
     linked_property_name: nestedProperty?.name ?? null,
     code: unit.code?.trim() ?? '',
@@ -102,6 +106,7 @@ export function toCreateUnitPayload(values: UnitFormValues): CreateUnitPayload {
     name: values.name.trim(),
     floor: values.floor.trim() || null,
     summary: values.summary.trim() || null,
+    hospitableCalendarUrl: values.hospitable_calendar_url?.trim() || null,
     openForBooking: values.bookable,
     guests: requiredNumber(values.capacity),
     capacityBedrooms: requiredNumber(values.bedrooms),

@@ -5,12 +5,7 @@
  */
 
 export type Platform =
-  | 'airbnb'
-  | 'homeaway'
-  | 'booking'
-  | 'direct'
-  | 'manual'
-  | string;
+  'airbnb' | 'homeaway' | 'booking' | 'direct' | 'manual' | string;
 
 export type ReservationStatusCategory =
   | 'request'
@@ -156,6 +151,7 @@ export type StaffMember = {
  * Ids match the Shortlet API (UUID strings).
  */
 export type Unit = {
+  hospitable_calendar_url?: string | null;
   id: string;
   property_id: string | null;
   /** Name when the API embeds the linked property. */
@@ -293,7 +289,13 @@ export type CalendarDay = {
 };
 
 export type DetailedRating = {
-  type: 'cleanliness' | 'communication' | 'location' | 'checkin' | 'accuracy' | 'value';
+  type:
+    | 'cleanliness'
+    | 'communication'
+    | 'location'
+    | 'checkin'
+    | 'accuracy'
+    | 'value';
   rating: number;
   comment: string;
 };
@@ -378,11 +380,7 @@ export type Payment = {
 
 /** Internal refund record (provider-backed; used by admin finance views). */
 export type RefundStatus =
-  | 'requested'
-  | 'pending_approval'
-  | 'processing'
-  | 'completed'
-  | 'rejected';
+  'requested' | 'pending_approval' | 'processing' | 'completed' | 'rejected';
 
 export type RefundReason =
   | 'guest_cancellation'
@@ -406,4 +404,3 @@ export type Refund = {
   created_at: string;
   updated_at: string;
 };
-
