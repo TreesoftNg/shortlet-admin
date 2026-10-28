@@ -199,7 +199,7 @@ export function StaffDetailDrawer({
           {member.status === 'active' && (
             <>
               <Button size="sm" onClick={() => setEditing(true)}>
-                Edit
+                Change role
               </Button>
               <Button
                 size="sm"

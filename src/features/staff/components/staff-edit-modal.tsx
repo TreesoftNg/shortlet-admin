@@ -4,7 +4,6 @@ import {
   Button,
   FormControl,
   FormLabel,
-  Input,
   Select,
   Text,
   Stack,
@@ -15,6 +14,10 @@ import { useRoles } from '../hooks/use-staff';
 import { useUpdateMember } from '../hooks/use-staff-mutations';
 import type { ApiStaffRole } from '../types';
 import { RolePermissionsList } from './role-permissions-list';
+/**
+ * Changes a member's role. Names belong to the person's own account (shared
+ * with other businesses and their guest profile), so they aren't edited here.
+ */
 export function StaffEditModal({
   member,
   onClose,
@@ -24,23 +27,14 @@ export function StaffEditModal({
 }) {
   const roles = useRoles();
   const update = useUpdateMember();
-  const [firstName, setFirstName] = useState(member.first_name);
-  const [lastName, setLastName] = useState(member.last_name);
   const [roleCode, setRole] = useState<ApiStaffRole>(member.role);
   const [error, setError] = useState('');
   const save = async () => {
     try {
-      await update.mutateAsync({
-        id: member.id,
-        values: {
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          roleCode,
-        },
-      });
+      await update.mutateAsync({ id: member.id, values: { roleCode } });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save member');
+      setError(err instanceof Error ? err.message : 'Could not change role');
     }
   };
   return (
@@ -49,7 +43,7 @@ export function StaffEditModal({
       onClose={() => {
         if (!update.isPending) onClose();
       }}
-      title="Edit member"
+      title="Change role"
       footer={
         <>
           <Button
@@ -62,32 +56,17 @@ export function StaffEditModal({
           <Button
             onClick={() => void save()}
             isLoading={update.isPending}
-            isDisabled={
-              !firstName.trim() || !lastName.trim() || !roles.data?.length
-            }
+            isDisabled={!roles.data?.length || roleCode === member.role}
           >
-            Save changes
+            Save role
           </Button>
         </>
       }
     >
       <Stack spacing="14px">
-        <FormControl>
-          <FormLabel>First name</FormLabel>
-          <Input
-            value={firstName}
-            maxLength={100}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>Last name</FormLabel>
-          <Input
-            value={lastName}
-            maxLength={100}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-        </FormControl>
+        <Text fontWeight="700">
+          {member.first_name} {member.last_name}
+        </Text>
         <FormControl>
           <FormLabel>Role</FormLabel>
           <Select

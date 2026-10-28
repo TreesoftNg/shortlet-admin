@@ -50,8 +50,7 @@ export type StaffRoleDefinition = {
   name: string;
   permissions: { code: string; name: string }[];
 };
+/** Staff edit changes the role only. */
 export type UpdateStaffPayload = {
-  roleCode?: ApiStaffRole;
-  firstName?: string;
-  lastName?: string;
+  roleCode: ApiStaffRole;
 };

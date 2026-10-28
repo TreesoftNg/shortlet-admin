@@ -3,8 +3,16 @@ import { useState } from 'react';
 import { Box, Button, Flex, Input, Select, Text } from '@chakra-ui/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiBlob, apiClient } from '@/shared/api/client';
+import { apiFieldErrors } from '@/shared/api/field-errors';
 import { adminPath } from '@/shared/api/paths';
 import { queryKeys } from '@/shared/api/query-keys';
+/** ID file types accepted on upload, and the only ones opened in a tab (the blob page runs on the admin origin). */
+const ID_FILE_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+];
 const labels: Record<string, string> = {
   passport: 'Passport',
   nin: 'NIN',
@@ -29,25 +37,29 @@ export function GuestIdRow({
     if (tab) tab.opener = null;
     setError('');
     try {
+      if (!tab) throw new Error('Allow pop-ups to view the ID');
       const blob = await apiBlob(
         adminPath(`/bookings/${bookingId}/id-document`),
       );
+      if (!ID_FILE_TYPES.includes(blob.type)) {
+        throw new Error('This file type can’t be opened here');
+      }
       const url = URL.createObjectURL(blob);
-      if (tab) tab.location.href = url;
-      else throw new Error('Allow pop-ups to view the ID');
+      tab.location.href = url;
       window.setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err) {
       tab?.close();
       setError(err instanceof Error ? err.message : 'Could not view ID');
     }
   };
-  const upload = async (file?: File) => {
+  const upload = async (input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    // Cleared so choosing the same file again (e.g. after a failure) fires a change.
+    input.value = '';
     if (!file) return;
     setError('');
     if (
-      !['image/jpeg', 'image/png', 'image/webp', 'application/pdf'].includes(
-        file.type,
-      ) ||
+      !ID_FILE_TYPES.includes(file.type) ||
       file.size > 10 * 1024 * 1024
     ) {
       setError('Choose a JPEG, PNG, WebP or PDF up to 10 MB');
@@ -65,7 +77,11 @@ export function GuestIdRow({
       await client.invalidateQueries({ queryKey: queryKeys.bookings.all });
       setAttaching(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not attach ID');
+      const [fieldMessage] = Object.values(apiFieldErrors(err));
+      setError(
+        fieldMessage ||
+          (err instanceof Error ? err.message : 'Could not attach ID'),
+      );
     } finally {
       setBusy(false);
     }
@@ -110,7 +126,7 @@ export function GuestIdRow({
             aria-label="Attach ID file"
             accept="image/jpeg,image/png,image/webp,application/pdf"
             isDisabled={busy}
-            onChange={(e) => void upload(e.target.files?.[0])}
+            onChange={(e) => void upload(e.target)}
           />
           <Text fontSize="12px">
             {busy
