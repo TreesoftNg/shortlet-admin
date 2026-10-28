@@ -1,5 +1,6 @@
 'use client';
 
+
 import {
   Box,
   Button,
@@ -16,6 +17,7 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react';
+import { GuestIdRow } from './guest-id-row';
 import { useState } from 'react';
 import { useMe } from '@/features/auth/hooks/use-auth';
 import { hasPermission } from '@/features/auth/utils/auth-helpers';
@@ -86,10 +88,13 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
   const canCancel = hasPermission(profile, 'booking.cancel');
   const canRefund = hasPermission(profile, 'payment.refund');
 
-  const { data: booking, isLoading, isError, error, refetch } = useBooking(
-    bookingId,
-    Boolean(bookingId),
-  );
+  const {
+    data: booking,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useBooking(bookingId, Boolean(bookingId));
 
   const checkInMutation = useCheckInBooking();
   const cancelMutation = useCancelBooking();
@@ -343,10 +348,7 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
     }
   };
 
-  const handleVerify = async (
-    paymentId: string,
-    provider: string,
-  ) => {
+  const handleVerify = async (paymentId: string, provider: string) => {
     try {
       await verifyMutation.mutateAsync(paymentId);
       toast({
@@ -387,17 +389,15 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
   if (dialog === 'deposit') {
     const depositTotal = Number(booking.deposit.amount);
     const amount = Number(depositAmount);
-    const keepingPart =
-      Number.isFinite(amount) && amount < depositTotal;
+    const keepingPart = Number.isFinite(amount) && amount < depositTotal;
     return (
       <VStack align="stretch" spacing="14px">
         <Heading as="h3" fontSize="18px">
           Release deposit
         </Heading>
         <Text fontSize="14px" color="ink.400">
-          Held amount:{' '}
-          {formatMoney(booking.deposit.amount, booking.currency)}. Enter how
-          much to return to the guest.
+          Held amount: {formatMoney(booking.deposit.amount, booking.currency)}.
+          Enter how much to return to the guest.
         </Text>
         <FormControl isRequired>
           <FormLabel>Refund amount</FormLabel>
@@ -568,15 +568,26 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
           </Button>
         ) : null}
       </Flex>
-
       <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px">
         <Box minW={0}>
+          <GuestIdRow
+            key={booking.id}
+            bookingId={booking.id}
+            document={booking.idDocument}
+            canAttach={canUpdate}
+          />
           <KeyValueList
             title="Guest"
             items={[
               { label: 'Name', value: <Text as="b">{name}</Text> },
-              { label: 'Email', value: <Text as="b">{booking.guest.email}</Text> },
-              { label: 'Phone', value: <Text as="b">{booking.guest.phone}</Text> },
+              {
+                label: 'Email',
+                value: <Text as="b">{booking.guest.email}</Text>,
+              },
+              {
+                label: 'Phone',
+                value: <Text as="b">{booking.guest.phone}</Text>,
+              },
               {
                 label: 'Requests',
                 value: (
@@ -597,7 +608,10 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
           <KeyValueList
             title="Stay"
             items={[
-              { label: 'Unit', value: <Text as="b">{unitLabel(booking)}</Text> },
+              {
+                label: 'Unit',
+                value: <Text as="b">{unitLabel(booking)}</Text>,
+              },
               {
                 label: 'Dates',
                 value: (
@@ -630,7 +644,10 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                 label: 'Nights',
                 value: (
                   <Text as="b">
-                    {formatMoney(booking.price.nightsSubtotal, booking.currency)}
+                    {formatMoney(
+                      booking.price.nightsSubtotal,
+                      booking.currency,
+                    )}
                   </Text>
                 ),
               },
@@ -656,7 +673,10 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                 label: 'Service fee',
                 value: (
                   <Text as="b">
-                    {formatMoney(booking.price.serviceFee.amount, booking.currency)}
+                    {formatMoney(
+                      booking.price.serviceFee.amount,
+                      booking.currency,
+                    )}
                   </Text>
                 ),
               },
@@ -748,7 +768,13 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
         </Box>
       </SimpleGrid>
 
-      <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="40px" borderTop="1px solid" borderColor="line.500" pt="16px">
+      <SimpleGrid
+        columns={{ base: 1, md: 2 }}
+        columnGap="40px"
+        borderTop="1px solid"
+        borderColor="line.500"
+        pt="16px"
+      >
         <Box mb="16px" minW={0}>
           <Text fontSize="13px" fontWeight={700} mb="8px" color="ink.400">
             Payments
@@ -789,12 +815,23 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
                     </Text>
                     {payment.status === 'needs_review' &&
                     payment.amountReceived ? (
-                      <Text fontSize="13px" color="ink.500" fontWeight={600} mt="2px">
-                        Received {formatMoney(payment.amountReceived, payment.currency)}
+                      <Text
+                        fontSize="13px"
+                        color="ink.500"
+                        fontWeight={600}
+                        mt="2px"
+                      >
+                        Received{' '}
+                        {formatMoney(payment.amountReceived, payment.currency)}
                       </Text>
                     ) : null}
                     {refundProgress ? (
-                      <Text fontSize="13px" color="ink.500" fontWeight={600} mt="2px">
+                      <Text
+                        fontSize="13px"
+                        color="ink.500"
+                        fontWeight={600}
+                        mt="2px"
+                      >
                         {refundProgress}
                       </Text>
                     ) : null}
@@ -865,7 +902,6 @@ export function BookingDetailDrawer({ bookingId }: BookingDetailDrawerProps) {
             </VStack>
           )}
         </Box>
-
       </SimpleGrid>
 
       {booking.cancellationReason ? (

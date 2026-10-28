@@ -1,3 +1,4 @@
+import { env } from '@/shared/config/env';
 import { sendRequest, type HttpRequest } from './http';
 import { endSession, getAccessToken, refreshAccessToken } from './session';
 import { ApiClientError, type ApiSuccessResponse } from './types';
@@ -10,14 +11,20 @@ export type RequestOptions = HttpRequest & {
 };
 
 function authenticationRequired(): ApiClientError {
-  return new ApiClientError('Please sign in to continue.', { code: 'AUTHENTICATION_REQUIRED', status: 401 });
+  return new ApiClientError('Please sign in to continue.', {
+    code: 'AUTHENTICATION_REQUIRED',
+    status: 401,
+  });
 }
 
 /**
  * Single entry point for Shortlet API calls. Sends the access token and, if
  * the API rejects it, refreshes once and retries before signing the user out.
  */
-export async function apiClient<T>(path: string, options: RequestOptions = {}): Promise<ApiSuccessResponse<T>> {
+export async function apiClient<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<ApiSuccessResponse<T>> {
   const { auth = true, ...request } = options;
   if (!auth) {
     return sendRequest<T>(path, request);
@@ -48,5 +55,31 @@ export async function apiClient<T>(path: string, options: RequestOptions = {}): 
 }
 
 function withBearer(request: HttpRequest, token: string): HttpRequest {
-  return { ...request, headers: { ...request.headers, Authorization: `Bearer ${token}` } };
+  return {
+    ...request,
+    headers: { ...request.headers, Authorization: `Bearer ${token}` },
+  };
+}
+
+/** Authenticated private files use the same session refresh behaviour as JSON. */
+export async function apiBlob(path: string): Promise<Blob> {
+  let token = await getAccessToken();
+  if (!token) throw authenticationRequired();
+  const read = (bearer: string) =>
+    fetch(`${env.apiUrl}${path}`, {
+      cache: 'no-store',
+      headers: { Authorization: `Bearer ${bearer}` },
+    });
+  let response = await read(token);
+  if (response.status === 401) {
+    token = await refreshAccessToken();
+    if (!token) throw authenticationRequired();
+    response = await read(token);
+  }
+  if (!response.ok)
+    throw new ApiClientError('Could not open the ID document', {
+      status: response.status,
+      code: 'DOCUMENT_UNAVAILABLE',
+    });
+  return response.blob();
 }

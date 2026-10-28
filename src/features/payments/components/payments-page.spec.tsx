@@ -30,7 +30,10 @@ function renderAs(permissions = ['payment.read', 'payment.refund']) {
     role: { code: 'owner', name: 'Owner' },
     permissions,
   };
-  queryClient.setQueryData(queryKeys.auth.me(), { success: true, data: profile });
+  queryClient.setQueryData(queryKeys.auth.me(), {
+    success: true,
+    data: profile,
+  });
   return renderWithProviders(<PaymentsPage />, queryClient);
 }
 
@@ -54,6 +57,7 @@ beforeEach(() => {
     reason: 'guest_cancellation',
     note: null,
     status: 'completed',
+    awaitingProvider: false,
     failureReason: null,
     requestedBy: { id: 'u1', name: 'Ada Okafor' },
     processedAt: '2026-10-02T09:00:00.000Z',

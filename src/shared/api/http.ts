@@ -1,5 +1,9 @@
 import { env } from '@/shared/config/env';
-import { ApiClientError, type ApiErrorResponse, type ApiSuccessResponse } from './types';
+import {
+  ApiClientError,
+  type ApiErrorResponse,
+  type ApiSuccessResponse,
+} from './types';
 
 export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
@@ -42,7 +46,10 @@ function isApiError(payload: unknown): payload is ApiErrorResponse {
  * One HTTP call to the Shortlet API, without authentication. Expects the PRD
  * response envelope and throws ApiClientError for anything else.
  */
-export async function sendRequest<T>(path: string, request: HttpRequest = {}): Promise<ApiSuccessResponse<T>> {
+export async function sendRequest<T>(
+  path: string,
+  request: HttpRequest = {},
+): Promise<ApiSuccessResponse<T>> {
   const { method = 'GET', body, headers = {}, signal } = request;
 
   let response: Response;
@@ -52,18 +59,29 @@ export async function sendRequest<T>(path: string, request: HttpRequest = {}): P
       signal,
       headers: {
         Accept: 'application/json',
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        ...(body !== undefined && !(body instanceof FormData)
+          ? { 'Content-Type': 'application/json' }
+          : {}),
         ...(env.tenantSlug ? { 'x-tenant-slug': env.tenantSlug } : {}),
         ...headers,
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body:
+        body instanceof FormData
+          ? body
+          : body !== undefined
+            ? JSON.stringify(body)
+            : undefined,
     });
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw error;
-    throw new ApiClientError('Cannot reach the server. Check your connection and try again.', {
-      code: 'NETWORK_ERROR',
-      status: 0,
-    });
+    if (error instanceof DOMException && error.name === 'AbortError')
+      throw error;
+    throw new ApiClientError(
+      'Cannot reach the server. Check your connection and try again.',
+      {
+        code: 'NETWORK_ERROR',
+        status: 0,
+      },
+    );
   }
 
   const payload = await parseJsonSafe(response);
@@ -77,11 +95,17 @@ export async function sendRequest<T>(path: string, request: HttpRequest = {}): P
         requestId: payload.meta?.requestId,
       });
     }
-    throw new ApiClientError('Request failed', { code: 'INTERNAL_ERROR', status: response.status });
+    throw new ApiClientError('Request failed', {
+      code: 'INTERNAL_ERROR',
+      status: response.status,
+    });
   }
 
   if (!isApiSuccess<T>(payload)) {
-    throw new ApiClientError('Invalid API response shape', { code: 'INTERNAL_ERROR', status: response.status });
+    throw new ApiClientError('Invalid API response shape', {
+      code: 'INTERNAL_ERROR',
+      status: response.status,
+    });
   }
   return payload;
 }

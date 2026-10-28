@@ -9,12 +9,7 @@ export type BookingStatus =
   | 'expired';
 
 export type DepositStatus =
-  | 'pending'
-  | 'held'
-  | 'refunded'
-  | 'partially_refunded'
-  | 'retained'
-  | 'none';
+  'pending' | 'held' | 'refunded' | 'partially_refunded' | 'retained' | 'none';
 
 export type PaymentStatus =
   | 'initialized'
@@ -159,6 +154,7 @@ export type BookingListItem = {
 };
 
 export type AdminBooking = {
+  idDocument?: { type: string; contentType: string; uploadedAt: string } | null;
   id: string;
   reference: string;
   status: BookingStatus;
@@ -242,7 +238,10 @@ export type StaffRefundReason =
   | 'duplicate_charge'
   | 'other';
 
-export const STAFF_REFUND_REASONS: { value: StaffRefundReason; label: string }[] = [
+export const STAFF_REFUND_REASONS: {
+  value: StaffRefundReason;
+  label: string;
+}[] = [
   { value: 'guest_cancellation', label: 'Guest cancellation' },
   { value: 'host_cancellation', label: 'Host cancellation' },
   { value: 'partial_stay', label: 'Partial stay' },
